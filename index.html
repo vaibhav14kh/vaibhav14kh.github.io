@@ -19,11 +19,12 @@
         .btn-launch:disabled { background-color: #94a3b8; cursor: not-allowed; }
         .input-field { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; }
         .input-field:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
+        /* Honeypot styling */
+        .visually-hidden { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
     </style>
 </head>
 <body class="hero-pattern min-h-screen flex flex-col">
 
-    <!-- Navigation -->
     <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
@@ -38,7 +39,6 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="flex-grow flex items-center justify-center p-4">
         <div class="w-full max-w-lg">
             
@@ -53,7 +53,6 @@
             </div>
 
             <div class="glass-card p-6 md:p-8">
-                <!-- Dynamic Tool Badge -->
                 <div class="text-center mb-6">
                     <span class="text-sm text-slate-500 block mb-1">Requesting Access To:</span>
                     <span id="requestedToolDisplay" class="badge badge-blue">
@@ -61,10 +60,14 @@
                     </span>
                 </div>
 
-                <!-- Capture Form -->
                 <form id="leadForm" class="space-y-5">
                     
                     <input type="hidden" id="toolId" name="toolId" value="">
+                    
+                    <div class="visually-hidden" aria-hidden="true">
+                        <label for="_gotcha">Leave this field blank</label>
+                        <input type="text" name="_gotcha" id="_gotcha" tabindex="-1" autocomplete="off">
+                    </div>
 
                     <div>
                         <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
@@ -139,6 +142,13 @@
             document.getElementById('leadForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                // Anti-spam check
+                const honeypot = document.getElementById('_gotcha').value;
+                if (honeypot) {
+                    console.warn('Bot detected. Submission aborted.');
+                    return; // Silently fail without notifying the bot
+                }
+                
                 const btn = document.getElementById('submitBtn');
                 const status = document.getElementById('statusMessage');
                 
@@ -157,10 +167,9 @@
                 status.classList.add('hidden');
 
                 try {
-                    // REPLACE THIS URL WITH YOUR n8n WEBHOOK URL IN PHASE 3
-                    const n8nWebhookUrl = 'https://n8n.srv1718280.hstgr.cloud/webhook-test/lead-capture'; 
+                    // Production Webhook Endpoint (removed /webhook-test/)
+                    const n8nWebhookUrl = 'https://n8n.srv1718280.hstgr.cloud/webhook/lead-capture'; 
                     
-                    /* UNCOMMENT THIS BLOCK ONCE N8N IS READY
                     const response = await fetch(n8nWebhookUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -168,25 +177,22 @@
                     });
 
                     if (!response.ok) throw new Error('Network response was not ok');
-                    */
 
-                    // Success State (Simulated for now)
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Link Sent!';
-                        btn.classList.replace('bg-blue-600', 'bg-green-600');
-                        btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
-                        
-                        status.textContent = "Check your email for the secure access link.";
-                        status.className = "text-sm text-center bg-green-100 text-green-700 rounded p-3 mt-4 block font-medium";
-                        
-                        document.getElementById('leadForm').reset();
-                    }, 1000);
+                    // Success State
+                    btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Link Sent!';
+                    btn.classList.replace('bg-blue-600', 'bg-green-600');
+                    btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+                    
+                    status.textContent = "Check your email for the secure access link.";
+                    status.className = "text-sm text-center bg-green-100 text-green-700 rounded p-3 mt-4 block font-medium";
+                    
+                    document.getElementById('leadForm').reset();
 
                 } catch (error) {
                     // Error State
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Try Again';
-                    status.textContent = "Error sending request. Please try again.";
+                    status.textContent = "Error sending request. Please ensure n8n workflow is active.";
                     status.className = "text-sm text-center bg-red-100 text-red-700 rounded p-3 mt-4 block font-medium";
                     console.error('Submission Error:', error);
                 }
