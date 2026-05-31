@@ -4,29 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+<!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
     <script>
         (function() {
-            // 1. Check if the user is arriving directly from the email link
             const urlParams = new URLSearchParams(window.location.search);
             const isEmailAuth = urlParams.get('auth') === 'true';
 
             if (isEmailAuth) {
-                // 2. Grant Access: Drop a token in their browser storage
-                const sessionData = { 
-                    user: "Verified Professional", 
-                    timestamp: new Date().getTime() 
-                };
+                // Grant Access
+                const sessionData = { user: "Verified Professional", timestamp: new Date().getTime() };
                 localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
-                
-                // Clean the URL so they cannot copy-paste the ?auth=true link to friends
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
-                // 3. Verify Access: Check if they already have a token from earlier
+                // Verify Access
                 const access = localStorage.getItem('workshop_v2_access');
                 if (!access) {
-                    // Boot them back to the lead capture page
-                    window.location.href = 'index.html';
+                    // Identify which tool they were trying to open
+                    let requestedTool = 'FullSuite';
+                    const path = window.location.pathname.toLowerCase();
+                    
+                    if(path.includes('bank')) requestedTool = 'BankAnalyzer';
+                    else if(path.includes('challan')) requestedTool = 'ChallanExtractor';
+                    else if(path.includes('gstr3b')) requestedTool = 'GSTR3B';
+                    
+                    // Boot them to the landing page WITH the requested tool parameter
+                    window.location.href = 'index.html?tool=' + requestedTool;
                 }
             }
         })();
