@@ -55,6 +55,10 @@
         .btn-primary:hover { background-color: #1d4ed8; }
         .dark .btn-primary { background-color: #3b82f6; }
         .dark .btn-primary:hover { background-color: #2563eb; }
+        
+        /* Locked Button State */
+        .btn-locked { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; background-color: #e2e8f0; color: #64748b; font-weight: 600; border-radius: 0.5rem; cursor: not-allowed; border: none; }
+        .dark .btn-locked { background-color: #334155; color: #94a3b8; }
 
         .social-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 9999px; background-color: #f1f5f9; color: #475569; transition: all 0.2s; }
         .social-btn:hover { background-color: #e2e8f0; color: #0f172a; transform: scale(1.1); }
@@ -155,64 +159,65 @@
             </div>
 
             <!-- Grid of Tools -->
+            <!-- Note: data-release-date uses standard ISO format (YYYY-MM-DDTHH:MM:SS+05:30 for IST) -->
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 
-                <!-- Tool 1 -->
-                <div class="glass-card flex flex-col p-6 h-full">
+                <!-- Tool 1: Already Released (Past Date) -->
+                <div class="glass-card flex flex-col p-6 h-full tool-card" data-release-date="2026-05-25T08:00:00+05:30">
                     <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4 text-xl shadow-sm">
                         <i class="fas fa-university"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Bank Statement Analyzer V2</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">Transforms massive, unstructured Excel bank statements into visual KPIs, cash flow trends, and high-value transaction alerts instantly.</p>
-                    <a href="request-access.html?tool=BankAnalyzer" class="btn-primary w-full shadow-md text-sm">
+                    <a href="request-access.html?tool=BankAnalyzer" class="btn-primary w-full shadow-md text-sm btn-action">
                         Request Tool Access <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
 
-                <!-- Tool 2 -->
-                <div class="glass-card flex flex-col p-6 h-full">
+                <!-- Tool 2: Drops June 1 -->
+                <div class="glass-card flex flex-col p-6 h-full tool-card" data-release-date="2026-06-01T08:00:00+05:30">
                     <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 text-xl shadow-sm">
                         <i class="fas fa-file-invoice"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Multi-Challan Extractor</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">Bulk upload PDF challans (PF, ESIC, TDS) and automatically extract the structured payment data directly into Excel without manual entry.</p>
-                    <a href="request-access.html?tool=ChallanExtractor" class="btn-primary w-full shadow-md text-sm">
+                    <a href="request-access.html?tool=ChallanExtractor" class="btn-primary w-full shadow-md text-sm btn-action">
                         Request Tool Access <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
 
-                <!-- Tool 3 -->
-                <div class="glass-card flex flex-col p-6 h-full">
+                <!-- Tool 3: Drops June 8 -->
+                <div class="glass-card flex flex-col p-6 h-full tool-card" data-release-date="2026-06-08T08:00:00+05:30">
                     <div class="w-12 h-12 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center text-green-600 dark:text-green-400 mb-4 text-xl shadow-sm">
                         <i class="fas fa-chart-pie"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">GSTR-3B Dashboard</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">Upload PDF returns to automatically visualize tax liability versus Input Tax Credit (ITC) utilization, identifying critical compliance gaps.</p>
-                    <a href="request-access.html?tool=GSTR3B" class="btn-primary w-full shadow-md text-sm">
+                    <a href="request-access.html?tool=GSTR3B" class="btn-primary w-full shadow-md text-sm btn-action">
                         Request Tool Access <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
 
-                <!-- Tool 4 -->
-                <div class="glass-card flex flex-col p-6 h-full">
+                <!-- Tool 4: Drops June 15 -->
+                <div class="glass-card flex flex-col p-6 h-full tool-card" data-release-date="2026-06-15T08:00:00+05:30">
                     <div class="w-12 h-12 bg-gray-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-gray-600 dark:text-gray-400 mb-4 text-xl shadow-sm border border-slate-200 dark:border-slate-700">
                         <i class="fas fa-file-contract"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Partnership Deed Drafter</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">Automates the drafting of legal partnership deeds with dynamic partner clauses, instant calculations, and standard legal formatting.</p>
-                    <a href="request-access.html?tool=DeedDrafter" class="btn-primary w-full shadow-md text-sm bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600">
+                    <a href="request-access.html?tool=DeedDrafter" class="btn-primary w-full shadow-md text-sm btn-action bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600">
                         Request Tool Access <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
 
-                <!-- Tool 5 -->
-                <div class="glass-card flex flex-col p-6 h-full">
+                <!-- Tool 5: Drops June 22 -->
+                <div class="glass-card flex flex-col p-6 h-full tool-card" data-release-date="2026-06-22T08:00:00+05:30">
                     <div class="w-12 h-12 bg-pink-100 dark:bg-pink-900/50 rounded-xl flex items-center justify-center text-pink-600 dark:text-pink-400 mb-4 text-xl shadow-sm">
                         <i class="fas fa-file-signature"></i>
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Engagement Letter Generator</h3>
                     <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">Standardizes audit engagement letters for diverse firm structures (partnerships & proprietorships) with instant, clean PDF generation.</p>
-                    <a href="request-access.html?tool=EngagementLetter" class="btn-primary w-full shadow-md text-sm">
+                    <a href="request-access.html?tool=EngagementLetter" class="btn-primary w-full shadow-md text-sm btn-action">
                         Request Tool Access <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -243,8 +248,9 @@
         </div>
     </footer>
 
-    <!-- Theme Toggle Script -->
+    <!-- Scripts -->
     <script>
+        // 1. Theme Toggle Script
         document.getElementById('themeToggle').addEventListener('click', () => {
             const html = document.documentElement;
             if (html.classList.contains('dark')) {
@@ -254,6 +260,33 @@
                 html.classList.add('dark');
                 localStorage.theme = 'dark';
             }
+        });
+
+        // 2. Drip Release Engine
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            
+            document.querySelectorAll('.tool-card').forEach(card => {
+                const releaseDateStr = card.getAttribute('data-release-date');
+                if (releaseDateStr) {
+                    const releaseDate = new Date(releaseDateStr);
+                    
+                    if (now < releaseDate) {
+                        // The tool is not released yet. Lock the access button.
+                        const btn = card.querySelector('a.btn-action');
+                        if (btn) {
+                            btn.removeAttribute('href');
+                            btn.className = 'w-full shadow-inner text-sm btn-locked';
+                            
+                            // Format the date (e.g., "Jun 1")
+                            const options = { month: 'short', day: 'numeric' };
+                            const formattedDate = releaseDate.toLocaleDateString('en-IN', options);
+                            
+                            btn.innerHTML = `<i class="fas fa-lock mr-2"></i> Drops on ${formattedDate}`;
+                        }
+                    }
+                }
+            });
         });
     </script>
 </body>
