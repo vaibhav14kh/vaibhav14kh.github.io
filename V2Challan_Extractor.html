@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=ChallanExtractor';
+                }
+            }
+        })();
+    </script>
+
+    <title>Multi-Challan Extractor | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js and SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Upload Zone Styles */
+        .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
+        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+
+        /* Stat Cards */
+        .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+
+        /* Compact Button Styles */
+        .btn-compact { display: inline-flex; align-items: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Table Styles */
+        .table-container { overflow-x: auto; max-height: 60vh; }
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
+        tbody tr:nth-child(even) { background-color: #f9fafb; }
+        tbody tr:hover { background-color: #eff6ff; }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); display: none;
+            justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .spinner {
+            width: 3rem; height: 3rem;
+            border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col">
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+            <div class="spinner mb-4 mx-auto"></div>
+            <h4 class="text-xl font-bold text-slate-800">Processing Documents</h4>
+            <p class="text-sm text-slate-500 mt-2">Extracting data locally via PDF.js...</p>
+        </div>
+    </div>
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow mb-12">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                <span class="gradient-text">Multi-Challan Data Extractor</span>
+            </h1>
+            <p class="text-slate-600 text-sm font-medium">Local PDF processing. Zero data leaves your browser.</p>
+        </div>
+
+        <div class="space-y-6">
+            
+            <!-- Upload Section Card -->
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-invoice mr-2 text-blue-600"></i>Upload PDFs</h2>
+                        <p class="text-sm text-slate-500 mt-1">Extracts structured data from PF, ESIC, and TDS challans automatically.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">PF / ECR</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">ESIC</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">TDS</span>
+                    </div>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm" onclick="document.getElementById('fileInput').click()">
+                    <div class="space-y-4">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-blue-400"></i>
+                        <div>
+                            <p class="text-base font-bold text-slate-700">Drop PDF files here or click to browse</p>
+                            <p class="text-sm text-slate-500 mt-1">Supports batch processing of multiple files locally</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
+                </div>
+
+                <!-- Stats Strip (Hidden initially) -->
+                <div id="uploadStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 hidden">
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 text-xl shadow-sm"><i class="fas fa-copy"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Files</p>
+                            <p id="totalFiles" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-sm"><i class="fas fa-check"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Success</p>
+                            <p id="successCount" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-xl shadow-sm"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Errors</p>
+                            <p id="errorCount" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl shadow-sm"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Time</p>
+                            <p id="processingTime" class="text-xl font-black text-slate-800">0s</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div id="progressContainer" class="hidden mt-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold text-slate-700">Processing Status</span>
+                        <span id="progressText" class="text-sm font-bold text-blue-600">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 shadow-inner">
+                        <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="actionButtons" class="hidden mt-6 flex gap-3 border-t border-slate-100 pt-6">
+                    <button onclick="downloadExcel()" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md">
+                        <i class="fas fa-file-excel mr-2"></i> Download Excel
+                    </button>
+                    <button onclick="clearResults()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
+                        <i class="fas fa-trash mr-2"></i> Clear Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Table Section -->
+            <div id="resultsSection" class="glass-card hidden overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center">
+                    <h3 class="text-base font-bold text-slate-800"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
+                </div>
+                
+                <div class="table-container">
+                    <table class="min-w-full divide-y divide-slate-200" id="resultsTable">
+                        <thead class="bg-slate-50">
+                            <tr id="tableHeader">
+                                <!-- Dynamic Headers -->
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="bg-white divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                            <!-- Dynamic Data -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <script>
+        // Global variables
+        let extractedData = [];
+        let processingStartTime;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            
+            document.getElementById('fileInput').addEventListener('change', handleFiles);
+            
+            const fileUpload = document.querySelector('.drop-zone');
+            fileUpload.addEventListener('dragover', (e) => { 
+                e.preventDefault(); 
+                e.currentTarget.classList.add('drag-over');
+            });
+            fileUpload.addEventListener('dragleave', (e) => { 
+                e.preventDefault(); 
+                e.currentTarget.classList.remove('drag-over');
+            });
+            fileUpload.addEventListener('drop', handleDrop);
+        });
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            if (files.length > 0) processFiles(files);
+            else alert('Please drop PDF files only.');
+        }
+
+        function handleFiles(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) processFiles(files);
+        }
+
+        async function processFiles(files) {
+            processingStartTime = Date.now();
+            extractedData = [];
+            
+            // Show UI elements
+            document.getElementById('uploadStats').classList.remove('hidden');
+            document.getElementById('uploadStats').classList.add('grid'); // Ensure grid display
+            document.getElementById('progressContainer').classList.remove('hidden');
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            let successCount = 0, errorCount = 0;
+            document.getElementById('totalFiles').textContent = files.length;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const progress = ((i + 1) / files.length) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = `Processing ${file.name}... (${i + 1}/${files.length})`;
+                
+                try {
+                    const data = await extractDataFromPDF(file);
+                    if (data && data.status === 'Success') {
+                        extractedData.push(data);
+                        successCount++;
+                    } else {
+                        throw new Error(data.status || 'Could not extract data');
+                    }
+                } catch (error) {
+                    console.error(`Error processing ${file.name}:`, error);
+                    extractedData.push({ filename: file.name, type: 'Unknown', status: `Error: ${error.message}` });
+                    errorCount++;
+                }
+                
+                document.getElementById('successCount').textContent = successCount;
+                document.getElementById('errorCount').textContent = errorCount;
+            }
+            
+            document.getElementById('loadingOverlay').style.display = 'none';
+            const processingTime = Math.round((Date.now() - processingStartTime) / 1000);
+            document.getElementById('processingTime').textContent = processingTime + 's';
+            
+            if (extractedData.length > 0) {
+                displayResults();
+                document.getElementById('actionButtons').classList.remove('hidden');
+            }
+        }
+
+        async function extractDataFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
+            
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(item => item.str).join(' ');
+            }
+            
+            const documentType = detectDocumentType(fullText);
+            return extractDataByType(fullText, documentType, file.name);
+        }
+
+        function detectDocumentType(text) {
+            const t = text.toLowerCase();
+            if (t.includes('employee provident fund') || t.includes('trrn')) return 'PF';
+            if (t.includes('employees\' state insurance') || (t.includes('employer\'s code') && t.includes('challan number'))) return 'ESIC';
+            if (t.includes('tax deducted at source') || (t.includes('bsr code') && t.includes('challan no'))) return 'TDS';
+            
+            // Fallback detections
+            if (t.includes('gstr-3b') || t.includes('return of outward supplies')) return 'GSTR-3B';
+            if (t.includes('goods and services tax') && t.includes('cpin')) return 'GST';
+            if (t.includes('income tax') && t.includes('itns')) return 'Income Tax';
+            return 'Unknown';
+        }
+
+        function extractDataByType(text, type, filename) {
+            const baseData = { filename, type, status: 'Success' };
+            try {
+                switch (type) {
+                    case 'PF': return { ...baseData, ...extractPFData(text) };
+                    case 'ESIC': return { ...baseData, ...extractESIData(text) };
+                    case 'TDS': return { ...baseData, ...extractTDSData(text) };
+                    case 'GST': return { ...baseData, ...extractGSTData(text) };
+                    case 'Income Tax': return { ...baseData, ...extractIncomeTaxData(text) };
+                    case 'GSTR-3B': return { ...baseData, ...extractGSTR3BData(text) };
+                    default: return { ...baseData, status: 'Error - Unknown document type' };
+                }
+            } catch(e) {
+                return { ...baseData, status: `Error - ${e.message}`};
+            }
+        }
+
+        // --- EXTRACTION LOGIC ---
+        function extractPFData(text) {
+            const data = {};
+            const clean = (s) => (s || '').replace(/\s+/g,' ').trim();
+            const amt = (s) => s ? parseFloat(s.replace(/,/g,'').trim()) : null;
+
+            data.trrn = clean(text.match(/TRRN\s*No\.?\s*:\s*([A-Z0-9-]+)/i)?.[1]);
+            data.challanStatus = clean(text.match(/Challan\s*Status\s*:\s*([A-Za-z ]+)/i)?.[1]);
+            data.establishmentId = clean(text.match(/Establish(?:ment)?\s*ID\s*:\s*([A-Z0-9]+)/i)?.[1]);
+            data.establishmentName = clean(text.match(/Establish(?:ment)?\s*Name\s*:\s*([^\n:][^\n]+)/i)?.[1]);
+            data.wageMonth = clean(text.match(/Wage\s*Month\s*:\s*([A-Z]{3}-\d{4})/i)?.[1]);
+            data.totalAmount = amt(text.match(/Total\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.amount_Account1 = amt(text.match(/Account-?1\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.amount_Account2 = amt(text.match(/Account-?2\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.amount_Account10 = amt(text.match(/Account-?10\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.amount_Account21 = amt(text.match(/Account-?21\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.amount_Account22 = amt(text.match(/Account-?22\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
+            data.crn = clean(text.match(/\bCRN\s*:\s*([A-Z0-9]+)/i)?.[1]);
+            data.paymentDate = clean(text.match(/Payment\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i)?.[1]);
+            return data;
+        }
+
+        function extractESIData(text) {
+            const data = {};
+            const cleanText = text.replace(/\s+/g, ' ').trim();
+            data.transactionStatus = cleanText.match(/Transaction\s*status\s*[:]?\s*(\w+)/i)?.[1] || null;
+            data.employerCode = cleanText.match(/Employer['']?s\s*Code\s*No\s*[:]?\s*([A-Z0-9]+)/i)?.[1] || null;
+            data.employerName = cleanText.match(/Employer['']?s\s*Name\s*[:]?\s*([^:\n]+?)(?=\s*Challan|$)/i)?.[1].trim() || null;
+            data.challanPeriod = cleanText.match(/Challan\s*Period\s*[:]?\s*(\w{3}-\d{4})/i)?.[1] || null;
+            data.challanNumber = cleanText.match(/Challan\s*Number\s*[:]?\s*(\w+)/i)?.[1] || null;
+            data.amountPaid = cleanText.match(/Amount\s*Paid\s*[:]?\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i)?.[1].replace(/,/g, '') || null;
+            return data;
+        }
+
+        function extractTDSData(text) {
+            const data = {};
+            const cleanText = text.replace(/\s+/g, ' ').trim();
+            const amt = (s) => s ? s.replace(/,/g, '') : null;
+            data.dateOfDeposit = cleanText.match(/Date of Deposit\s*[:]?\s*(\d{2}-\w{3}-\d{4}|\d{2}\/\d{2}\/\d{4})/i)?.[1] || null;
+            data.bsrCode = cleanText.match(/BSR\s*code\s*[:]?\s*(\d{7})/i)?.[1] || null;
+            data.challanNo = cleanText.match(/Challan\s*No\s*[:]?\s*(\d+)/i)?.[1] || null;
+            data.tan = cleanText.match(/TAN\s*[:]?\s*([A-Z]{4}\d{5}[A-Z])/i)?.[1] || null;
+            data.assessmentYear = cleanText.match(/Assessment Year\s*[:]?\s*(\d{4}-\d{2})/i)?.[1] || null;
+            data.totalAmount = amt(cleanText.match(/Total\s*\(A\+B\+C\+D\+E\+F\)\s*[₹]?\s*([\d,]+)/i)?.[1] || cleanText.match(/Amount\s*\(in Rs\.\)\s*[:]?\s*[₹]?\s*([\d,]+)/i)?.[1]);
+            return data;
+        }
+
+        function extractGSTData(text) { return { gstin: text.match(/GSTIN[\s:]*([A-Z0-9]{15})/i)?.[1] || 'N/A' }; }
+        function extractIncomeTaxData(text) { return { pan: text.match(/PAN[\s:]*([A-Z]{5}\d{4}[A-Z])/i)?.[1] || 'N/A' }; }
+        function extractGSTR3BData(text) { return { gstin: text.match(/GSTIN[\s:]*([A-Z0-9]{15})/i)?.[1] || 'N/A' }; }
+
+        // Display Logic
+        function displayResults() {
+            if (extractedData.length === 0) return;
+
+            const allKeys = new Set(['filename', 'type', 'status']);
+            extractedData.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
+
+            const headers = Array.from(allKeys);
+            const headerRow = document.getElementById('tableHeader');
+            headerRow.innerHTML = '';
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.className = 'px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap';
+                th.textContent = header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
+                headerRow.appendChild(th);
+            });
+
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            extractedData.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-blue-50 transition-colors';
+                
+                headers.forEach(header => {
+                    const cell = document.createElement('td');
+                    cell.className = 'px-6 py-4 whitespace-nowrap text-sm text-slate-700';
+                    
+                    const value = item[header] !== undefined && item[header] !== null ? item[header] : 'N/A';
+                    
+                    if (header === 'status') {
+                        const span = document.createElement('span');
+                        span.textContent = value;
+                        if (value.startsWith('Error')) {
+                            span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200';
+                        } else {
+                            span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200';
+                        }
+                        cell.appendChild(span);
+                    } else if (header === 'type') {
+                        const span = document.createElement('span');
+                        span.textContent = value;
+                        span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200';
+                        cell.appendChild(span);
+                    } else {
+                        cell.textContent = value;
+                    }
+                    row.appendChild(cell);
+                });
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+        }
+
+        function downloadExcel() {
+            if (extractedData.length === 0) {
+                alert('No data to download');
+                return;
+            }
+            const ws = XLSX.utils.json_to_sheet(extractedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Extracted Challan Data');
+            XLSX.writeFile(wb, `Challan_Extraction_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        }
+
+        function clearResults() {
+            extractedData = [];
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('uploadStats').classList.add('hidden');
+            document.getElementById('progressContainer').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            
+            // Reset stats
+            document.getElementById('totalFiles').textContent = '0';
+            document.getElementById('successCount').textContent = '0';
+            document.getElementById('errorCount').textContent = '0';
+            document.getElementById('processingTime').textContent = '0s';
+        }
+    </script>
+</body>
+</html>
