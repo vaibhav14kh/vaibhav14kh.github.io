@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=DirectorsReport';
+                }
+            }
+        })();
+    </script>
+
+    <title>Directors' Report Generator | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Input Styles */
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+            padding-top: 0.5rem; padding-bottom: 0.5rem; padding-left: 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+            border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
+            background-color: #f8fafc; color: #334155; font-weight: 500;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+        input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; border: none; }
+        .btn-compact:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Document Preview (A4 Sim) */
+        .a4-paper {
+            width: 210mm; min-height: 297mm; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 25mm; margin: 0 auto; color: #000; font-family: "Times New Roman", Times, serif;
+            font-size: 11pt; line-height: 1.5; overflow-wrap: break-word; text-align: justify;
+        }
+        
+        .doc h2, .doc h3 { font-family: 'Times New Roman', Times, serif; color: #000; margin-top: 1.5em; margin-bottom: 0.5em; text-align: left; }
+        .doc h2 { font-size: 14pt; text-align: center; text-decoration: underline; }
+        .doc h3 { font-size: 12pt; font-weight: bold; }
+        .doc p { margin-bottom: 1em; }
+        .doc ol { margin-left: 2em; margin-bottom: 1em; }
+        .doc ol li { margin-bottom: 0.5em; }
+        
+        .doc table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 10pt; }
+        .doc th, .doc td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
+        .doc th { background: #f3f4f6; font-weight: bold; text-align: center; }
+        .center { text-align: center; }
+        .right { text-align: right; }
+        
+        .letterhead { border-bottom: 2px solid #111; text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
+        .lh-title { font-weight: 700; text-transform: uppercase; font-size: 18pt; font-family: "Garamond", serif; }
+        .lh-line { font-size: 11pt; line-height: 1.2; margin-top: 4px; }
+        .muted { color: #4b5563; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Print Media Overrides */
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .hide-on-print { display: none !important; }
+            .print-full-width { width: 100% !important; max-width: none !important; border: none; box-shadow: none; padding: 0; margin: 0; }
+            .a4-paper { width: 100%; min-height: auto; box-shadow: none; padding: 0; margin: 0; }
+            @page { margin: 20mm; }
+        }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col overflow-hidden">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0 hide-on-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <div class="max-w-full w-full mx-auto flex flex-col lg:flex-row gap-6 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8 print-full-width">
+        
+        <!-- Left Column: Inputs -->
+        <div class="w-full lg:w-[40%] xl:w-[35%] flex flex-col gap-4 hide-on-print">
+            
+            <div class="mb-1">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                    <span class="gradient-text">Directors' Report</span>
+                </h1>
+                <p class="text-slate-600 text-xs font-medium">Companies Act, 2013 Mail Merge Engine.</p>
+            </div>
+
+            <!-- Action Toolbar (Top) -->
+            <div class="glass-card p-4 flex flex-col gap-3 flex-shrink-0 bg-blue-50/50 border-blue-100">
+                <div class="flex flex-wrap gap-2">
+                    <button class="btn-compact bg-green-600 text-white hover:bg-green-700 shadow-md flex-1" id="btnMerge">
+                        <i class="fas fa-play mr-2"></i> Merge Now
+                    </button>
+                    <button class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md flex-1" id="btnDownloadWord" disabled>
+                        <i class="fas fa-file-word mr-2"></i> DOC
+                    </button>
+                    <button class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-md flex-1" id="btnPrintPDF" disabled>
+                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-2 border-t border-blue-200 pt-3">
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnImportData">
+                        <i class="fas fa-file-import mr-1"></i> Import Excel
+                    </button>
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnExportData">
+                        <i class="fas fa-file-export mr-1"></i> Export Data
+                    </button>
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnDownloadCSV" title="Download Excel Template">
+                        <i class="fas fa-download mr-1"></i> Template
+                    </button>
+                </div>
+                <input type="file" id="importCSV" accept=".csv" class="hidden">
+                <div class="text-[10px] text-center text-slate-500 font-medium">Export Filename: <strong id="fileHint" class="text-blue-700">Company_Year</strong></div>
+            </div>
+
+            <!-- Scrollable Input Form -->
+            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
+                <div class="p-4 border-b border-slate-100 bg-white">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Merge Variables</h3>
+                </div>
+                
+                <div class="p-4 overflow-y-auto custom-scrollbar space-y-6 bg-white">
+                    
+                    <!-- Basic Info -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Basic Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Company Name</label>
+                                <input id="companyName" placeholder="e.g., XYZ Private Limited">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Financial Year End</label>
+                                <input id="fyEnd" type="date">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Annual Report No.</label>
+                                <input id="annualNo" placeholder="e.g., 4">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Business Activity (Short)</label>
+                                <input id="bizActivity" placeholder="e.g., providing software development services">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financial Results -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center border-b border-blue-100 pb-1">
+                            <h4 class="text-xs font-bold text-blue-600 uppercase">Financial Results</h4>
+                            <select id="unit" class="w-auto py-1 px-2 text-xs h-auto">
+                                <option value="hundred">Hundred</option>
+                                <option value="thousand">Thousand</option>
+                                <option value="lakh">Lakh</option>
+                                <option value="million">Million</option>
+                                <option value="crore">Crore</option>
+                            </select>
+                        </div>
+                        
+                        <div class="overflow-x-auto rounded-lg border border-slate-200">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-2 font-bold text-slate-600">Particulars</th>
+                                        <th class="p-2 font-bold text-slate-600 w-16">Op.</th>
+                                        <th class="p-2 font-bold text-slate-600 text-center">Current</th>
+                                        <th class="p-2 font-bold text-slate-600 text-center">Previous</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr><td class="p-2 font-medium">Turnover</td><td class="p-1"></td><td class="p-1"><input id="turnCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="turnPrev" type="number" step="0.01" class="text-right h-7 px-1"></td></tr>
+                                    <tr><td class="p-2 font-medium">Profit before Tax</td><td class="p-1"></td><td class="p-1"><input id="pbtCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="pbtPrev" type="number" step="0.01" class="text-right h-7 px-1"></td></tr>
+                                    <tr>
+                                        <td class="p-2 font-medium text-red-600">Tax for Current Yr</td>
+                                        <td class="p-1"><select id="opTaxCurr" class="h-7 px-1 py-0 text-[10px]"><option value="Less" selected>Less</option><option value="Add">Add</option></select></td>
+                                        <td class="p-1"><input id="taxCurrCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="taxCurrPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-medium text-red-600">Tax for Earlier Yrs</td>
+                                        <td class="p-1"><select id="opTaxEarl" class="h-7 px-1 py-0 text-[10px]"><option value="Less" selected>Less</option><option value="Add">Add</option></select></td>
+                                        <td class="p-1"><input id="taxEarlCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="taxEarlPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-medium text-red-600">Deferred Tax</td>
+                                        <td class="p-1"><select id="opDefTax" class="h-7 px-1 py-0 text-[10px]"><option value="Less" selected>Less</option><option value="Add">Add</option></select></td>
+                                        <td class="p-1"><input id="defTaxCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="defTaxPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
+                                    </tr>
+                                    <tr class="bg-blue-50/50"><td class="p-2 font-bold text-blue-800" colspan="2">Profit for the Year</td><td class="p-2 text-right font-bold text-blue-800" id="profitCurr">0.00</td><td class="p-2 text-right font-bold text-blue-800" id="profitPrev">0.00</td></tr>
+                                    <tr>
+                                        <td class="p-2 font-medium">Adj. earlier years</td>
+                                        <td class="p-1"><select id="opAdj" class="h-7 px-1 py-0 text-[10px]"><option value="Add" selected>Add</option><option value="Less">Less</option></select></td>
+                                        <td class="p-1"><input id="adjCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="adjPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2 font-medium">Bal. brought fwd</td>
+                                        <td class="p-1"><select id="opBrought" class="h-7 px-1 py-0 text-[10px]"><option value="Add" selected>Add</option><option value="Less">Less</option></select></td>
+                                        <td class="p-1"><input id="broughtCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="broughtPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
+                                    </tr>
+                                    <tr class="bg-slate-100"><td class="p-2 font-bold text-slate-800" colspan="2">Closing Balance</td><td class="p-2 text-right font-bold text-slate-900" id="closingCurr">0.00</td><td class="p-2 text-right font-bold text-slate-900" id="closingPrev">0.00</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Auditor Details -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Auditor Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Auditor Firm Name</label>
+                                <input id="auditorName" placeholder="M/s. ABC & Co.">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">FRN Number</label>
+                                <input id="frn" placeholder="e.g., 012345W">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">AGM Number</label>
+                                <input id="agmNo" placeholder="e.g., 1">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">AGM Date</label>
+                                <input id="agmDate" type="date">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Auditor Tenure (yrs)</label>
+                                <input id="audTenure" type="number" min="1" placeholder="e.g., 5">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Letterhead Details -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center border-b border-blue-100 pb-1">
+                            <h4 class="text-xs font-bold text-blue-600 uppercase">Letterhead (Optional)</h4>
+                            <select id="showLH" class="w-auto py-1 px-2 text-xs h-auto bg-blue-50 text-blue-700 border-blue-200">
+                                <option value="no">Hide</option>
+                                <option value="yes">Show</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Registered Address</label>
+                                <input id="addr" placeholder="Line 1, City, State, PIN">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">CIN</label>
+                                <input id="cin" placeholder="e.g., U12345WB2013PLC000000">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Telephone</label>
+                                <input id="tel" placeholder="e.g., +91-33-1234">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                                <input id="email" placeholder="info@company.com">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Website</label>
+                                <input id="web" placeholder="www.company.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Board Meetings -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Board Meetings</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">No. of Meetings</label>
+                                <input id="bmCount" type="number" min="0" value="0">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 mb-1">Rows Active</label>
+                                <input id="bmRowsActive" disabled class="bg-slate-100 text-center font-bold">
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-slate-500 leading-tight">Fill rows below. % attendance = (Attended ÷ Total) × 100.</p>
+                        <div id="bmRows" class="space-y-2"></div>
+                    </div>
+
+                    <!-- Directorship Changes -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Directorship & Disclosures</h4>
+                        <div class="grid grid-cols-1 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Change in Directorship?</label>
+                                <select id="chChange">
+                                    <option value="no">No change</option>
+                                    <option value="yes">Changes occurred</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">If Changes – enter description</label>
+                                <textarea id="chText" rows="2" placeholder="e.g., Mr. X appointed w.e.f. 01/08/2024..." disabled></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Related Party Note No.</label>
+                                <input id="relatedPartyNote" placeholder="e.g., 25">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signature Block -->
+                    <div class="space-y-3 pb-4">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Signatory Details</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Signing Date</label>
+                                <input id="signDate" type="date">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Place</label>
+                                <input id="place" placeholder="e.g., Kolkata">
+                            </div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 1 – Name</label><input id="d1"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 1 – DIN</label><input id="d1din"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 2 – Name</label><input id="d2"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 2 – DIN</label><input id="d2din"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Preview & Output -->
+        <div class="w-full lg:w-[60%] xl:w-[65%] flex flex-col min-h-0 print-full-width">
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-4 sm:p-8 custom-scrollbar shadow-inner print-full-width">
+                
+                <!-- The A4 Document -->
+                <div id="docWrap" class="a4-paper doc">
+                    <div id="letterhead" class="letterhead hidden">
+                        <div class="lh-title" id="lhName">—</div>
+                        <div class="lh-line" id="lhAddr"></div>
+                        <div class="lh-line" id="lhLine2"></div>
+                    </div>
+
+                    <div id="report">
+                        <h2><strong>BOARD REPORT</strong></h2>
+                        <p>Dear Members,</p>
+                        <p>Your Directors have pleasure in presenting this <span data-k="annualNo">_______</span> Annual report on the affairs of the Company together with the Audited Statement of Accounts for the year ended on <span data-k="fyEndLong">__________</span>.</p>
+
+                        <h3>1. FINANCIAL RESULTS:</h3>
+                        <p>The Company’s financial performance, for the year ended <span data-k="fyEndLongShort">March 31, 2025</span>:</p>
+                        <p class="muted">(amount in <span data-k="unit">hundred</span>)</p>
+                        <table id="financialTable">
+                        <thead>
+                            <tr>
+                            <th>PARTICULARS</th>
+                            <th class="right">YEAR ENDED<br><span data-k="fyEndShort">31.03.2025</span></th>
+                            <th class="right">YEAR ENDED<br><span data-k="prevFyEndShort">31.03.2024</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Turnover</td><td data-k="turnCurr" class="right">-</td><td data-k="turnPrev" class="right">-</td></tr>
+                            <tr><td>Profit before Taxation</td><td data-k="pbtCurr" class="right">-</td><td data-k="pbtPrev" class="right">-</td></tr>
+                            <tr data-op="opTaxCurr" data-base="Income Tax for Current Year"><td class="op-particular">Less: Income Tax for Current Year</td><td data-k="taxCurrCurr" class="right">-</td><td data-k="taxCurrPrev" class="right">-</td></tr>
+                            <tr data-op="opTaxEarl" data-base="Income Tax for Earlier Years"><td class="op-particular">Less: Income Tax for Earlier Years</td><td data-k="taxEarlCurr" class="right">-</td><td data-k="taxEarlPrev" class="right">-</td></tr>
+                            <tr data-op="opDefTax" data-base="Deferred Tax"><td class="op-particular">Less: Deferred Tax</td><td data-k="defTaxCurr" class="right">-</td><td data-k="defTaxPrev" class="right">-</td></tr>
+                            <tr><td>Profit for the Year</td><td data-k="profitCurr" class="right">-</td><td data-k="profitPrev" class="right">-</td></tr>
+                            <tr data-op="opAdj" data-base="Adjustment relating to Income tax for earlier years"><td class="op-particular">Add: Adjustment relating to Income tax for earlier years</td><td data-k="adjCurr" class="right">-</td><td data-k="adjPrev" class="right">-</td></tr>
+                            <tr data-op="opBrought" data-base="Balance brought forward"><td class="op-particular">Add: Balance brought forward</td><td data-k="broughtCurr" class="right">-</td><td data-k="broughtPrev" class="right">-</td></tr>
+                            <tr><td><strong>Closing Balance</strong></td><td data-k="closingCurr" class="right"><strong>-</strong></td><td data-k="closingPrev" class="right"><strong>-</strong></td></tr>
+                        </tbody>
+                        </table>
+                        <p>&nbsp;</p>
+
+                        <h3>2. STATE OF AFFAIRS:</h3>
+                        <p>a) The Company is engaged in the business of providing <span data-k="bizActivity">_______________________</span>.</p>
+                        <p>b) There has been no change in the business of the Company during the financial year ended <span data-k="fyEndLongShort">March 31, 2025</span>.</p>
+
+                        <h3>3. WEB LINK OF ANNUAL RETURN, IF ANY:</h3>
+                        <p>The Company doesn’t have a website. Therefore, there is no need of publication of Annual Return.</p>
+
+                        <h3>4. MEETING OF THE BOARD OF DIRECTORS:</h3>
+                        <p><span data-k="bmCountText">_______</span> Board Meetings were held during the Financial Year ended <span data-k="fyEndLongShort">March 31, 2025</span> in compliance with Section 173. Details are given as follows:</p>
+                        <table id="bmTable">
+                        <thead>
+                            <tr>
+                            <th class="center">Date of meeting (DD/MM/YYYY)</th>
+                            <th class="center">Total directors as on date</th>
+                            <th class="center">Directors attended</th>
+                            <th class="center">% of attendance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- rows injected -->
+                        </tbody>
+                        </table>
+                        <p>&nbsp;</p>
+
+                        <h3>5. DETAILS IN RESPECT OF FRAUD</h3>
+                        <p>During the year under review, the Statutory Auditor in their report have not reported any instances of frauds committed in the Company by its Officers or Employees under section 143(12) of the Companies Act, 2013.</p>
+
+                        <h3>6. BOARD’S COMMENT ON THE AUDITORS’ REPORT:</h3>
+                        <p>The Auditors have not made any qualifications, reservations, adverse remarks, or disclaimers in their report on the financial statements for the financial year ended <span data-k="fyEndLongShort">31 March 2025</span>. Therefore, no further explanation is required in this regard.</p>
+
+                        <h3>7. MATERIAL CHANGES AND COMMITMENTS:</h3>
+                        <p>There have been no material changes or commitments occurred between the end of the financial year to which the financial statements relate and the date of this report that affect the financial position of the company.</p>
+
+                        <h3>8. CHANGE IN DIRECTORSHIP:</h3>
+                        <p id="changePara">There has been <em>no change</em> in the constitution of the Board during the financial year. The structure of the Board remains the same.</p>
+
+                        <h3>9. DETAILS OF SIGNIFICANT AND MATERIAL ORDERS PASSED BY THE REGULATORS, COURTS AND TRIBUNALS:</h3>
+                        <p>No significant and material order has been passed by the regulators, courts, tribunals impacting the going concern status and Company’s operations in future.</p>
+
+                        <h3>10. CONTRACTS AND ARRANGEMENTS WITH RELATED PARTIES</h3>
+                        <p>All related party transactions that were entered into during the financial year ended <span data-k="fyEndLongShort">March 31, 2025</span>, were on an arm’s length basis and were in the ordinary course of business. Therefore, the provisions of Section 188 of the Companies Act, 2013 were not attracted.</p>
+                        <p>However, there are no materially significant related party transactions during the financial year made by the Company, thus, disclosure in Form AOC-2 is not required.</p>
+                        <p>However, the disclosure of transactions with related parties for the financial year is given in Note <span data-k="relatedPartyNote">________</span> to the Balance Sheet.</p>
+
+                        <h3>11. COMPLIANCE WITH SECRETARIAL STANDARD</h3>
+                        <p>The Company has complied with the applicable Secretarial Standards (as amended from time to time) on meetings of the Board of Directors and Meeting of Shareholders (EGM/AGM) i.e. SS-1 and SS-2 issued by The Institute of Company Secretaries of India and approved by Central Government under section 118(10) of the Companies Act, 2013.</p>
+
+                        <h3>12. PARTICULARS OF LOANS AND INVESTMENT</h3>
+                        <p>The Company has not made any investments, given guarantees, and provided securities during the financial year under review. Therefore, there is no need to do any compliance under Section 186 of the Companies Act, 2013.</p>
+
+                        <h3>13. AUDITOR:</h3>
+                        <p>As per the provisions of Sections 139 and 141 of the Companies Act, 2013 and rules made thereunder (the "Act"), the Company at its <span data-k="agmNo">______</span> Annual General Meeting (AGM) held on <span data-k="agmDate">___________</span> approved the appointment of <span data-k="auditorName">M/s. _______________________</span>, Chartered Accountants (FRN No. <span data-k="frn">__________</span>) as Statutory Auditor for a period of <span data-k="audTenure">________</span> years commencing from the conclusion of <span data-k="agmNo">______</span> AGM till the conclusion of the <span data-k="agmNoPlus">______</span> AGM to be held in the year <span data-k="agmEndYear">_______</span>.</p>
+
+                        <h3>14. DIRECTORS’ RESPONSIBILITY STATEMENT:</h3>
+                        <p>The Directors would like to inform the Members that the Audited Accounts for the financial year ended <span data-k="fyEndLongShort">March 31, 2025</span>, are in full conformity with the requirements of the Companies Act, 2013. The Financial Accounts are audited by the Statutory Auditors, <span data-k="auditorName">M/s. ________</span>, Chartered Accountants (FRN No. <span data-k="frn">_______</span>). The Directors further confirm that:</p>
+                        <ol type="a">
+                        <li>In the preparation of the annual accounts for the financial year ended <span data-k="fyEndLongShort">March 31, 2025</span>, the applicable accounting standards, read with the requirements set out under Schedule III to the Act, have been followed, and there are no material departures from the same.</li>
+                        <li>The Directors have selected such accounting policies, applied them consistently, and made judgements and estimates that are reasonable and prudent so as to give a true and fair view of the state of affairs of the company for the financial year ended <span data-k="fyEndLongShort">March 31, 2025</span>.</li>
+                        <li>The Directors have taken proper and sufficient care for the maintenance of adequate accounting records in accordance with the provisions of the Act for safeguarding the assets of the Company and preventing and detecting fraud and other irregularities.</li>
+                        <li>The Directors have prepared the annual accounts on a 'going concern' basis.</li>
+                        <li>The Company being unlisted, sub-clause (e) of Section 134(3) of the Companies Act, 2013, pertaining to laying down internal financial controls, is not applicable to the Company.</li>
+                        <li>The Directors had devised proper systems to ensure compliance with the provisions of all applicable laws and that such systems were adequate and operating effectively.</li>
+                        </ol>
+
+                        <h3>15. DEPOSITS:</h3>
+                        <p>The Company has not accepted any deposits under Section 73 of the Companies Act, 2013 during the financial year.</p>
+
+                        <h3>16. PREVENTION OF SEXUAL HARASSMENT AT WORKPLACE [“POSH”]:</h3>
+                        <p>The Company has adopted a policy for prevention of sexual harassment at the workplace, in line with the requirements of the Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013 (the “POSH Act”). An Internal Complaints Committee (“ICC”) has been duly constituted as per the provisions of the POSH Act to redress complaints regarding sexual harassment at the workplace.</p>
+                        <p>During the financial year under review, the Company has complied with all the provisions of the POSH Act and the rules framed thereunder. No complaints were received and/or pending as at the end of the financial year.</p>
+                        <p>The Company is committed to providing a safe and conducive work environment for all its employees.</p>
+
+                        <p><strong>ACKNOWLEDGMENT</strong></p>
+                        <p>Your directors place on records their appreciation of the contributions made by employees and consultants at all levels, who, with their competence, diligence, solidarity, co-operation, and support, have enabled the company to achieve the desired results.</p>
+                        <p>The board of directors gratefully acknowledges the assistance and cooperation received from the central and state government departments, shareholders, and stakeholders.</p>
+
+                        <p class="right mt-6">For and on behalf of the Board of Directors</p>
+                        <p>Date: <span data-k="signDate">___________</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Place: <span data-k="place">___________</span></p>
+
+                        <table style="margin-top:16px;border:0;width:100%">
+                        <tr>
+                            <td style="border:0;width:50%;vertical-align:top;padding:20px 0;">
+                            <br><br><br>
+                            <div class="center">Director</div>
+                            <div class="center"><u><span data-k="d1">_________</span></u></div>
+                            <div class="center">DIN No. <span data-k="d1din">________</span></div>
+                            </td>
+                            <td style="border:0;width:50%;vertical-align:top;padding:20px 0;">
+                            <br><br><br>
+                            <div class="center">Director</div>
+                            <div class="center"><u><span data-k="d2">_________</span></u></div>
+                            <div class="center">DIN No. <span data-k="d2din">________</span></div>
+                            </td>
+                        </tr>
+                        </table>
+
+                    </div>
+
+                    <div class="mt-8 border-t border-slate-300 border-dashed pt-4 text-slate-500 text-xs text-center hide-on-print">
+                        Template aligned to your uploaded prompt. Generated HTML exports to Word (.doc) and PDF via print. Replace dashes with actual figures as required.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <script>
+        const el = id => document.getElementById(id);
+
+        function dateToDDMMYYYY(dt){
+            if(!dt || isNaN(dt)) return '';
+            const d = String(dt.getDate()).padStart(2,'0');
+            const m = String(dt.getMonth()+1).padStart(2,'0');
+            const y = dt.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
+        function fmtLong(dt){
+            return dt ? dt.toLocaleDateString('en-IN',{day:'numeric', month:'long', year:'numeric'}) : '__________';
+        }
+        function fmtLongShort(dt){
+            if(!dt) return '__________';
+            const day = dt.getDate();
+            const month = dt.toLocaleString('en-IN',{month:'long'});
+            const year = dt.getFullYear();
+            return `${month} ${day}, ${year}`;
+        }
+        function fmtDots(dt){
+            if(!dt) return '____.__.____';
+            const dd = String(dt.getDate()).padStart(2,'0');
+            const mm = String(dt.getMonth()+1).padStart(2,'0');
+            const yy = dt.getFullYear();
+            return `${dd}.${mm}.${yy}`;
+        }
+        function oneYearBack(dt){
+            if(!dt) return null;
+            return new Date(dt.getFullYear()-1, dt.getMonth(), dt.getDate());
+        }
+
+        function toOrdinal(n) {
+            if (!n || isNaN(n)) return '';
+            const s = n.toString();
+            const lastDigit = parseInt(s.slice(-1));
+            const lastTwo = parseInt(s.slice(-2));
+            let suf = 'th';
+            if (lastTwo !== 11 && lastTwo !== 12 && lastTwo !== 13) {
+                if (lastDigit === 1) suf = 'st';
+                else if (lastDigit === 2) suf = 'nd';
+                else if (lastDigit === 3) suf = 'rd';
+            }
+            return `${n}<sup>${suf}</sup>`;
+        }
+
+        function toProperCase(str){
+            return (str||'').toLowerCase().replace(/\b\w/g, c=>c.toUpperCase());
+        }
+
+        function formatIndian(numStr) {
+            if (!numStr || numStr === '-') return '-';
+            let num = parseFloat(numStr);
+            if (isNaN(num)) return '-';
+            const absNum = Math.abs(num);
+            const formatted = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(absNum);
+            if (num < 0) {
+                return `(${formatted})`;
+            } else {
+                return formatted;
+            }
+        }
+
+        const financialKeys = [
+            'turnCurr', 'turnPrev', 'pbtCurr', 'pbtPrev',
+            'taxCurrCurr', 'taxCurrPrev', 'taxEarlCurr', 'taxEarlPrev', 'defTaxCurr', 'defTaxPrev',
+            'profitCurr', 'profitPrev', 'adjCurr', 'adjPrev', 'broughtCurr', 'broughtPrev',
+            'closingCurr', 'closingPrev'
+        ];
+
+        function getSign(opId, def) {
+            const opEl = document.getElementById(opId);
+            if (!opEl) return def > 0 ? 1 : -1;
+            return opEl.value === 'Add' ? 1 : -1;
+        }
+
+        function calcFinancial() {
+            // Current
+            const pbtC = parseFloat(el('pbtCurr')?.value || 0);
+            const taxCC = parseFloat(el('taxCurrCurr')?.value || 0);
+            const taxEC = parseFloat(el('taxEarlCurr')?.value || 0);
+            const defC = parseFloat(el('defTaxCurr')?.value || 0);
+            const signTaxCurr = getSign('opTaxCurr', -1);
+            const signTaxEarl = getSign('opTaxEarl', -1);
+            const signDefTax = getSign('opDefTax', -1);
+            const profitC = pbtC + signTaxCurr * taxCC + signTaxEarl * taxEC + signDefTax * defC;
+            el('profitCurr').textContent = formatIndian(profitC);
+            const adjC = parseFloat(el('adjCurr')?.value || 0);
+            const broughtC = parseFloat(el('broughtCurr')?.value || 0);
+            const signAdj = getSign('opAdj', 1);
+            const signBrought = getSign('opBrought', 1);
+            const closingC = profitC + signAdj * adjC + signBrought * broughtC;
+            el('closingCurr').textContent = formatIndian(closingC);
+
+            // Previous
+            const pbtP = parseFloat(el('pbtPrev')?.value || 0);
+            const taxCP = parseFloat(el('taxCurrPrev')?.value || 0);
+            const taxEP = parseFloat(el('taxEarlPrev')?.value || 0);
+            const defP = parseFloat(el('defTaxPrev')?.value || 0);
+            const profitP = pbtP + signTaxCurr * taxCP + signTaxEarl * taxEP + signDefTax * defP;
+            el('profitPrev').textContent = formatIndian(profitP);
+            const adjP = parseFloat(el('adjPrev')?.value || 0);
+            const broughtP = parseFloat(el('broughtPrev')?.value || 0);
+            const closingP = profitP + signAdj * adjP + signBrought * broughtP;
+            el('closingPrev').textContent = formatIndian(closingP);
+        }
+
+        // Financial calc listeners
+        ['pbtCurr', 'taxCurrCurr', 'taxEarlCurr', 'defTaxCurr', 'adjCurr', 'broughtCurr',
+         'pbtPrev', 'taxCurrPrev', 'taxEarlPrev', 'defTaxPrev', 'adjPrev', 'broughtPrev',
+         'opTaxCurr', 'opTaxEarl', 'opDefTax', 'opAdj', 'opBrought'].forEach(id => {
+            const elem = el(id);
+            if (elem) {
+                if (elem.tagName === 'SELECT') {
+                    elem.addEventListener('change', calcFinancial);
+                } else {
+                    elem.addEventListener('input', calcFinancial);
+                }
+            }
+        });
+        calcFinancial(); // Initial
+
+        // Board meetings UI rows
+        function renderBmRows(){
+            const n = Math.max(0, parseInt(el('bmCount').value||'0',10));
+            const cont = el('bmRows');
+            cont.innerHTML = '';
+            for(let i=0;i<n;i++){
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-200';
+                row.style.marginBottom = '8px';
+                row.innerHTML = `
+                    <div><label class="block text-[10px] text-slate-500 mb-1">Date</label><input data-bm="date" type="date" class="h-7 px-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-500 mb-1">Total Directors</label><input data-bm="total" type="number" min="1" class="h-7 px-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-500 mb-1">Attended</label><input data-bm="att" type="number" min="0" class="h-7 px-1 text-xs"></div>
+                `;
+                cont.appendChild(row);
+            }
+            el('bmRowsActive').value = n;
+        }
+        el('bmCount').addEventListener('input', renderBmRows);
+        renderBmRows();
+
+        // Directorship change disable
+        el('chChange')?.addEventListener('change', e => {
+            const disabled = e.target.value === 'no';
+            const field = el('chText');
+            field.disabled = disabled;
+            if (disabled) field.value = '';
+        });
+
+        function updateLetterhead(show){
+            const visible = show==='yes';
+            el('letterhead').classList.toggle('hidden', !visible);
+            if(!visible) return;
+            el('lhName').textContent = toProperCase(el('companyName').value||'');
+            const line1 = el('addr').value ? toProperCase(el('addr').value) : '';
+            const line2 = [el('cin').value, el('tel').value, el('email').value, el('web').value].filter(Boolean).join(' | ');
+            el('lhAddr').textContent = line1;
+            el('lhLine2').textContent = line2;
+        }
+        el('showLH')?.addEventListener('change', e=>updateLetterhead(e.target.value));
+
+        function merge(){
+            // compute dates
+            const fyStr = el('fyEnd').value;
+            const fy = fyStr ? new Date(fyStr) : null;
+            const prev = oneYearBack(fy);
+            const agmStr = el('agmDate').value;
+            const agmD = agmStr ? new Date(agmStr) : null;
+            const signStr = el('signDate').value;
+            const signD = signStr ? new Date(signStr) : null;
+
+            // Ordinals
+            const annNum = parseInt((el('annualNo').value || '').replace(/[^0-9]/g, ''), 10) || 0;
+            const annualOrdinal = toOrdinal(annNum);
+            const agmNum = parseInt((el('agmNo').value || '').replace(/[^0-9]/g, ''), 10) || 0;
+            const tenure = parseInt(el('audTenure').value || '0', 10) || 0;
+            const agmPlusNum = agmNum + tenure;
+            const agmOrdinal = toOrdinal(agmNum);
+            const agmPlusOrdinal = toOrdinal(agmPlusNum);
+            const agmEndYear = agmD ? (new Date(agmD.getFullYear() + tenure, agmD.getMonth(), agmD.getDate())).getFullYear() : '';
+
+            // Financial calcs for merge (raw numbers)
+            const pbtC = parseFloat(el('pbtCurr')?.value || 0);
+            const taxCC = parseFloat(el('taxCurrCurr')?.value || 0);
+            const taxEC = parseFloat(el('taxEarlCurr')?.value || 0);
+            const defC = parseFloat(el('defTaxCurr')?.value || 0);
+            const signTaxCurr = getSign('opTaxCurr', -1);
+            const signTaxEarl = getSign('opTaxEarl', -1);
+            const signDefTax = getSign('opDefTax', -1);
+            const profitC = pbtC + signTaxCurr * taxCC + signTaxEarl * taxEC + signDefTax * defC;
+            const adjC = parseFloat(el('adjCurr')?.value || 0);
+            const broughtC = parseFloat(el('broughtCurr')?.value || 0);
+            const signAdj = getSign('opAdj', 1);
+            const signBrought = getSign('opBrought', 1);
+            const closingC = profitC + signAdj * adjC + signBrought * broughtC;
+
+            const pbtP = parseFloat(el('pbtPrev')?.value || 0);
+            const taxCP = parseFloat(el('taxCurrPrev')?.value || 0);
+            const taxEP = parseFloat(el('taxEarlPrev')?.value || 0);
+            const defP = parseFloat(el('defTaxPrev')?.value || 0);
+            const profitP = pbtP + signTaxCurr * taxCP + signTaxEarl * taxEP + signDefTax * defP;
+            const adjP = parseFloat(el('adjPrev')?.value || 0);
+            const broughtP = parseFloat(el('broughtPrev')?.value || 0);
+            const closingP = profitP + signAdj * adjP + signBrought * broughtP;
+
+            // map replacements (raw for financial)
+            const map = new Map([
+                ['companyName', el('companyName').value],
+                ['fyEndLong', fmtLong(fy)],
+                ['fyEndLongShort', fmtLongShort(fy)],
+                ['fyEndShort', fmtDots(fy)],
+                ['prevFyEndShort', fmtDots(prev)],
+                ['bizActivity', toProperCase(el('bizActivity').value)],
+                ['auditorName', el('auditorName').value],
+                ['frn', el('frn').value],
+                ['agmDate', dateToDDMMYYYY(agmD)],
+                ['audTenure', el('audTenure').value],
+                ['signDate', dateToDDMMYYYY(signD)],
+                ['place', toProperCase(el('place').value)],
+                ['d1', toProperCase(el('d1').value)],
+                ['d1din', el('d1din').value],
+                ['d2', toProperCase(el('d2').value)],
+                ['d2din', el('d2din').value],
+                ['turnCurr', el('turnCurr')?.value || '-'],
+                ['turnPrev', el('turnPrev')?.value || '-'],
+                ['pbtCurr', pbtC],
+                ['pbtPrev', pbtP],
+                ['taxCurrCurr', taxCC],
+                ['taxCurrPrev', taxCP],
+                ['taxEarlCurr', taxEC],
+                ['taxEarlPrev', taxEP],
+                ['defTaxCurr', defC],
+                ['defTaxPrev', defP],
+                ['profitCurr', profitC],
+                ['profitPrev', profitP],
+                ['adjCurr', adjC],
+                ['adjPrev', adjP],
+                ['broughtCurr', broughtC],
+                ['broughtPrev', broughtP],
+                ['closingCurr', closingC],
+                ['closingPrev', closingP],
+                ['relatedPartyNote', el('relatedPartyNote').value || '________'],
+                ['unit', el('unit').value],
+            ]);
+
+            document.querySelectorAll('[data-k]:not([data-k="annualNo"]):not([data-k="agmNo"]):not([data-k="agmNoPlus"])').forEach(span=>{
+                const k = span.getAttribute('data-k');
+                const val = map.get(k);
+                if (financialKeys.includes(k)) {
+                    span.textContent = formatIndian(val);
+                } else {
+                    span.textContent = val || '__________';
+                }
+            });
+
+            // Special for ordinals (innerHTML)
+            document.querySelector('[data-k="annualNo"]').innerHTML = annualOrdinal || '__________';
+            document.querySelectorAll('[data-k="agmNo"]').forEach(n => n.innerHTML = agmOrdinal || '______');
+            document.querySelector('[data-k="agmNoPlus"]').innerHTML = agmPlusOrdinal || '______';
+            document.querySelector('[data-k="agmEndYear"]').textContent = agmEndYear || '_______';
+
+            // Operations for financial table
+            document.querySelectorAll('#financialTable tbody tr[data-op]').forEach(tr => {
+                const opId = tr.getAttribute('data-op');
+                const base = tr.getAttribute('data-base');
+                const opEl = document.getElementById(opId);
+                const op = opEl ? opEl.value : (opId.includes('Tax') || opId.includes('Def') ? 'Less' : 'Add');
+                tr.querySelector('.op-particular').textContent = `${op}: ${base}`;
+            });
+
+            // change in directorship paragraph
+            const ch = el('chChange').value;
+            const chT = (el('chText').value||'').trim();
+            const para = el('changePara');
+            if(ch==='yes' && chT){
+                para.innerHTML = `There have been changes in the constitution of the Board during the financial year. ${chT}`;
+            } else {
+                para.innerHTML = 'There has been <em>no change</em> in the constitution of the Board during the financial year. The structure of the Board remains the same.';
+            }
+
+            // board meetings table
+            const tbody = document.querySelector('#bmTable tbody');
+            tbody.innerHTML = '';
+            const rows = el('bmRows').querySelectorAll('[data-bm="date"]');
+            let count=0;
+            rows.forEach((dateInput, idx)=>{
+                const parent = dateInput.closest('.grid-cols-3');
+                const total = parseInt(parent.querySelector('[data-bm="total"]').value||'0',10);
+                const att   = parseInt(parent.querySelector('[data-bm="att"]').value||'0',10);
+                const dstr  = dateInput.value ? dateToDDMMYYYY(new Date(dateInput.value)) : '';
+                if(!dstr) return; // skip empty
+                count++;
+                const pct = (total>0)? ((att/total)*100) : 0;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="center">${dstr}</td>
+                    <td class="center">${total||''}</td>
+                    <td class="center">${att||''}</td>
+                    <td class="center">${pct.toFixed(2)}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.querySelector('[data-k="bmCountText"]').textContent = count? `${count} (${count})` : '_______';
+
+            // letterhead
+            updateLetterhead(el('showLH').value);
+
+            // enable exports if we have a company + year
+            const name = (el('companyName').value||'Company').trim();
+            const yr = (fy && fy.getFullYear()) ? fy.getFullYear() : 'Year';
+            const fname = `${name}_${yr}`;
+            document.getElementById('fileHint').textContent = fname;
+            el('btnDownloadWord').disabled = false;
+            el('btnPrintPDF').disabled = false;
+        }
+
+        function exportWord(){
+            const name = document.getElementById('fileHint').textContent || 'Directors_Report';
+            // Create a minimal Word-compatible HTML (.doc) file
+            const preface = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${name}</title>
+            <style>
+                body { font-family: Calibri, Arial; line-height:1.5; margin: 0.5in; padding: 0; }
+                p { text-align: justify; margin-bottom: 12px; }
+                ol { margin-left: 20px; }
+                ol li { text-align: justify; }
+                table { border-collapse: collapse; table-layout: auto; margin-bottom: 12px; }
+                th, td { border: 1px solid #000; padding: 1px; text-align: left; vertical-align: top; }
+                th { background: #f0f0f0; }
+                .center { text-align: center; }
+                .right { text-align: right; }
+                h2, h3 { margin-top: 18px; font-family: Calibri; text-align: left; }
+                sup { font-size: 0.8em; vertical-align: super; }
+                .letterhead { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: white; border-bottom: 2px solid #111; text-align: center; padding-bottom: 12px; margin-bottom: 16px; }
+                body { margin-top: 80px; }
+            </style></head><body>`;
+            const post = '</body></html>';
+            const content = el('letterhead').outerHTML + el('report').innerHTML;
+            const html = preface + content + post;
+            const blob = new Blob([html], {type: 'application/msword'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name + '.doc';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function exportCSV(){
+            // Export current data
+            const bmRows = el('bmRows').children;
+            const bmData = [];
+            for(let i = 0; i < 5; i++) {
+                if (i < bmRows.length) {
+                    const row = bmRows[i]; // The grid container
+                    bmData.push({
+                        date: row?.querySelector('[data-bm="date"]').value || '',
+                        total: row?.querySelector('[data-bm="total"]').value || '',
+                        att: row?.querySelector('[data-bm="att"]').value || ''
+                    });
+                } else {
+                    bmData.push({date: '', total: '', att: ''});
+                }
+            }
+
+            const headers = [
+                'Company Name','Address','CIN','Telephone','Email','Website','Financial Year End (YYYY-MM-DD)','Annual Report No.','Business Activity',
+                'Auditor Firm','FRN','AGM No.','AGM Date (YYYY-MM-DD)','Auditor Tenure (years)',
+                'Signing Date (YYYY-MM-DD)','Place','Director1 Name','Director1 DIN','Director2 Name','Director2 DIN','Related Party Note',
+                'Turnover Current','Turnover Previous','PBT Current','PBT Previous','Tax Current Year Current','Tax Current Year Previous',
+                'Tax Earlier Years Current','Tax Earlier Years Previous','Deferred Tax Current','Deferred Tax Previous',
+                'Adjustment Current','Adjustment Previous','Brought Forward Current','Brought Forward Previous',
+                'BoardMeetingsCount',
+                'BM1 Date','BM1 Total Directors','BM1 Attended',
+                'BM2 Date','BM2 Total Directors','BM2 Attended',
+                'BM3 Date','BM3 Total Directors','BM3 Attended',
+                'BM4 Date','BM4 Total Directors','BM4 Attended',
+                'BM5 Date','BM5 Total Directors','BM5 Attended'
+            ];
+
+            const values = [
+                el('companyName').value || '',
+                el('addr').value || '',
+                el('cin').value || '',
+                el('tel').value || '',
+                el('email').value || '',
+                el('web').value || '',
+                el('fyEnd').value || '',
+                el('annualNo').value || '',
+                el('bizActivity').value || '',
+                el('auditorName').value || '',
+                el('frn').value || '',
+                el('agmNo').value || '',
+                el('agmDate').value || '',
+                el('audTenure').value || '',
+                el('signDate').value || '',
+                el('place').value || '',
+                el('d1').value || '',
+                el('d1din').value || '',
+                el('d2').value || '',
+                el('d2din').value || '',
+                el('relatedPartyNote').value || '',
+                el('turnCurr')?.value || '',
+                el('turnPrev')?.value || '',
+                el('pbtCurr')?.value || '',
+                el('pbtPrev')?.value || '',
+                el('taxCurrCurr')?.value || '',
+                el('taxCurrPrev')?.value || '',
+                el('taxEarlCurr')?.value || '',
+                el('taxEarlPrev')?.value || '',
+                el('defTaxCurr')?.value || '',
+                el('defTaxPrev')?.value || '',
+                el('adjCurr')?.value || '',
+                el('adjPrev')?.value || '',
+                el('broughtCurr')?.value || '',
+                el('broughtPrev')?.value || '',
+                el('bmCount').value || '',
+                ...bmData.flatMap(bm => [bm.date, bm.total, bm.att])
+            ];
+
+            const rows = [headers, values];
+            const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Directors_Report_Data.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function importCSV() {
+            el('importCSV').click();
+        }
+
+        el('importCSV')?.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const csv = ev.target.result;
+                const lines = csv.split('\n').filter(l => l.trim()).map(l => {
+                    const parts = l.split(',').map(p => p.replace(/"/g, ''));
+                    return parts.length > 1 ? parts : [l];
+                });
+                if (lines.length < 2) return;
+                const header = lines[0];
+                const data = lines[1].map(d => d.replace(/"/g, ''));
+                const obj = {};
+                header.forEach((h, i) => { obj[h.trim()] = data[i] || ''; });
+
+                // Set fields
+                el('companyName').value = obj['Company Name'] || '';
+                el('addr').value = obj['Address'] || '';
+                el('cin').value = obj['CIN'] || '';
+                el('tel').value = obj['Telephone'] || '';
+                el('email').value = obj['Email'] || '';
+                el('web').value = obj['Website'] || '';
+                el('fyEnd').value = obj['Financial Year End (YYYY-MM-DD)'] || '';
+                el('annualNo').value = obj['Annual Report No.'] || '';
+                el('bizActivity').value = obj['Business Activity'] || '';
+                el('auditorName').value = obj['Auditor Firm'] || '';
+                el('frn').value = obj['FRN'] || '';
+                el('agmNo').value = obj['AGM No.'] || '';
+                el('agmDate').value = obj['AGM Date (YYYY-MM-DD)'] || '';
+                el('audTenure').value = obj['Auditor Tenure (years)'] || '';
+                el('signDate').value = obj['Signing Date (YYYY-MM-DD)'] || '';
+                el('place').value = obj['Place'] || '';
+                el('d1').value = obj['Director1 Name'] || '';
+                el('d1din').value = obj['Director1 DIN'] || '';
+                el('d2').value = obj['Director2 Name'] || '';
+                el('d2din').value = obj['Director2 DIN'] || '';
+                el('relatedPartyNote').value = obj['Related Party Note'] || '';
+
+                // Financial
+                el('turnCurr').value = obj['Turnover Current'] || '';
+                el('turnPrev').value = obj['Turnover Previous'] || '';
+                el('pbtCurr').value = obj['PBT Current'] || '';
+                el('pbtPrev').value = obj['PBT Previous'] || '';
+                el('taxCurrCurr').value = obj['Tax Current Year Current'] || '';
+                el('taxCurrPrev').value = obj['Tax Current Year Previous'] || '';
+                el('taxEarlCurr').value = obj['Tax Earlier Years Current'] || '';
+                el('taxEarlPrev').value = obj['Tax Earlier Years Previous'] || '';
+                el('defTaxCurr').value = obj['Deferred Tax Current'] || '';
+                el('defTaxPrev').value = obj['Deferred Tax Previous'] || '';
+                el('adjCurr').value = obj['Adjustment Current'] || '';
+                el('adjPrev').value = obj['Adjustment Previous'] || '';
+                el('broughtCurr').value = obj['Brought Forward Current'] || '';
+                el('broughtPrev').value = obj['Brought Forward Previous'] || '';
+
+                calcFinancial();
+
+                // BM
+                const bmCount = parseInt(obj['BoardMeetingsCount'] || 0);
+                el('bmCount').value = bmCount;
+                renderBmRows();
+                const bmRows = el('bmRows').children;
+                for(let i = 0; i < 5; i++) {
+                    const prefix = `BM${i+1}`;
+                    if (i < bmRows.length) {
+                        const row = bmRows[i];
+                        row.querySelector('[data-bm="date"]').value = obj[`${prefix} Date`] || '';
+                        row.querySelector('[data-bm="total"]').value = obj[`${prefix} Total Directors`] || '';
+                        row.querySelector('[data-bm="att"]').value = obj[`${prefix} Attended`] || '';
+                    }
+                }
+
+                // Directorship
+                const chChangeVal = obj['Change in Directorship?'] || 'no'; // Assume header if added, else manual
+                el('chChange').value = chChangeVal;
+                el('chChange').dispatchEvent(new Event('change'));
+                el('chText').value = obj['If Changes – enter brief description'] || ''; // Assume header
+
+                merge(); // Update preview
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('btnMerge').addEventListener('click', merge);
+        document.getElementById('btnDownloadWord').addEventListener('click', exportWord);
+        document.getElementById('btnPrintPDF').addEventListener('click', ()=>{ window.print(); });
+        document.getElementById('btnExportData').addEventListener('click', exportCSV);
+        document.getElementById('btnImportData').addEventListener('click', importCSV);
+        document.getElementById('btnDownloadCSV').addEventListener('click', () => {
+            const headers = [
+                'Company Name','Address','CIN','Telephone','Email','Website','Financial Year End (YYYY-MM-DD)','Annual Report No.','Business Activity',
+                'Auditor Firm','FRN','AGM No.','AGM Date (YYYY-MM-DD)','Auditor Tenure (years)',
+                'Signing Date (YYYY-MM-DD)','Place','Director1 Name','Director1 DIN','Director2 Name','Director2 DIN','Related Party Note',
+                'Turnover Current','Turnover Previous','PBT Current','PBT Previous','Tax Current Year Current','Tax Current Year Previous',
+                'Tax Earlier Years Current','Tax Earlier Years Previous','Deferred Tax Current','Deferred Tax Previous',
+                'Adjustment Current','Adjustment Previous','Brought Forward Current','Brought Forward Previous',
+                'BoardMeetingsCount',
+                'BM1 Date','BM1 Total Directors','BM1 Attended',
+                'BM2 Date','BM2 Total Directors','BM2 Attended',
+                'BM3 Date','BM3 Total Directors','BM3 Attended',
+                'BM4 Date','BM4 Total Directors','BM4 Attended',
+                'BM5 Date','BM5 Total Directors','BM5 Attended'
+            ];
+            const example = [
+                'XYZ Private Limited','1, Park Street, Kolkata – 700016','U12345WB2013PTC000000','033-12345678','info@xyz.com','www.xyz.com','2025-03-31','4','software development services',
+                'M/s. ABC & Co.','012345W','1','2022-09-30','5','2025-03-31','Kolkata','Rahul Sen','01234567','Anita Das','07654321','25',
+                '100000','90000','50000','40000','10000','8000','2000','1000','3000','2000','5000','4000','20000','15000','30000','25000',
+                '3',
+                '2024-05-15','5','5',
+                '2024-08-20','5','4',
+                '2024-12-10','5','5',
+                '','','',
+                '','',''
+            ];
+            const rows = [headers, example];
+            const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Directors_Report_Template.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+    </script>
+</body>
+</html>

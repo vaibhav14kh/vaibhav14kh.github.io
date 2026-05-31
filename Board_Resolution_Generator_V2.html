@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=BoardResolution';
+                }
+            }
+        })();
+    </script>
+
+    <title>Board Resolution Generator | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- html2pdf for PDF & docx for Word -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Input Styles */
+        input, select, textarea {
+            padding-top: 0.5rem; padding-bottom: 0.5rem; padding-left: 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+            border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
+            background-color: #f8fafc; color: #334155; font-weight: 500; margin-top: 0.25rem;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Document Preview Styles (Strictly preserved for exports) */
+        #resolutionPreview {
+            background: #ffffff; width: 700px; max-width: 100%; padding: 30px 40px 28px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); font-family: "Times New Roman", serif;
+            font-size: 13.5px; line-height: 1.6; color: #000000; page-break-inside: avoid; margin: 0 auto;
+        }
+        #resolutionPreview p { text-align: justify; margin: 0 0 8px 0; }
+        .letterhead { text-align: center; margin-bottom: 8px; }
+        .letterhead .company-name { font-family: "Garamond", "Times New Roman", serif; font-size: 22px; font-weight: 700; text-transform: uppercase; color: #000000; }
+        .letterhead .line { font-size: 11px; color: #000000; }
+        .separator { margin: 8px 0 16px; }
+        .separator .hr-thick { border: 0; border-top: 3px solid #000000; margin: 0 0 2px; }
+        .separator .hr-thin { border: 0; border-top: 1px solid #000000; margin: 0; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-2 { margin-top: 8px; }
+        .mt-4 { margin-top: 16px; }
+        .mt-6 { margin-top: 24px; }
+        .resolution-title { font-weight: bold; text-decoration: underline; margin-top: 10px; margin-bottom: 10px; text-align: center; }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col overflow-hidden">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <div class="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Left Column: Inputs -->
+        <div class="w-full lg:w-[40%] flex flex-col gap-6">
+            
+            <div class="mb-2">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                    <span class="gradient-text">Board Resolution Generator</span>
+                </h1>
+                <p class="text-slate-600 text-xs font-medium">Standardized corporate drafting (Companies Act, 2013).</p>
+            </div>
+
+            <!-- Scrollable Input Form -->
+            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
+                <div class="p-5 border-b border-slate-100 bg-white">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Resolution Settings</h3>
+                </div>
+                
+                <div class="p-5 overflow-y-auto custom-scrollbar space-y-6 bg-white">
+                    
+                    <!-- Resolution Type -->
+                    <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                        <label for="templateSelect" class="block text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Resolution Type</label>
+                        <select id="templateSelect" class="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">-- Select Resolution --</option>
+                            <option value="firstAuditor">1. Appointment of First Auditor</option>
+                            <option value="reappointAuditorAGM">2. Re-Appointment of Auditor at AGM</option>
+                            <option value="casualVacancyAuditor">3. Appointment of Auditor for Casual Vacancy</option>
+                            <option value="callEGM">4. BR for Calling EGM & Approving EGM Notice</option>
+                            <option value="callAGM">5. BR for Calling AGM & Approving AGM Notice</option>
+                            <option value="approveFS">6. BR for Approval of Financial Statements</option>
+                            <option value="transferShares">7. BR for Transfer of Shares</option>
+                            <option value="approveBoardReport">8. BR for Approval of Board Report</option>
+                            <option value="combinedFSBRAGM">9. Combined BR – Board Report, FS & AGM Notice</option>
+                            <option value="directorResignation">10. Director Resignation</option>
+                            <option value="adoptSeal">11. Adoption of Common Seal</option>
+                            <option value="openBankAccount">12. Opening of Bank Account</option>
+                            <option value="rptGeneric">13. Related Party Transaction (General)</option>
+                            <option value="purchaseAssets">14. Purchase of Assets</option>
+                            <option value="sanctionLoan">15. Sanction of Loan</option>
+                            <option value="additionalDirector">16. Appointment of Additional Director</option>
+                            <option value="acceptDIR2MBP1">17. Acceptance of DIR-2 & MBP-1</option>
+                            <option value="borrowing180">18. Borrowing Powers u/s 180</option>
+                            <option value="closeBankAccount">19. Closure of Bank Account</option>
+                            <option value="issueShareCertificates">20. Issue of Share Certificates</option>
+                            <option value="interCorporateLoan">21. Inter-Corporate Loan</option>
+                            <option value="investment186">22. Investment u/s 186</option>
+                            <option value="changeROWithinCity">23. Change of Registered Office (Within City)</option>
+                            <option value="changeROSameROC">24. Change of Registered Office (Same ROC)</option>
+                            <option value="allotShares">25. Allotment of Shares</option>
+                            <option value="rpt188">26. Related Party Transaction u/s 188</option>
+                        </select>
+                    </div>
+
+                    <!-- Letterhead Details -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Letterhead Details</h4>
+                        <div><label class="block text-xs font-bold text-slate-700">Company Name</label><input id="companyName" placeholder="ABC PRIVATE LIMITED"></div>
+                        <div><label class="block text-xs font-bold text-slate-700">CIN</label><input id="cin" placeholder="L12345AB2020PLC012345"></div>
+                        <div><label class="block text-xs font-bold text-slate-700">Registered Office Address</label><textarea id="registeredOffice" placeholder="Full registered office address" rows="2"></textarea></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-bold text-slate-700">Email</label><input id="email" placeholder="info@company.com"></div>
+                            <div><label class="block text-xs font-bold text-slate-700">Phone</label><input id="phone" placeholder="+91-xxxxxxxxxx"></div>
+                        </div>
+                    </div>
+
+                    <!-- Meeting Details -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Meeting Details</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-bold text-slate-700">Meeting Date</label><input id="meetingDate" type="date"></div>
+                            <div><label class="block text-xs font-bold text-slate-700">Board Meeting No.</label><input id="meetingNumber" placeholder="e.g. 1/2025-26"></div>
+                        </div>
+                        <div><label class="block text-xs font-bold text-slate-700">Place of Meeting</label><input id="meetingPlace" placeholder="City / Registered Office"></div>
+                    </div>
+
+                    <!-- Signatory Details -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Signatory Details</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="block text-xs font-bold text-slate-700">Name of Director</label><input id="signatoryName" placeholder="Name"></div>
+                            <div><label class="block text-xs font-bold text-slate-700">DIN</label><input id="signatoryDin" placeholder="DIN"></div>
+                        </div>
+                    </div>
+
+                    <!-- Specific Fields Container -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest border-b pb-1">Resolution-Specific Variables</h4>
+                        <div id="specificFields" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Form Actions (Sticky Bottom) -->
+                <div class="flex gap-3 pt-4 mt-auto bg-white border-t border-slate-100 p-4 flex-shrink-0">
+                    <button class="flex-1 btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md" id="btnPdf">
+                        <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                    </button>
+                    <button class="flex-1 btn-compact bg-slate-800 text-white hover:bg-slate-900 shadow-md" id="btnWord">
+                        <i class="fas fa-file-word mr-2"></i> Export DOC
+                    </button>
+                    <button class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" id="btnClear" title="Clear All">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Preview -->
+        <div class="w-full lg:w-[60%] flex flex-col min-h-0">
+            <div class="glass-card p-4 mb-6 flex justify-between items-center flex-shrink-0 shadow-md">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">
+                    <i class="fas fa-eye mr-2 text-blue-600"></i> Live Document Preview
+                </h2>
+                <span class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">Updates in real-time</span>
+            </div>
+
+            <!-- Preview Container -->
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-8 custom-scrollbar shadow-inner">
+                <div id="resolutionPreview">
+                    <div class="letterhead">
+                        <div class="company-name">[Company Name]</div>
+                        <div class="line">Regd. Office: [Registered Office Address]</div>
+                        <div class="line">CIN: [CIN]</div>
+                        <div class="line">Email: [Email] | Phone: [Phone]</div>
+                    </div>
+                    <div class="separator">
+                        <hr class="hr-thick">
+                        <hr class="hr-thin">
+                    </div>
+                    <p class="text-center"><strong>BOARD RESOLUTION</strong></p>
+                    <p style="text-align:center; font-size:13px; color:#6b7280;">
+                        Select a resolution type and enter details in the left panel to generate a formatted resolution.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <script>
+        function formatDate(dateStr) {
+            if (!dateStr) return "________";
+            const parts = dateStr.split("-");
+            if (parts.length !== 3) return dateStr;
+            return parts[2] + "-" + parts[1] + "-" + parts[0];
+        }
+
+        function getValue(id, fallback = "________") {
+            const el = document.getElementById(id);
+            if (!el || !el.value) return fallback;
+            return el.value.trim();
+        }
+
+        // All 26 templates
+        const templates = {
+            // 1. Appointment of First Auditor
+            firstAuditor: {
+                title: "APPOINTMENT OF FIRST AUDITOR",
+                specificFields: [
+                    { id: "auditorName", label: "Name of Auditor / Firm" },
+                    { id: "auditorAddress", label: "Address of Auditor / Firm" },
+                    { id: "auditorFRN", label: "Firm Registration No. (if any)" },
+                    { id: "auditorRemuneration", label: "Remuneration / Fees" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 139 and other applicable provisions, if any, of the Companies Act, 2013 read with the rules made thereunder, {{auditorName}}, {{auditorAddress}}, (FRN: {{auditorFRN}}), be and is hereby appointed as the First Auditor of the Company to hold office from the date of incorporation till the conclusion of the first Annual General Meeting of the Company, on such remuneration of {{auditorRemuneration}} plus applicable taxes and reimbursement of out-of-pocket expenses as may be mutually agreed between the Board of Directors and the said Auditor.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to file the necessary e-form with the Registrar of Companies and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 2. Re-Appointment of Auditor at AGM
+            reappointAuditorAGM: {
+                title: "RE-APPOINTMENT OF STATUTORY AUDITOR AT AGM",
+                specificFields: [
+                    { id: "auditorNameRe", label: "Name of Auditor / Firm" },
+                    { id: "auditorAddressRe", label: "Address of Auditor / Firm" },
+                    { id: "auditorFRNRe", label: "Firm Registration No." },
+                    { id: "fyPeriodRe", label: "Financial Year (e.g. 2024-25)" },
+                    { id: "remunerationRe", label: "Remuneration / Fees for the year" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Sections 139, 141 and other applicable provisions, if any, of the Companies Act, 2013, and subject to the approval of the members at the ensuing Annual General Meeting of the Company, {{auditorNameRe}}, {{auditorAddressRe}}, (FRN: {{auditorFRNRe}}), be and is hereby recommended for re-appointment as the Statutory Auditor of the Company to hold office for the financial year {{fyPeriodRe}}, at such remuneration of {{remunerationRe}} plus applicable taxes and reimbursement of out-of-pocket expenses as may be determined by the members of the Company in consultation with the Board.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to sign and issue the notice of AGM including the ordinary resolution for re-appointment of the Statutory Auditor and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 3. Appointment of Auditor for Casual Vacancy
+            casualVacancyAuditor: {
+                title: "APPOINTMENT OF AUDITOR IN CASUAL VACANCY",
+                specificFields: [
+                    { id: "resigningAuditor", label: "Name of Resigning Auditor / Firm" },
+                    { id: "newAuditorName", label: "Name of New Auditor / Firm" },
+                    { id: "newAuditorAddress", label: "Address of New Auditor / Firm" },
+                    { id: "newAuditorFRN", label: "Firm Registration No. of New Auditor" },
+                    { id: "vacancyReason", label: "Reason for Casual Vacancy" },
+                    { id: "vacancyEffectiveDate", label: "Effective Date of Casual Vacancy (dd-mm-yyyy or text)" }
+                ],
+                body: `
+RESOLVED THAT the casual vacancy in the office of Statutory Auditor of the Company caused by the resignation of {{resigningAuditor}}, with effect from {{vacancyEffectiveDate}}, due to {{vacancyReason}}, be and is hereby noted.
+
+RESOLVED FURTHER THAT, pursuant to the provisions of Section 139(8) and other applicable provisions, if any, of the Companies Act, 2013, and subject to the approval of the members in General Meeting, {{newAuditorName}}, {{newAuditorAddress}}, (FRN: {{newAuditorFRN}}), be and is hereby appointed as Statutory Auditor of the Company to fill the said casual vacancy and to hold office till the conclusion of the next Annual General Meeting of the Company, on such remuneration as may be fixed by the members in consultation with the Board.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to convene a General Meeting, issue notice and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 4. Calling EGM & Approving EGM Notice
+            callEGM: {
+                title: "CALLING EXTRA-ORDINARY GENERAL MEETING & APPROVAL OF NOTICE",
+                specificFields: [
+                    { id: "egmDate", label: "Date of EGM" },
+                    { id: "egmTime", label: "Time of EGM" },
+                    { id: "egmVenue", label: "Venue of EGM" },
+                    { id: "egmAgendaBrief", label: "Brief Description of Special Business / Agenda" }
+                ],
+                body: `
+RESOLVED THAT an Extra-Ordinary General Meeting of the members of the Company be convened and held on {{egmDate}} at {{egmTime}} at {{egmVenue}} to transact the business as set out in the draft notice placed before the Board.
+
+RESOLVED FURTHER THAT the draft notice of the Extra-Ordinary General Meeting, as placed before the meeting and initialled by the Chairman for the purpose of identification, setting out, inter alia, the following business, be and is hereby approved:
+
+{{egmAgendaBrief}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to issue the said notice to all the members, directors, auditors and other persons entitled to receive notice, and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 5. Calling AGM & Approving AGM Notice
+            callAGM: {
+                title: "CALLING ANNUAL GENERAL MEETING & APPROVAL OF AGM NOTICE",
+                specificFields: [
+                    { id: "agmNo", label: "AGM No. (e.g. 5th AGM)" },
+                    { id: "agmDate", label: "Date of AGM" },
+                    { id: "agmTime", label: "Time of AGM" },
+                    { id: "agmVenue", label: "Venue of AGM" },
+                    { id: "agmAgendaBrief", label: "Brief Description of Ordinary / Special Business" }
+                ],
+                body: `
+RESOLVED THAT the {{agmNo}} of the members of the Company be convened and held on {{agmDate}} at {{agmTime}} at {{agmVenue}} to transact the business as set out in the draft notice placed before the Board.
+
+RESOLVED FURTHER THAT the draft notice of the Annual General Meeting, as placed before the meeting and initialled by the Chairman for the purpose of identification, containing, inter alia, the following business, be and is hereby approved:
+
+{{agmAgendaBrief}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to sign and issue the said notice to all the members, directors, auditors and other persons entitled to receive notice, and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 6. Approval of Financial Statements
+            approveFS: {
+                title: "APPROVAL OF FINANCIAL STATEMENTS",
+                specificFields: [
+                    { id: "fyPeriod", label: "Financial Year (e.g. 1st April 2024 to 31st March 2025)" }
+                ],
+                body: `
+RESOLVED THAT the audited financial statements of the Company for the financial year {{fyPeriod}}, comprising the Balance Sheet, Statement of Profit and Loss, Cash Flow Statement (where applicable), Statement of Changes in Equity (where applicable) and the Notes forming part thereof, together with the Auditor’s Report thereon as placed before the meeting, be and are hereby approved and adopted.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to sign the said financial statements on behalf of the Board and to arrange for filing, circulation and submission of the same with such authorities and stakeholders as may be required under the applicable laws.`
+            },
+
+            // 7. Transfer of Shares
+            transferShares: {
+                title: "TRANSFER OF SHARES",
+                specificFields: [
+                    { id: "transferorName", label: "Name of Transferor" },
+                    { id: "transfereeName", label: "Name of Transferee" },
+                    { id: "noOfSharesTrf", label: "No. of Shares to be Transferred" },
+                    { id: "shareDetails", label: "Share Details (Certificate Nos., Distinctive Nos.)" },
+                    { id: "considerationTrf", label: "Consideration (if required to mention)" }
+                ],
+                body: `
+RESOLVED THAT the transfer of {{noOfSharesTrf}} equity shares of the Company from {{transferorName}} to {{transfereeName}}, as set out below, be and is hereby approved:
+
+{{shareDetails}}
+
+RESOLVED FURTHER THAT, upon registration of the said transfer, the name of {{transfereeName}} be entered in the Register of Members in place of {{transferorName}} in respect of the aforesaid shares, and that the share certificates, duly endorsed, be delivered to the transferee.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to make necessary entries in the Register of Members and other statutory records and to do all such acts, deeds and things as may be required to give effect to this resolution.`
+            },
+
+            // 8. Approval of Board’s Report
+            approveBoardReport: {
+                title: "APPROVAL OF BOARD’S REPORT",
+                specificFields: [
+                    { id: "fyPeriodBR", label: "Financial Year (e.g. 2024-25)" },
+                    { id: "boardReportSignatory", label: "Name & Designation of Signatory of Board’s Report" }
+                ],
+                body: `
+RESOLVED THAT the draft Board’s Report of the Company for the financial year {{fyPeriodBR}}, as placed before the meeting and initialled by the Chairman for the purpose of identification, be and is hereby approved.
+
+RESOLVED FURTHER THAT {{boardReportSignatory}} be and is hereby authorised to sign the Board’s Report for and on behalf of the Board of Directors of the Company, and any of the Directors of the Company be and are hereby authorised to annex the same with the financial statements and to circulate and file the same with the Registrar of Companies and other authorities as may be required.`
+            },
+
+            // 9. Combined: FS, Board’s Report & AGM Notice
+            combinedFSBRAGM: {
+                title: "APPROVAL OF FINANCIAL STATEMENTS, BOARD’S REPORT & AGM NOTICE",
+                specificFields: [
+                    { id: "fyPeriodCombined", label: "Financial Year (e.g. 2024-25)" },
+                    { id: "agmNoCombined", label: "AGM No. (e.g. 5th AGM)" },
+                    { id: "agmDateCombined", label: "Date of AGM" },
+                    { id: "agmTimeCombined", label: "Time of AGM" },
+                    { id: "agmVenueCombined", label: "Venue of AGM" },
+                    { id: "boardReportSignatoryCombined", label: "Name & Designation of Signatory of Board’s Report" }
+                ],
+                body: `
+RESOLVED THAT the audited financial statements of the Company for the financial year {{fyPeriodCombined}}, comprising the Balance Sheet, Statement of Profit and Loss, Cash Flow Statement (where applicable), Statement of Changes in Equity (where applicable) and the Notes forming part thereof, together with the Auditor’s Report thereon as placed before the meeting, be and are hereby approved and adopted.
+
+RESOLVED FURTHER THAT the draft Board’s Report of the Company for the financial year {{fyPeriodCombined}}, as placed before the meeting, be and is hereby approved and that {{boardReportSignatoryCombined}} be and is hereby authorised to sign the same for and on behalf of the Board of Directors.
+
+RESOLVED FURTHER THAT the {{agmNoCombined}} of the Company be convened on {{agmDateCombined}} at {{agmTimeCombined}} at {{agmVenueCombined}}, and that the draft notice of the said Annual General Meeting, as placed before the meeting, be and is hereby approved.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to sign and issue the said notice of AGM along with the approved financial statements and Board’s Report to the members and other persons entitled to receive the same and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 10. Director Resignation
+            directorResignation: {
+                title: "TAKING NOTE OF RESIGNATION OF DIRECTOR",
+                specificFields: [
+                    { id: "resigningDirectorName", label: "Name of Resigning Director" },
+                    { id: "resigningDirectorDIN", label: "DIN of Resigning Director" },
+                    { id: "resignationDate", label: "Date of Resignation Letter" },
+                    { id: "resignationEffective", label: "Effective Date of Resignation" }
+                ],
+                body: `
+RESOLVED THAT the resignation of {{resigningDirectorName}} (DIN: {{resigningDirectorDIN}}) from the office of Director of the Company, tendered vide letter dated {{resignationDate}}, with effect from {{resignationEffective}}, be and is hereby noted and accepted with immediate effect.
+
+RESOLVED FURTHER THAT the Board places on record its appreciation for the valuable contribution made by {{resigningDirectorName}} during his/her tenure as Director of the Company.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to file necessary e-form(s) with the Registrar of Companies and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 11. Adoption of Common Seal
+            adoptSeal: {
+                title: "ADOPTION OF COMMON SEAL",
+                specificFields: [
+                    { id: "sealLocation", label: "Location where Seal is to be kept (e.g. Registered Office)" },
+                    { id: "sealCustodian", label: "Name & Designation of Person having Custody of Seal" }
+                ],
+                body: `
+RESOLVED THAT the specimen of the Common Seal of the Company, as placed before the meeting and initialled by the Chairman for the purpose of identification, be and is hereby approved and adopted as the Common Seal of the Company.
+
+RESOLVED FURTHER THAT the Common Seal of the Company be kept at {{sealLocation}} under the custody of {{sealCustodian}}, who shall be responsible for the safe custody and use of the Common Seal as per the provisions of the Articles of Association of the Company and applicable laws.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to ensure that the Common Seal shall be affixed to such documents as may be required, in the presence of such person(s) as may be authorised by the Board from time to time, and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 12. Opening of Bank Account
+            openBankAccount: {
+                title: "OPENING OF BANK ACCOUNT",
+                specificFields: [
+                    { id: "bankName", label: "Name of Bank" },
+                    { id: "bankBranch", label: "Branch" },
+                    { id: "accountType", label: "Type of Account (e.g. Current Account)" },
+                    { id: "authorisedOps", label: "Names & Designation of Authorised Signatories and Mode of Operation" }
+                ],
+                body: `
+RESOLVED THAT a {{accountType}} in the name of the Company be opened with {{bankName}}, {{bankBranch}} Branch, and that the said Bank be and is hereby authorised to honour all cheques, drafts, pay orders, electronic transfers and other instruments drawn, accepted or made on behalf of the Company and signed by the authorised signatories as per the mode of operation approved by the Board.
+
+RESOLVED FURTHER THAT the following person(s) be and are hereby authorised to operate the said bank account as per the mode of operation mentioned below:
+
+{{authorisedOps}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to submit the certified copy of this resolution and such other documents as may be required by the Bank and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 13. Related Party Transaction (General)
+            rptGeneric: {
+                title: "APPROVAL OF RELATED PARTY TRANSACTION (GENERAL)",
+                specificFields: [
+                    { id: "rptPartyName", label: "Name of Related Party" },
+                    { id: "rptRelationship", label: "Nature of Relationship" },
+                    { id: "rptNature", label: "Nature of Transaction / Contract" },
+                    { id: "rptValue", label: "Total Value / Limit of Transaction" },
+                    { id: "rptTerms", label: "Key Commercial Terms (brief)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 188 and other applicable provisions, if any, of the Companies Act, 2013, read with the rules made thereunder and the applicable provisions of the Articles of Association of the Company, approval of the Board be and is hereby accorded to enter into a related party transaction with {{rptPartyName}}, being a related party in terms of {{rptRelationship}}, for {{rptNature}}, for an aggregate value not exceeding {{rptValue}}, on arm’s length basis and in the ordinary course of business, on such terms and conditions as set out below, and more particularly described in the draft agreement / term sheet placed before the Board:
+
+{{rptTerms}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to negotiate, finalise and execute the necessary agreements and documents in this regard and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 14. Purchase of Assets
+            purchaseAssets: {
+                title: "APPROVAL FOR PURCHASE OF ASSETS",
+                specificFields: [
+                    { id: "assetDescription", label: "Description of Asset(s)" },
+                    { id: "assetVendorName", label: "Name of Vendor / Seller" },
+                    { id: "assetAmount", label: "Total Consideration (figures)" },
+                    { id: "assetAmountWords", label: "Total Consideration (in words)" },
+                    { id: "assetPaymentTerms", label: "Payment Terms (brief)" }
+                ],
+                body: `
+RESOLVED THAT approval of the Board be and is hereby accorded for the purchase of the following asset(s) for the business of the Company from {{assetVendorName}}:
+
+{{assetDescription}}
+
+for an aggregate consideration of {{assetAmount}} ({{assetAmountWords}}), on the terms and conditions as to payment, delivery and other matters as may be mutually agreed, including the following broad payment terms:
+
+{{assetPaymentTerms}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to negotiate, finalise and execute the necessary agreements, invoices and other documents and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 15. Sanction of Loan
+            sanctionLoan: {
+                title: "SANCTION OF LOAN TO BE AVAILED BY THE COMPANY",
+                specificFields: [
+                    { id: "loanLenderName", label: "Name of Lender (Bank / NBFC / Other)" },
+                    { id: "loanAmountCompany", label: "Loan Amount (figures)" },
+                    { id: "loanAmountCompanyWords", label: "Loan Amount (in words)" },
+                    { id: "loanPurposeCompany", label: "Purpose of Loan" },
+                    { id: "loanInterestCompany", label: "Rate of Interest" },
+                    { id: "loanTenureCompany", label: "Tenure / Repayment Schedule" },
+                    { id: "loanSecurityCompany", label: "Security / Collateral (if any)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the applicable provisions of the Companies Act, 2013 and the Articles of Association of the Company, approval of the Board be and is hereby accorded to avail a loan of {{loanAmountCompany}} ({{loanAmountCompanyWords}}) from {{loanLenderName}} for the purpose of {{loanPurposeCompany}}, on such terms and conditions as to interest, security and repayment including, inter alia, interest at the rate of {{loanInterestCompany}}, tenure / repayment schedule of {{loanTenureCompany}} and security / collateral as under:
+
+{{loanSecurityCompany}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to negotiate, finalise and execute the loan agreements, deeds, declarations, deeds of hypothecation, mortgage, guarantee and such other documents as may be required and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 16. Appointment of Additional Director
+            additionalDirector: {
+                title: "APPOINTMENT OF ADDITIONAL DIRECTOR",
+                specificFields: [
+                    { id: "addlDirName", label: "Name of Additional Director" },
+                    { id: "addlDirDIN", label: "DIN of Additional Director" },
+                    { id: "effectiveDateAddl", label: "Effective Date (dd-mm-yyyy or text)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 161(1) of the Companies Act, 2013 and the Articles of Association of the Company, {{addlDirName}} (DIN: {{addlDirDIN}}) be and is hereby appointed as an Additional Director of the Company with effect from {{effectiveDateAddl}} to hold office up to the date of the next Annual General Meeting of the Company or the last date on which the Annual General Meeting should have been held, whichever is earlier, and that the consent to act as Director and the disclosure of interest submitted by him/her be and are hereby noted.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to file the necessary e-form(s) with the Registrar of Companies and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 17. Acceptance of DIR-2 & MBP-1
+            acceptDIR2MBP1: {
+                title: "ACCEPTANCE OF DIR-2 AND MBP-1",
+                specificFields: [
+                    { id: "dirNameList", label: "Name(s) of Director(s) from whom forms received" }
+                ],
+                body: `
+RESOLVED THAT the consent to act as Director in Form DIR-2 and the disclosure of interest in Form MBP-1 received from {{dirNameList}} be and are hereby noted and taken on record.
+
+RESOLVED FURTHER THAT the said forms be kept in the safe custody at the Registered Office of the Company as per the requirements of the Companies Act, 2013 and the rules made thereunder.`
+            },
+
+            // 18. Borrowing Powers u/s 180(1)(c)
+            borrowing180: {
+                title: "BORROWING POWERS UNDER SECTION 180(1)(c)",
+                specificFields: [
+                    { id: "limitAmount", label: "Overall Borrowing Limit (figures)" },
+                    { id: "limitAmountWords", label: "Overall Borrowing Limit (in words)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 180(1)(c) and other applicable provisions, if any, of the Companies Act, 2013 and subject to the approval of the shareholders of the Company in General Meeting, consent of the Board be and is hereby accorded to borrow monies, from time to time, for the purposes of the business of the Company, notwithstanding that the monies to be borrowed together with the moneys already borrowed by the Company (apart from temporary loans obtained from the Company’s bankers in the ordinary course of business) may exceed the aggregate of the paid-up share capital, free reserves and securities premium of the Company, provided that the total amount so borrowed shall not at any time exceed {{limitAmount}} ({{limitAmountWords}}).
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to take all such steps as may be necessary to give effect to this resolution.`
+            },
+
+            // 19. Closure of Bank Account
+            closeBankAccount: {
+                title: "CLOSURE OF BANK ACCOUNT",
+                specificFields: [
+                    { id: "closeBankName", label: "Name of Bank" },
+                    { id: "closeBranch", label: "Branch" },
+                    { id: "accountNumber", label: "Account Number" }
+                ],
+                body: `
+RESOLVED THAT the bank account of the Company maintained with {{closeBankName}}, {{closeBranch}} Branch, bearing Account No. {{accountNumber}}, be and is hereby closed and the balance, if any, lying in the said account be transferred to such other bank account of the Company as may be decided by any of the Directors of the Company.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to sign and submit necessary letters, documents and forms to the said Bank and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 20. Issue of Share Certificates
+            issueShareCertificates: {
+                title: "ISSUE OF SHARE CERTIFICATES",
+                specificFields: [
+                    { id: "allotteeName", label: "Name(s) of Allottee(s)" },
+                    { id: "noOfSharesIssue", label: "No. of Shares" },
+                    { id: "certificateNoRange", label: "Certificate No(s)." },
+                    { id: "distinctiveNoRange", label: "Distinctive No(s)" }
+                ],
+                body: `
+RESOLVED THAT share certificates for {{noOfSharesIssue}} equity shares of the Company, bearing Certificate No(s). {{certificateNoRange}} and Distinctive No(s). {{distinctiveNoRange}}, allotted to {{allotteeName}}, be issued under the signatures of two Directors or a Director and such other authorised signatory, as per the Articles of Association of the Company and the provisions of the Companies Act, 2013 and the rules made thereunder.
+
+RESOLVED FURTHER THAT entries in the Register of Members and other statutory registers in this regard be made accordingly.`
+            },
+
+            // 21. Inter-Corporate Loan
+            interCorporateLoan: {
+                title: "GRANT OF INTER-CORPORATE LOAN",
+                specificFields: [
+                    { id: "loanToEntity", label: "Name of Borrower Company / Entity" },
+                    { id: "loanAmount", label: "Loan Amount (figures)" },
+                    { id: "loanAmountWords", label: "Loan Amount (in words)" },
+                    { id: "loanPurpose", label: "Purpose of Loan" },
+                    { id: "interestRate", label: "Rate of Interest" },
+                    { id: "tenure", label: "Tenure / Repayment Terms" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 186 and other applicable provisions, if any, of the Companies Act, 2013 and subject to the prescribed limits, consent of the Board be and is hereby accorded to grant an inter-corporate loan of {{loanAmount}} ({{loanAmountWords}}) to {{loanToEntity}} for the purpose of {{loanPurpose}}, on such terms and conditions as to interest, security and repayment as may be mutually agreed, inter alia including interest at the rate of {{interestRate}} and tenure / repayment terms of {{tenure}}.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to negotiate, finalise and execute loan agreements and other documents and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 22. Investment u/s 186
+            investment186: {
+                title: "APPROVAL OF INVESTMENTS UNDER SECTION 186",
+                specificFields: [
+                    { id: "investmentLimit", label: "Overall Investment Limit (figures)" },
+                    { id: "investmentLimitWords", label: "Overall Investment Limit (in words)" },
+                    { id: "investmentBrief", label: "Brief of Proposed Investments (entities / instruments)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 186 and other applicable provisions, if any, of the Companies Act, 2013 and subject to the limits as may be approved by the shareholders of the Company, consent of the Board be and is hereby accorded to make investments, from time to time, by way of subscription, purchase or otherwise in the securities of one or more body corporates or in such other instruments as may be permitted by law, for an aggregate amount not exceeding {{investmentLimit}} ({{investmentLimitWords}}) outstanding at any point of time, as per the details broadly set out below:
+
+{{investmentBrief}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to identify the entities, negotiate the terms and make such investments and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 23. Change of Registered Office (Within City)
+            changeROWithinCity: {
+                title: "CHANGE OF REGISTERED OFFICE (WITHIN CITY LIMITS)",
+                specificFields: [
+                    { id: "oldRO", label: "Existing Registered Office Address" },
+                    { id: "newRO", label: "New Registered Office Address (within same city)" },
+                    { id: "changeEffectiveDate", label: "Effective Date of Change" }
+                ],
+                body: `
+RESOLVED THAT the Registered Office of the Company be and is hereby shifted from its present address at {{oldRO}} to {{newRO}} with effect from {{changeEffectiveDate}}, such addresses being within the local limits of the same city/town.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to file the necessary e-Form INC-22 with the Registrar of Companies and to do all such acts, deeds and things as may be necessary or expedient to give effect to this resolution.`
+            },
+
+            // 24. Change of Registered Office (within same ROC)
+            changeROSameROC: {
+                title: "CHANGE OF REGISTERED OFFICE (WITHIN SAME ROC JURISDICTION)",
+                specificFields: [
+                    { id: "oldROS", label: "Existing Registered Office Address" },
+                    { id: "newROS", label: "New Registered Office Address (different city but same ROC)" },
+                    { id: "effectiveROS", label: "Effective Date of Change" }
+                ],
+                body: `
+RESOLVED THAT subject to the provisions of Section 12 of the Companies Act, 2013 and other applicable provisions, if any, the Registered Office of the Company be and is hereby shifted from {{oldROS}} to {{newROS}} with effect from {{effectiveROS}}, such places being within the jurisdiction of the same Registrar of Companies.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to make necessary filings with the Registrar of Companies and other statutory authorities and to do all such acts, deeds and things as may be required to give effect to this resolution.`
+            },
+
+            // 25. Allotment of Shares
+            allotShares: {
+                title: "ALLOTMENT OF SHARES",
+                specificFields: [
+                    { id: "allotmentDetails", label: "Details of Allottees, No. of Shares, Consideration" },
+                    { id: "considerationType", label: "Nature of Consideration (cash / other than cash)" },
+                    { id: "faceValue", label: "Face Value per share" },
+                    { id: "premium", label: "Securities Premium per share, if any" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of the Companies Act, 2013 and the Articles of Association of the Company and in accordance with the authority granted by the shareholders, the consent of the Board be and is hereby accorded to allot equity shares of the Company as per the following details:
+
+{{allotmentDetails}}
+
+RESOLVED FURTHER THAT the equity shares so allotted shall rank pari passu in all respects with the existing equity shares of the Company and shall be issued for a consideration of {{considerationType}} at a face value of {{faceValue}} per share and securities premium of {{premium}} per share, as applicable.
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to file the return of allotment with the Registrar of Companies and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            },
+
+            // 26. Related Party Transaction u/s 188
+            rpt188: {
+                title: "RELATED PARTY TRANSACTION UNDER SECTION 188",
+                specificFields: [
+                    { id: "rptPartyName188", label: "Name of Related Party" },
+                    { id: "rptRelationship188", label: "Nature of Relationship" },
+                    { id: "rptNature188", label: "Nature of Transaction / Contract" },
+                    { id: "rptValue188", label: "Total Value / Limit of Transaction" },
+                    { id: "rptTerms188", label: "Key Commercial Terms (brief)" },
+                    { id: "meetingType188", label: "Type of Members’ Meeting (AGM / EGM)" },
+                    { id: "resolutionType188", label: "Resolution Type (Ordinary / Special)" }
+                ],
+                body: `
+RESOLVED THAT pursuant to the provisions of Section 188 and other applicable provisions, if any, of the Companies Act, 2013 read with the rules made thereunder and the applicable provisions of the Articles of Association of the Company, and subject to the approval of the members of the Company by way of {{resolutionType188}} Resolution at the ensuing {{meetingType188}}, the consent of the Board be and is hereby accorded to enter into a related party transaction with {{rptPartyName188}}, being a related party in terms of {{rptRelationship188}}, for {{rptNature188}}, for an aggregate value not exceeding {{rptValue188}}, on such terms and conditions as set out below and more particularly described in the draft agreement / term sheet placed before the meeting:
+
+{{rptTerms188}}
+
+RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby authorised to include the requisite resolution in the notice of the {{meetingType188}}, and, upon approval by the members, to negotiate, finalise and execute the necessary agreements and documents and to do all such acts, deeds and things as may be necessary to give effect to this resolution.`
+            }
+        };
+
+        const templateSelect = document.getElementById("templateSelect");
+        const specificFieldsDiv = document.getElementById("specificFields");
+        const previewDiv = document.getElementById("resolutionPreview");
+        const btnPdf = document.getElementById("btnPdf");
+        const btnWord = document.getElementById("btnWord");
+        const btnClear = document.getElementById("btnClear");
+
+        function renderSpecificFields() {
+            const key = templateSelect.value;
+            specificFieldsDiv.innerHTML = "";
+            if (!key || !templates[key]) {
+                specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>';
+                return;
+            }
+
+            const spec = templates[key].specificFields;
+            spec.forEach(f => {
+                const wrap = document.createElement("div");
+                wrap.className = "mb-3";
+                const label = document.createElement("label");
+                label.className = "block text-xs font-bold text-slate-700 mb-1";
+                label.textContent = f.label;
+                label.setAttribute("for", f.id);
+                wrap.appendChild(label);
+
+                const input = document.createElement("textarea");
+                input.id = f.id;
+                input.rows = 2;
+                wrap.appendChild(input);
+                specificFieldsDiv.appendChild(wrap);
+            });
+        }
+
+        function buildBodyData(templateKey) {
+            const tmpl = templates[templateKey];
+            if (!tmpl) return null;
+
+            const companyName = getValue("companyName");
+            const cin = getValue("cin");
+            const registeredOffice = getValue("registeredOffice");
+            const email = getValue("email");
+            const phone = getValue("phone");
+
+            const meetingDateRaw = document.getElementById("meetingDate").value;
+            const meetingDate = formatDate(meetingDateRaw);
+            const meetingPlace = getValue("meetingPlace");
+            const meetingNumber = getValue("meetingNumber", "");
+            const signatoryName = getValue("signatoryName");
+            const signatoryDin = getValue("signatoryDin");
+
+            const replacements = {
+                companyName,
+                cin,
+                registeredOffice,
+                email,
+                phone,
+                meetingDate,
+                meetingPlace,
+                meetingNumber,
+                signatoryName,
+                signatoryDin
+            };
+
+            if (tmpl.specificFields) {
+                tmpl.specificFields.forEach(f => {
+                    replacements[f.id] = getValue(f.id);
+                });
+            }
+
+            let bodyText = tmpl.body;
+            Object.keys(replacements).forEach(key => {
+                const val = replacements[key];
+                bodyText = bodyText.split(`{{${key}}}`).join(val);
+            });
+
+            return {
+                bodyText,
+                companyName,
+                meetingDate,
+                meetingPlace,
+                meetingNumber,
+                signatoryName,
+                signatoryDin,
+                cin,
+                registeredOffice,
+                email,
+                phone,
+                title: tmpl.title
+            };
+        }
+
+        function updatePreview() {
+            const templateKey = templateSelect.value;
+
+            const companyName = getValue("companyName");
+            const cin = getValue("cin");
+            const registeredOffice = getValue("registeredOffice");
+            const email = getValue("email");
+            const phone = getValue("phone");
+
+            const meetingDateRaw = document.getElementById("meetingDate").value;
+            const meetingDate = formatDate(meetingDateRaw);
+            const meetingPlace = getValue("meetingPlace");
+            const meetingNumber = getValue("meetingNumber", "");
+
+            const signatoryName = getValue("signatoryName");
+            const signatoryDin = getValue("signatoryDin");
+
+            let letterheadHTML = `
+                <div class="letterhead">
+                    <div class="company-name">${companyName}</div>
+                    <div class="line">Regd. Office: ${registeredOffice}</div>
+                    <div class="line">CIN: ${cin}</div>
+                    <div class="line">Email: ${email} | Phone: ${phone}</div>
+                </div>
+                <div class="separator">
+                    <hr class="hr-thick">
+                    <hr class="hr-thin">
+                </div>
+            `;
+
+            if (!templateKey || !templates[templateKey]) {
+                previewDiv.innerHTML = letterheadHTML +
+                    `<p class="text-center"><strong>BOARD RESOLUTION</strong></p>
+                    <p style="text-align:center; font-size:13px; color:#6b7280;">
+                    Select a resolution type and enter details in the left panel to generate a formatted resolution.
+                    </p>`;
+                return;
+            }
+
+            const built = buildBodyData(templateKey);
+            const tmplTitle = built.title;
+            let bodyText = built.bodyText;
+
+            let heading = `
+                <p class="text-right" style="font-size:12px;">
+                    Date: ${meetingDate}<br>
+                    Place: ${meetingPlace}
+                </p>
+                <p class="text-center" style="font-size:13px; margin-top:10px;">
+                    <strong>CERTIFIED TRUE COPY OF THE RESOLUTION PASSED AT THE MEETING OF THE BOARD OF DIRECTORS OF ${companyName}${(meetingNumber && meetingNumber !== "________") ? " (BM No. " + meetingNumber + ")" : ""}, HELD ON ${meetingDate} AT ${meetingPlace}.</strong>
+                </p>
+                <p class="resolution-title">${tmplTitle}</p>
+            `;
+
+            const signBlock = `
+                <div class="mt-6">
+                    <p>For ${companyName}</p>
+                    <p class="mt-4"><br>______________________________<br>${signatoryName}<br>Director<br>DIN: ${signatoryDin}</p>
+                </div>
+            `;
+
+            previewDiv.innerHTML =
+                letterheadHTML +
+                heading +
+                `<p>${bodyText.trim().replace(/\n\s*\n/g, "</p><p>").replace(/\n/g, "<br>")}</p>` +
+                signBlock;
+        }
+
+        templateSelect.addEventListener("change", () => {
+            renderSpecificFields();
+            updatePreview();
+        });
+
+        document.addEventListener("input", (e) => {
+            if (
+                e.target.matches("input") ||
+                e.target.matches("textarea") ||
+                e.target.matches("select")
+            ) {
+                updatePreview();
+            }
+        });
+
+        // PDF download – CRISP PDF FIX
+        btnPdf.addEventListener("click", () => {
+            const element = document.getElementById("resolutionPreview");
+            const fileName = `Board_Resolution_${templateSelect.value || "draft"}.pdf`;
+
+            html2pdf()
+                .set({
+                    margin: [20, 25.5, 25.4, 12.5], // top, left, bottom, right in mm
+                    filename: fileName,
+                    html2canvas: {
+                        scale: 3,          // high resolution
+                        useCORS: true,
+                        scrollY: 0,
+                        dpi: 300,
+                        letterRendering: true
+                    },
+                    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+                })
+                .from(element)
+                .save();
+        });
+
+        // DOCX export using docx library
+        btnWord.addEventListener("click", async () => {
+            const templateKey = templateSelect.value;
+            if (!templateKey || !templates[templateKey]) {
+                alert("Please select a resolution type before downloading Word file.");
+                return;
+            }
+
+            if (!window.docx) {
+                alert("Word export library failed to load. Please check your internet connection and try again.");
+                return;
+            }
+
+            const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+
+            const built = buildBodyData(templateKey);
+            const {
+                bodyText, companyName, meetingDate, meetingPlace, meetingNumber,
+                signatoryName, signatoryDin, cin, registeredOffice, email, phone, title
+            } = built;
+
+            const children = [];
+            const cleanRO = (registeredOffice || "").replace(/\s+/g, " ").trim();
+
+            // LETTERHEAD
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: companyName, bold: true, size: 44, font: "Garamond" })]
+                })
+            );
+
+            if (cleanRO) {
+                children.push(
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [new TextRun({ text: "Regd. Office: " + cleanRO, size: 22, font: "Times New Roman" })]
+                    })
+                );
+            }
+
+            if (cin && cin !== "________") {
+                children.push(
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [new TextRun({ text: "CIN: " + cin, size: 22, font: "Times New Roman" })]
+                    })
+                );
+            }
+
+            const contactLine = [];
+            if (email && email !== "________") contactLine.push("Email: " + email);
+            if (phone && phone !== "________") contactLine.push("Phone: " + phone);
+
+            if (contactLine.length) {
+                children.push(
+                    new Paragraph({
+                        alignment: AlignmentType.CENTER,
+                        children: [new TextRun({ text: contactLine.join(" | "), size: 22, font: "Times New Roman" })]
+                    })
+                );
+            }
+
+            children.push(new Paragraph({}));
+
+            // Separator lines
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: "______________________________", size: 18, font: "Times New Roman" })]
+                })
+            );
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: "______________________________", size: 12, font: "Times New Roman" })]
+                })
+            );
+
+            children.push(new Paragraph({}));
+
+            // Date & place
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.RIGHT,
+                    children: [
+                        new TextRun({ text: "Date: " + meetingDate, size: 24, font: "Times New Roman" }),
+                        new TextRun({ break: 1 }),
+                        new TextRun({ text: "Place: " + meetingPlace, size: 24, font: "Times New Roman" })
+                    ]
+                })
+            );
+
+            // Heading
+            const headingText =
+                "CERTIFIED TRUE COPY OF THE RESOLUTION PASSED AT THE MEETING OF THE BOARD OF DIRECTORS OF " +
+                companyName +
+                (meetingNumber && meetingNumber !== "________" ? " (BM No. " + meetingNumber + ")" : "") +
+                ", HELD ON " + meetingDate + " AT " + meetingPlace + ".";
+
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: headingText, bold: true, size: 26, font: "Times New Roman" })]
+                })
+            );
+
+            // Resolution Title
+            children.push(
+                new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [new TextRun({ text: title, bold: true, underline: {}, size: 26, font: "Garamond" })]
+                })
+            );
+
+            // Body paragraphs
+            const paras = bodyText.trim().split(/\n\s*\n/);
+            paras.forEach(p => {
+                const clean = p.replace(/\n/g, " ").trim();
+                if (!clean) return;
+                children.push(
+                    new Paragraph({
+                        alignment: AlignmentType.JUSTIFIED,
+                        children: [new TextRun({ text: clean, size: 26, font: "Times New Roman" })]
+                    })
+                );
+            });
+
+            // Signature block
+            children.push(new Paragraph({}));
+            children.push(
+                new Paragraph({
+                    children: [new TextRun({ text: "For " + companyName, size: 26, font: "Times New Roman" })]
+                })
+            );
+            children.push(
+                new Paragraph({
+                    children: [
+                        new TextRun({ text: "______________________________", size: 26, font: "Times New Roman" }),
+                        new TextRun({ break: 1 }),
+                        new TextRun({ text: signatoryName, size: 26, font: "Times New Roman" }),
+                        new TextRun({ break: 1 }),
+                        new TextRun({ text: "Director", size: 26, font: "Times New Roman" }),
+                        new TextRun({ break: 1 }),
+                        new TextRun({ text: "DIN: " + signatoryDin, size: 26, font: "Times New Roman" })
+                    ]
+                })
+            );
+
+            const doc = new Document({
+                sections: [
+                    {
+                        properties: {
+                            page: {
+                                margin: { top: 1134, left: 1440, bottom: 1440, right: 720 }
+                            }
+                        },
+                        children
+                    }
+                ]
+            });
+
+            const blob = await Packer.toBlob(doc);
+            const fileName = `Board_Resolution_${templateKey || "draft"}.docx`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        btnClear.addEventListener("click", () => {
+            document.querySelectorAll("input, textarea").forEach(el => {
+                el.value = "";
+            });
+            templateSelect.value = "";
+            specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>';
+            updatePreview();
+        });
+
+        // Initial render
+        updatePreview();
+    </script>
+</body>
+</html>

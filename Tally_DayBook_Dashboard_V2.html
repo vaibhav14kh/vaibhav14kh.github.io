@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=TallyDaybook';
+                }
+            }
+        })();
+    </script>
+
+    <title>Tally Cashbook Dashboard | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- SheetJS and Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Upload Zone Styles */
+        .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
+        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+
+        /* Stat Cards */
+        .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+
+        /* Compact Inputs */
+        select.form-select-sm, input.form-input-sm {
+            padding-top: 0.35rem; padding-bottom: 0.35rem; padding-left: 0.75rem; font-size: 0.875rem; height: 2.25rem; 
+            line-height: 1.25rem; border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%;
+            background-color: #f8fafc; color: #334155; font-weight: 500;
+        }
+        select.form-select-sm:focus, input.form-input-sm:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
+        .toggle-checkbox:checked + .toggle-label:before { transform: translateX(100%); }
+        
+        .toggle-label { width: 44px; height: 24px; background-color: #cbd5e1; border-radius: 9999px; position: relative; cursor: pointer; transition: background-color 0.3s; }
+        .toggle-label:before { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; transition: transform 0.3s; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        /* Table Styles */
+        .table-container { overflow-x: auto; max-height: 500px; }
+        table { min-width: 100%; }
+        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
+        tbody tr:hover { background-color: #f8fafc; }
+
+        /* Chart Container */
+        .chart-wrapper { position: relative; height: 250px; width: 100%; }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow mb-12">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                <span class="gradient-text">Tally Cashbook Dashboard</span>
+            </h1>
+            <p class="text-slate-600 text-sm font-medium">Turn raw Tally exports into interactive visual analytics instantly.</p>
+        </div>
+
+        <div class="space-y-6">
+            
+            <!-- Upload Section -->
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-excel mr-2 text-green-600"></i>Data Source</h2>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Supports .xlsx exports from Tally</span>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm" onclick="document.getElementById('fileInput').click()">
+                    <div class="space-y-4">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-slate-400"></i>
+                        <div>
+                            <p class="text-base font-bold text-slate-700">Click to upload Excel Daybook</p>
+                            <p class="text-sm text-slate-500 mt-1" id="fileStatus">No file selected</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div id="dashboardContent" class="hidden space-y-6">
+                
+                <!-- Controls Bar -->
+                <div class="glass-card p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">From Date</label>
+                            <input type="date" id="dateFrom" class="form-input-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">To Date</label>
+                            <input type="date" id="dateTo" class="form-input-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Month</label>
+                            <select id="monthFilter" class="form-select-sm"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Year</label>
+                            <select id="yearFilter" class="form-select-sm"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Voucher Type</label>
+                            <select id="vchTypeFilter" class="form-select-sm"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Account</label>
+                            <select id="accountFilter" class="form-select-sm"></select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                        <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <span class="text-sm font-bold text-slate-600"><i class="fas fa-chart-pie mr-2 text-blue-500"></i>Charts</span>
+                            <div class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
+                                <input type="checkbox" name="toggle" id="visualToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                <label for="visualToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
+                            </div>
+                            <span class="text-sm font-bold text-slate-600"><i class="fas fa-table mr-2 text-green-500"></i>Reports</span>
+                        </div>
+                        <button onclick="location.reload()" class="text-sm text-slate-500 hover:text-slate-800 font-bold bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
+                            <i class="fas fa-sync-alt mr-2"></i> Reset Dashboard
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div id="metricsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- Populated by JS -->
+                </div>
+
+                <!-- Charts Section -->
+                <div id="chartsSection" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Transaction Distribution</h3>
+                        <div class="chart-wrapper"><canvas id="transactionTypesChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Monthly Trends</h3>
+                        <div class="chart-wrapper"><canvas id="monthlyTrendsChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Top Accounts</h3>
+                        <div class="chart-wrapper"><canvas id="topAccountsChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Cash vs Bank Flow</h3>
+                        <div class="chart-wrapper"><canvas id="cashBankFlowChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Daily Volume</h3>
+                        <div class="chart-wrapper"><canvas id="dailyVolumeChart"></canvas></div>
+                    </div>
+                    <div class="glass-card p-5">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Party Analysis</h3>
+                        <div class="chart-wrapper"><canvas id="customerSupplierChart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reportsSection" class="hidden space-y-6">
+                    <div id="reportsContent">
+                        <!-- Reports populated by JS -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <script>
+        let globalData = [];
+        let filteredData = [];
+        let charts = {};
+
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+        document.getElementById('visualToggle').addEventListener('change', toggleView);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileStatus').innerHTML = '<span class="text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Processing data...</span>';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    
+                    const rawData = XLSX.utils.sheet_to_json(worksheet, { 
+                        range: 'A5:H10000',
+                        header: ['Date', 'Particulars', 'Col3', 'Col4', 'VchType', 'VchNo', 'DebitAmount', 'CreditAmount'],
+                        defval: null 
+                    });
+
+                    globalData = rawData.filter(record => 
+                        record.Date && record.Particulars && (record.DebitAmount || record.CreditAmount)
+                    ).map(record => ({
+                        ...record,
+                        Date: excelDateToJSDate(record.Date),
+                        DebitAmount: parseFloat(record.DebitAmount) || 0,
+                        CreditAmount: parseFloat(record.CreditAmount) || 0
+                    }));
+
+                    if (globalData.length === 0) {
+                        document.getElementById('fileStatus').innerHTML = '<span class="text-red-500 font-bold"><i class="fas fa-exclamation-circle mr-2"></i>No valid data found</span>';
+                        return;
+                    }
+
+                    document.getElementById('fileStatus').innerHTML = `<span class="text-green-600 font-bold"><i class="fas fa-check-circle mr-2"></i>Successfully loaded ${globalData.length} transactions</span>`;
+                    document.getElementById('dashboardContent').classList.remove('hidden');
+                    
+                    initializeFilters();
+                    applyFilters();
+                    
+                } catch (error) {
+                    console.error(error);
+                    document.getElementById('fileStatus').innerHTML = '<span class="text-red-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Error processing file</span>';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function excelDateToJSDate(excelDate) {
+            return new Date((excelDate - 25569) * 86400 * 1000);
+        }
+
+        function initializeFilters() {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const years = [...new Set(globalData.map(d => d.Date.getFullYear()))].sort();
+            const vchTypes = [...new Set(globalData.map(d => d.VchType).filter(Boolean))].sort();
+            const accounts = [...new Set(globalData.map(d => d.Particulars).filter(Boolean))].sort();
+
+            const populate = (id, opts, labelFn = x => x) => {
+                const el = document.getElementById(id);
+                el.innerHTML = `<option value="">All</option>` + opts.map((o, i) => `<option value="${typeof o === 'string' ? o : i}">${labelFn(o)}</option>`).join('');
+            };
+
+            populate('monthFilter', months);
+            populate('yearFilter', years);
+            populate('vchTypeFilter', vchTypes);
+            populate('accountFilter', accounts);
+
+            const dates = globalData.map(d => d.Date).sort((a,b) => a-b);
+            if(dates.length) {
+                document.getElementById('dateFrom').value = dates[0].toISOString().split('T')[0];
+                document.getElementById('dateTo').value = dates[dates.length - 1].toISOString().split('T')[0];
+            }
+
+            ['dateFrom', 'dateTo', 'monthFilter', 'yearFilter', 'vchTypeFilter', 'accountFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+        }
+
+        function applyFilters() {
+            const dateFrom = new Date(document.getElementById('dateFrom').value);
+            const dateTo = new Date(document.getElementById('dateTo').value);
+            const month = document.getElementById('monthFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const vchType = document.getElementById('vchTypeFilter').value;
+            const account = document.getElementById('accountFilter').value;
+
+            let baseFilteredData = globalData.filter(record => {
+                const d = record.Date;
+                if (dateFrom && d < dateFrom) return false;
+                if (dateTo && d > dateTo) return false;
+                if (month !== '' && d.getMonth() !== parseInt(month)) return false;
+                if (year !== '' && d.getFullYear() !== parseInt(year)) return false;
+                if (vchType !== '' && record.VchType !== vchType) return false;
+                return true;
+            });
+
+            if (account !== '') {
+                const relevantVouchers = new Set();
+                baseFilteredData.forEach(record => {
+                    if (record.Particulars === account) relevantVouchers.add(`${record.VchType}-${record.VchNo}`);
+                });
+                filteredData = baseFilteredData.filter(record => relevantVouchers.has(`${record.VchType}-${record.VchNo}`));
+            } else {
+                filteredData = baseFilteredData;
+            }
+
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            updateMetrics();
+            if (document.getElementById('visualToggle').checked) {
+                updateCharts();
+            } else {
+                updateReports();
+            }
+        }
+
+        function calculateMetrics() {
+            let cashPayments = 0, cashReceipts = 0, sales = 0, purchases = 0;
+            let paymentCount = 0, receiptCount = 0, salesCount = 0, purchaseCount = 0;
+            let cashBalance = 0, bankBalance = 0;
+
+            filteredData.forEach(record => {
+                const p = record.Particulars;
+                if (p === 'Cash' || p.toLowerCase().includes('cash')) {
+                    cashBalance += record.CreditAmount - record.DebitAmount;
+                    if (record.DebitAmount > 0) { cashReceipts += record.DebitAmount; receiptCount++; }
+                    if (record.CreditAmount > 0) { cashPayments += record.CreditAmount; paymentCount++; }
+                } else if (p.startsWith('Bank ') || p.toLowerCase().includes('bank')) {
+                    bankBalance += record.CreditAmount - record.DebitAmount;
+                    if (record.DebitAmount > 0) { cashReceipts += record.DebitAmount; receiptCount++; }
+                    if (record.CreditAmount > 0) { cashPayments += record.CreditAmount; paymentCount++; }
+                }
+                if (record.VchType === 'Sales' && record.DebitAmount > 0) { sales += record.DebitAmount; salesCount++; }
+                if (record.VchType === 'Purchase' && record.DebitAmount > 0) { purchases += record.DebitAmount; purchaseCount++; }
+            });
+
+            return { cashBalance, bankBalance, netPosition: cashReceipts - cashPayments, cashPayments, cashReceipts, sales, purchases, paymentCount, receiptCount, salesCount, purchaseCount };
+        }
+
+        function updateMetrics() {
+            const m = calculateMetrics();
+            const fmt = (n) => '₹' + Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            
+            const card = (title, val, sub, color) => `
+                <div class="stat-card border-b-4 border-${color}-500">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-100 text-${color}-600 text-xl shadow-sm"><i class="fas fa-chart-line"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">${title}</p>
+                        <p class="text-xl font-black text-slate-800 ${val < 0 ? 'text-red-600' : ''}">${fmt(val)}</p>
+                        <p class="text-xs font-medium text-slate-400 mt-0.5">${sub}</p>
+                    </div>
+                </div>`;
+
+            document.getElementById('metricsGrid').innerHTML = `
+                ${card('Cash Balance', m.cashBalance, 'Net Position', 'green')}
+                ${card('Bank Balance', m.bankBalance, 'Net Position', 'blue')}
+                ${card('Receipts', m.cashReceipts, m.receiptCount + ' Txns', 'indigo')}
+                ${card('Payments', m.cashPayments, m.paymentCount + ' Txns', 'red')}
+                ${card('Sales', m.sales, m.salesCount + ' Txns', 'teal')}
+                ${card('Purchases', m.purchases, m.purchaseCount + ' Txns', 'orange')}
+                ${card('Net Flow', m.netPosition, m.netPosition >= 0 ? 'Surplus' : 'Deficit', 'purple')}
+            `;
+        }
+
+        function updateCharts() {
+            Object.values(charts).forEach(c => c && c.destroy());
+            charts = {};
+
+            const chartConfig = (ctxId, type, data, opts = {}) => {
+                const ctx = document.getElementById(ctxId).getContext('2d');
+                charts[ctxId] = new Chart(ctx, { type, data, options: { responsive: true, maintainAspectRatio: false, ...opts } });
+            };
+
+            // Transaction Types
+            const typeCounts = {};
+            filteredData.forEach(r => typeCounts[r.VchType] = (typeCounts[r.VchType] || 0) + 1);
+            chartConfig('transactionTypesChart', 'doughnut', {
+                labels: Object.keys(typeCounts),
+                datasets: [{ data: Object.values(typeCounts), backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'], borderWidth: 0 }]
+            }, { plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter', size: 11 } } } }, cutout: '70%' });
+
+            // Monthly Trends
+            const monthlyData = {};
+            filteredData.forEach(r => {
+                const k = r.Date.toISOString().slice(0, 7);
+                if (!monthlyData[k]) monthlyData[k] = { d: 0, c: 0 };
+                monthlyData[k].d += r.DebitAmount;
+                monthlyData[k].c += r.CreditAmount;
+            });
+            const months = Object.keys(monthlyData).sort();
+            chartConfig('monthlyTrendsChart', 'line', {
+                labels: months,
+                datasets: [
+                    { label: 'Debits', data: months.map(m => monthlyData[m].d), borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.3, fill: true },
+                    { label: 'Credits', data: months.map(m => monthlyData[m].c), borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', tension: 0.3, fill: true }
+                ]
+            }, { plugins: { legend: { labels: { font: { family: 'Inter' } } } }, scales: { x: { grid: { display: false } } } });
+
+            // Top Accounts
+            const accTotals = {};
+            filteredData.forEach(r => accTotals[r.Particulars] = (accTotals[r.Particulars] || 0) + r.DebitAmount + r.CreditAmount);
+            const topAccs = Object.entries(accTotals).sort((a,b) => b[1]-a[1]).slice(0, 10);
+            chartConfig('topAccountsChart', 'bar', {
+                labels: topAccs.map(x => x[0].substring(0, 15)),
+                datasets: [{ label: 'Volume', data: topAccs.map(x => x[1]), backgroundColor: '#3B82F6', borderRadius: 4 }]
+            }, { plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } });
+
+            // Cash vs Bank
+            createCashBankFlowChart(); 
+            createDailyVolumeChart();
+            createCustomerSupplierChart();
+        }
+
+        // Helper chart functions (logic strictly preserved)
+        function createCashBankFlowChart() {
+            const ctx = document.getElementById('cashBankFlowChart').getContext('2d');
+            const dailyData = { cash: {}, bank: {} };
+            filteredData.sort((a, b) => a.Date - b.Date).forEach(r => {
+                const d = r.Date.toISOString().split('T')[0];
+                if (r.Particulars.toLowerCase().includes('cash')) {
+                    dailyData.cash[d] = (dailyData.cash[d] || 0) + r.CreditAmount - r.DebitAmount;
+                } else if (r.Particulars.toLowerCase().includes('bank')) {
+                    dailyData.bank[d] = (dailyData.bank[d] || 0) + r.CreditAmount - r.DebitAmount;
+                }
+            });
+            const dates = [...new Set([...Object.keys(dailyData.cash), ...Object.keys(dailyData.bank)])].sort();
+            let cRun = 0, bRun = 0;
+            const cData = [], bData = [];
+            dates.forEach(d => {
+                cRun += dailyData.cash[d] || 0; bRun += dailyData.bank[d] || 0;
+                cData.push(cRun); bData.push(bRun);
+            });
+            charts.cashBankFlow = new Chart(ctx, {
+                type: 'line', data: { labels: dates, datasets: [{ label: 'Cash', data: cData, borderColor: '#10B981', tension: 0.2, pointRadius: 0 }, { label: 'Bank', data: bData, borderColor: '#3B82F6', tension: 0.2, pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } } } }
+            });
+        }
+
+        function createDailyVolumeChart() {
+            const ctx = document.getElementById('dailyVolumeChart').getContext('2d');
+            const dv = {};
+            filteredData.forEach(r => {
+                const d = r.Date.toISOString().split('T')[0];
+                if (!dv[d]) dv[d] = { c: 0, a: 0 };
+                dv[d].c++; dv[d].a += r.DebitAmount + r.CreditAmount;
+            });
+            const dates = Object.keys(dv).sort().slice(-30);
+            charts.dailyVolume = new Chart(ctx, {
+                type: 'bar', data: { labels: dates, datasets: [{ label: 'Count', data: dates.map(d => dv[d].c), backgroundColor: '#F59E0B', yAxisID: 'y', borderRadius: 2 }, { label: 'Amt', data: dates.map(d => dv[d].a), type: 'line', borderColor: '#EF4444', yAxisID: 'y1', tension: 0.3 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false } }, y: { position: 'left' }, y1: { position: 'right', grid: { display: false } } } }
+            });
+        }
+
+        function createCustomerSupplierChart() {
+            const ctx = document.getElementById('customerSupplierChart').getContext('2d');
+            let cats = { Cust: 0, Supp: 0, Bank: 0, Cash: 0, Oth: 0 };
+            filteredData.forEach(r => {
+                const amt = r.DebitAmount + r.CreditAmount;
+                const p = r.Particulars.toLowerCase();
+                if (p.includes('customer') || r.VchType === 'Sales') cats.Cust += amt;
+                else if (p.includes('supplier') || r.VchType === 'Purchase') cats.Supp += amt;
+                else if (p.includes('bank')) cats.Bank += amt;
+                else if (p.includes('cash')) cats.Cash += amt;
+                else cats.Oth += amt;
+            });
+            charts.customerSupplier = new Chart(ctx, {
+                type: 'bar', data: { labels: Object.keys(cats), datasets: [{ data: Object.values(cats), backgroundColor: ['#10B981', '#EF4444', '#3B82F6', '#F59E0B', '#8B5CF6'], borderRadius: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { display: false } } } }
+            });
+        }
+
+        function updateReports() {
+            const div = document.getElementById('reportsContent');
+            const createTable = (title, cols, rows) => `
+                <div class="glass-card overflow-hidden mb-6">
+                    <div class="p-4 bg-white border-b border-slate-200"><h3 class="text-base font-black text-slate-800 tracking-wide">${title}</h3></div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50"><tr>${cols.map(c => `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">${c}</th>`).join('')}</tr></thead>
+                            <tbody class="bg-white divide-y divide-slate-100">${rows}</tbody>
+                        </table>
+                    </div>
+                </div>`;
+
+            // Transaction Summary
+            const txnRows = filteredData.slice(0, 100).map(r => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${r.Date.toLocaleDateString()}</td>
+                    <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate" title="${r.Particulars}">${r.Particulars}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">${r.VchType}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-mono">${r.VchNo}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${r.DebitAmount ? r.DebitAmount.toLocaleString() : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${r.CreditAmount ? r.CreditAmount.toLocaleString() : '-'}</td>
+                </tr>
+            `).join('');
+            
+            // Account Summary
+            const accSum = {};
+            filteredData.forEach(r => {
+                if (!accSum[r.Particulars]) accSum[r.Particulars] = { c: 0, d: 0, cr: 0 };
+                accSum[r.Particulars].c++; accSum[r.Particulars].d += r.DebitAmount; accSum[r.Particulars].cr += r.CreditAmount;
+            });
+            const accRows = Object.entries(accSum).sort((a,b) => (b[1].d+b[1].cr)-(a[1].d+a[1].cr)).slice(0, 50).map(([k,v]) => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-slate-700 font-medium">${k}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${v.c}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${v.d.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${v.cr.toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            div.innerHTML = createTable('Transaction Details (Top 100)', ['Date', 'Particulars', 'Type', 'No', 'Debit', 'Credit'], txnRows) +
+                            createTable('Account Summary (Top 50)', ['Account', 'Count', 'Debits', 'Credits'], accRows);
+        }
+
+        function toggleView() {
+            const isChart = document.getElementById('visualToggle').checked;
+            document.getElementById('chartsSection').classList.toggle('hidden', !isChart);
+            document.getElementById('reportsSection').classList.toggle('hidden', isChart);
+            if (isChart) updateCharts(); else updateReports();
+        }
+
+        // Init
+        toggleView();
+    </script>
+</body>
+</html>

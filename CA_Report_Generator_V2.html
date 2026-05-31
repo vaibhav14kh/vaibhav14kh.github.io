@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=CAReport';
+                }
+            }
+        })();
+    </script>
+
+    <title>CA Visa Report | J.L. Khanna & Co.</title>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Form Controls */
+        .form-select-sm, .form-input-sm { height: 2.25rem; font-size: 0.8rem; border-radius: 0.375rem; border: 1px solid #cbd5e1; background-color: #f8fafc; width: 100%; transition: all 0.2s; color: #334155; font-weight: 500;}
+        .form-input-sm:focus, .form-select-sm:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #fff;}
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; transition: all 0.2s;}
+
+        /* Input Table Styles */
+        .input-grid-table { border-collapse: collapse; width: 100%; }
+        .input-grid-table th { font-size: 0.7rem; color: #475569; font-weight: 700; text-transform: uppercase; padding: 0.5rem; text-align: center; background: #f1f5f9; border: 1px solid #e2e8f0; white-space: nowrap; }
+        .input-grid-table td { padding: 0.25rem; border: 1px solid #e2e8f0; }
+        .sub-table-total { font-size: 0.75rem; font-weight: 700; padding: 0.5rem 0.75rem; display: flex; justify-content: space-between; border-radius: 0 0 0.375rem 0.375rem; margin-bottom: 0.75rem; }
+        .input-grid-label { font-size: 0.75rem; font-weight: 600; color: #334155; background-color: #f8fafc; padding-left: 0.75rem !important; }
+        .gross-row { background-color: #eff6ff; border-top: 2px solid #bfdbfe; }
+        .total-row { background-color: #f1f5f9; font-weight: bold; border-top: 2px solid #cbd5e1; }
+        .req-star { color: #ef4444; margin-left: 2px; }
+        .sec-title { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #1e293b; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .sec-subtitle { font-size: 0.75rem; font-weight: 700; color: #475569; margin-top: 0.5rem; margin-bottom: 0.25rem; padding-left: 0.5rem; border-left: 3px solid #3b82f6; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* --- PREVIEW & PRINT --- */
+        .font-serif-doc { font-family: 'Cambria', serif; font-size: 11pt; line-height: 1.3; }
+        .section-header, .sub-section-header, .sub-sub-header { background-color: #e2e8f0; border: 1px solid #000; padding: 3px 6px; text-transform: uppercase; font-weight: bold; font-size: 10pt; color: #000 !important; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+        .sub-sub-header { font-size: 9pt; margin-top: 4px; }
+        
+        .a4-page {
+            width: 210mm; min-height: 297mm; max-height: 297mm; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+            position: relative; color: #000; overflow: hidden; display: flex; flex-direction: column;
+            transform: scale(0.75); transform-origin: top center; margin-bottom: -60mm; padding: 0.2in; flex-shrink: 0;
+        }
+
+        .doc-header-line { border-bottom: 2px solid #000; margin-bottom: 5px; }
+        .doc-table { width: 100%; border-collapse: collapse; font-family: 'Noto Serif', serif; font-size: 9pt; table-layout: fixed; margin-bottom: 0px; }
+        .doc-table th, .doc-table td { border: 1px solid #000; padding: 3px 4px; vertical-align: middle; }
+        .doc-table th { background-color: #f1f5f9; font-weight: bold; text-align: center; text-transform: uppercase; font-size: 8pt; }
+        .doc-table .sub-header { background-color: #e2e8f0; font-weight: bold; }
+        .doc-text-12 { font-size: 11pt; }
+        .dense-line { line-height: 1.3; }
+        .grey-box-header { background-color: #cbd5e1; border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; text-decoration: underline; font-size: 11pt; font-family: 'Noto Serif', serif; }
+        .grey-box-content { background-color: #f8fafc; border: 1px solid #000; border-top: none; padding: 10px; font-size: 11pt; text-align: justify; line-height: 1.5; font-family: 'Noto Serif', serif; }
+
+        @media print {
+            body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            #app-container { display: block; height: auto; overflow: visible; padding: 0; margin: 0; }
+            #input-panel { display: none; }
+            #preview-container { width: 100%; padding: 0; background: white; height: auto; overflow: visible; border: none; display: block; box-shadow: none; }
+            #preview-panel { background: white; padding: 0; }
+            .a4-page { transform: none !important; margin: 0; box-shadow: none; width: 100%; min-height: 100vh; page-break-after: always; border: none; padding: 0; margin-bottom: 0 !important; }
+            @page { size: A4 portrait; margin: 1cm; }
+            .border-t-2 .flex { font-size: 9pt !important; line-height: 1.3; }
+            .border-t-2 .text-sm { font-size: 8pt !important; }
+            .text-\[10px\] { font-size: 8pt !important; padding: 2px !important; }
+        }
+        .force-break-before { page-break-before: always; }
+        .force-break-after { page-break-after: always; }
+        .avoid-break { page-break-inside: avoid; }
+    </style>
+</head>
+<body class="hero-pattern h-screen overflow-hidden flex flex-col" x-data="reportApp()">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0 no-print">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="w-full mx-auto flex flex-col lg:flex-row gap-6 flex-1 min-h-0 px-4 sm:px-6 lg:px-8 py-6 max-w-[1600px]">
+        
+        <!-- ================= LEFT PANEL: INPUT FORM ================= -->
+        <div id="input-panel" class="w-full lg:w-[45%] flex flex-col gap-4 h-full min-h-0">
+            
+            <div class="mb-2 flex-shrink-0">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                    <span class="gradient-text">Net Worth & Visa Report</span>
+                </h1>
+                <p class="text-slate-600 text-xs font-medium">Generate certified financial statements for embassy submissions.</p>
+            </div>
+
+            <!-- TABS -->
+            <div class="glass-card flex p-1 flex-shrink-0 bg-white shadow-sm">
+                <button @click="activeTab = 'firm'" :class="{'bg-blue-50 text-blue-700 font-bold rounded-md shadow-sm border border-blue-100': activeTab==='firm', 'text-slate-500 hover:bg-slate-50 font-medium': activeTab!=='firm'}" class="flex-1 py-2 text-xs uppercase transition-all duration-200 tracking-wider">1. Firm</button>
+                <button @click="activeTab = 'client'" :class="{'bg-blue-50 text-blue-700 font-bold rounded-md shadow-sm border border-blue-100': activeTab==='client', 'text-slate-500 hover:bg-slate-50 font-medium': activeTab!=='client'}" class="flex-1 py-2 text-xs uppercase transition-all duration-200 tracking-wider">2. Client</button>
+                <button @click="activeTab = 'financials'" :class="{'bg-blue-50 text-blue-700 font-bold rounded-md shadow-sm border border-blue-100': activeTab==='financials', 'text-slate-500 hover:bg-slate-50 font-medium': activeTab!=='financials'}" class="flex-1 py-2 text-xs uppercase transition-all duration-200 tracking-wider">3. Financials</button>
+            </div>
+
+            <!-- TAB CONTENT -->
+            <div class="glass-card flex-1 overflow-y-auto custom-scrollbar p-5 bg-white shadow-md">
+
+                <!-- TAB 1: FIRM CONFIG -->
+                <div x-show="activeTab === 'firm'" class="space-y-5" x-transition>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">Firm Type</label><select x-model="firm.type" class="form-select-sm px-3"><option>Proprietorship</option><option>Partnership</option><option>LLP</option></select></div>
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">Est. Since</label><input type="text" x-model="firm.est" class="form-input-sm px-3" placeholder="Optional"></div>
+                        </div>
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Firm Name <span class="req-star">*</span></label><input type="text" x-model="firm.name" class="form-input-sm px-3 font-bold text-slate-800 border-slate-300"></div>
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Slogan</label><input type="text" x-model="firm.slogan" class="form-input-sm px-3" placeholder="Optional"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">Website</label><input type="text" x-model="firm.web" class="form-input-sm px-3" placeholder="Optional"></div>
+                            <div><label class="block text-xs font-bold text-slate-600 mb-1">Phone No <span class="req-star">*</span></label><input type="text" x-model="firm.phone" class="form-input-sm px-3"></div>
+                        </div>
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Email Add <span class="req-star">*</span></label><input type="text" x-model="firm.email" class="form-input-sm px-3"></div>
+                        <div><label class="block text-xs font-bold text-slate-600 mb-1">Address <span class="req-star">*</span></label><textarea x-model="firm.address" rows="2" class="w-full text-sm border border-slate-300 rounded-md p-3 bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea></div>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200">
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">PAN <span class="req-star">*</span></label><input type="text" x-model="firm.pan" class="form-input-sm px-3 uppercase"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">GSTN</label><input type="text" x-model="firm.gstn" class="form-input-sm px-3 uppercase" placeholder="Optional"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">FRN No <span class="req-star">*</span></label><input type="text" x-model="firm.frn" class="form-input-sm px-3"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">MSME No.</label><input type="text" x-model="firm.msme" class="form-input-sm px-3 uppercase" placeholder="Optional"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 shadow-sm space-y-4">
+                        <h4 class="text-xs font-black text-blue-800 uppercase tracking-widest border-b border-blue-200 pb-2">Signatory Details</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">Partner/Prop Name <span class="req-star">*</span></label><input type="text" x-model="firm.partner" class="form-input-sm px-3 font-bold"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">MRN No <span class="req-star">*</span></label><input type="text" x-model="firm.mno" class="form-input-sm px-3"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">UDIN <span class="req-star">*</span></label><input type="text" x-model="firm.udin" class="form-input-sm px-3 bg-yellow-50 border-yellow-200 font-mono text-yellow-800 focus:bg-white"></div>
+                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase">Date <span class="req-star">*</span></label><input type="date" x-model="firm.date" class="form-input-sm px-3"></div>
+                            <div class="col-span-2"><label class="block text-[10px] font-bold text-slate-500 uppercase">Place <span class="req-star">*</span></label><input type="text" x-model="firm.place" class="form-input-sm px-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: CLIENT INFO -->
+                <div x-show="activeTab === 'client'" class="space-y-5" x-transition>
+                    <div class="flex items-center gap-3 bg-indigo-50 p-3 rounded-lg border border-indigo-100 shadow-sm">
+                        <span class="text-xs font-black text-indigo-800 uppercase tracking-wider">Number of Applicants:</span>
+                        <select x-model.number="clientCount" class="form-select-sm w-32 px-3 border-indigo-200 text-indigo-900 font-bold bg-white shadow-sm focus:border-indigo-500">
+                            <option value="1">1 Person</option>
+                            <option value="2">2 People</option>
+                            <option value="3">3 People</option>
+                            <option value="4">4 People</option>
+                        </select>
+                    </div>
+                    <template x-for="i in clientCount" :key="i">
+                        <div class="p-4 border border-slate-200 rounded-xl shadow-sm bg-white relative">
+                            <div class="absolute top-0 right-0 bg-slate-200 px-3 py-1 text-[10px] font-black text-slate-700 rounded-bl-lg rounded-tr-xl">APP <span x-text="i"></span></div>
+                            
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Applicant Name <span class="req-star">*</span></label>
+                            <input type="text" x-model="clients[i-1].name" class="form-input-sm border-slate-300 mb-3 font-bold px-3 text-slate-800 text-base h-10">
+                            
+                            <div class="flex gap-3 mb-3">
+                                <div class="w-28"><label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Relation <span class="req-star">*</span></label>
+                                    <select x-model="clients[i-1].relType" class="form-select-sm px-2"><option>S/O</option><option>W/O</option><option>D/O</option></select>
+                                </div>
+                                <div class="flex-1"><label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Relative Name <span class="req-star">*</span></label>
+                                    <input type="text" x-model="clients[i-1].relName" class="form-input-sm px-3">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div><label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">PAN <span class="req-star">*</span></label>
+                                    <input type="text" x-model="clients[i-1].pan" class="form-input-sm px-3 uppercase font-mono">
+                                </div>
+                                <div><label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">DOB <span class="req-star">*</span></label>
+                                    <input type="text" x-model="clients[i-1].dob" placeholder="DD.MM.YYYY" class="form-input-sm px-3">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <div class="bg-slate-50 p-4 border border-slate-200 rounded-xl shadow-sm">
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide">Common Address <span class="req-star">*</span></label>
+                        <textarea x-model="commonAddress" rows="2" class="w-full text-sm border border-slate-300 rounded-md p-3 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- TAB 3: FINANCIALS -->
+                <div x-show="activeTab === 'financials'" class="space-y-6" x-transition>
+
+                    <!-- SECTION 1: SETTINGS -->
+                    <div class="bg-indigo-50/80 p-4 rounded-xl border border-indigo-100 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row items-end gap-3">
+                            <div class="flex-1 w-full">
+                                <label class="block text-[10px] font-black text-indigo-700 mb-1.5 uppercase tracking-widest">Assessment Years</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <template x-for="(y, i) in financials.years" :key="i">
+                                        <input type="text" x-model="financials.years[i]" class="form-input-sm border-indigo-200 px-2 text-center font-bold bg-white text-indigo-900 shadow-sm">
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 w-full sm:w-auto">
+                                <button @click="autoFetchAY" class="btn-sm bg-indigo-600 text-white h-9 shadow-sm hover:bg-indigo-700 w-full sm:w-auto"><i class="fas fa-calendar-alt mr-1"></i> Auto AY</button>
+                                <button @click="fetchLiveRates" class="btn-sm bg-emerald-600 text-white h-9 shadow-sm hover:bg-emerald-700 w-full sm:w-auto"><i class="fas fa-sync-alt mr-1"></i> Live FX</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-[10px] font-black text-indigo-700 mb-1.5 uppercase tracking-widest">Currency</label>
+                                <select x-model="financials.forex.code" @change="updateForexDetails()" class="form-select-sm border-indigo-200 font-bold text-indigo-900 bg-white shadow-sm h-9">
+                                    <template x-for="code in financials.currencyList" :key="code">
+                                        <option :value="code" x-text="financials.currencyMeta[code].label"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-[10px] font-black text-indigo-700 mb-1.5 uppercase tracking-widest">Exact Rate</label>
+                                <input type="number" x-model="financials.forex.rate" class="form-input-sm border-indigo-200 font-bold text-indigo-900 bg-white shadow-sm h-9">
+                            </div>
+                            <div class="flex-1 min-w-[100px]">
+                                <label class="block text-[10px] font-black text-red-600 mb-1.5 uppercase tracking-widest">Calc Rate</label>
+                                <input type="number" x-model="financials.forex.calcRate" @input="updateCalcRate" class="form-input-sm border-red-200 font-black text-red-700 bg-red-50 shadow-sm h-9">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: STATEMENT OF INCOME -->
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="bg-slate-100 px-4 py-3 border-b border-slate-200">
+                            <h4 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-wallet mr-2 text-blue-500"></i>Section 2 - Income</h4>
+                        </div>
+                        <template x-for="(client, cIdx) in clients.slice(0, clientCount)" :key="cIdx">
+                            <div class="border-b border-slate-200 last:border-0 p-4">
+                                <div class="text-xs font-black text-blue-800 mb-3 uppercase tracking-wider bg-blue-50 inline-block px-3 py-1 rounded" x-text="client.name || 'Client '+(cIdx+1)"></div>
+                                <div class="overflow-x-auto">
+                                    <table class="input-grid-table">
+                                        <thead>
+                                            <tr>
+                                                <th rowspan="2" class="w-40 text-left pl-3 align-middle border-b border-slate-300">Particulars</th>
+                                                <th colspan="3" class="border-b border-slate-300 bg-slate-100 text-slate-800">INR (₹)</th>
+                                                <th colspan="3" class="border-b border-slate-300 bg-blue-100 text-blue-800" x-text="financials.forex.currency"></th>
+                                            </tr>
+                                            <tr>
+                                                <template x-for="year in financials.years"><th class="w-24 border-slate-300 text-[10px]" x-text="year"></th></template>
+                                                <template x-for="year in financials.years"><th class="w-24 border-slate-300 text-blue-700 bg-blue-50 text-[10px]" x-text="year"></th></template>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="key in ['salary', 'rent', 'business', 'capGain', 'other', 'agri']">
+                                                <tr class="hover:bg-slate-50 transition-colors">
+                                                    <td class="input-grid-label" x-text="getLabel(key)"></td>
+                                                    <template x-for="(year, yIdx) in financials.years">
+                                                        <td class="p-1 border-slate-200"><input type="number" x-model="financials.income[cIdx][yIdx][key]" class="w-full text-right px-2 text-xs h-7 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-blue-500" placeholder="0"></td>
+                                                    </template>
+                                                    <template x-for="(year, yIdx) in financials.years">
+                                                        <td class="p-1 border-slate-200 bg-blue-50/50 text-right text-xs text-blue-800 font-medium" x-text="calcFX(financials.income[cIdx][yIdx][key])"></td>
+                                                    </template>
+                                                </tr>
+                                            </template>
+
+                                            <!-- Gross Total Income -->
+                                            <tr class="total-row bg-slate-100">
+                                                <td class="input-grid-label !text-slate-800">GROSS TOTAL INC</td>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-xs px-2 border-slate-200" x-text="formatVal(calculateGrossTotal(cIdx, yIdx))"></td></template>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-xs px-2 border-slate-200 bg-blue-100 text-blue-900" x-text="calcFX(calculateGrossTotal(cIdx, yIdx))"></td></template>
+                                            </tr>
+
+                                            <!-- Less Agri -->
+                                            <tr>
+                                                <td class="input-grid-label text-slate-500 italic font-medium">Less: Agri Inc.</td>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-xs px-2 border-slate-200 text-slate-500" x-text="formatVal(financials.income[cIdx][yIdx].agri)"></td></template>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-xs px-2 border-slate-200 bg-blue-50/50 text-slate-500" x-text="calcFX(financials.income[cIdx][yIdx].agri)"></td></template>
+                                            </tr>
+
+                                            <!-- Less Deductions -->
+                                            <tr class="bg-red-50/30">
+                                                <td class="input-grid-label !text-red-700 !bg-transparent">Less: Deductions</td>
+                                                <template x-for="(year, yIdx) in financials.years">
+                                                    <td class="p-1 border-slate-200"><input type="number" x-model="financials.income[cIdx][yIdx].deduction" class="w-full text-right px-2 text-xs h-7 border border-red-200 rounded bg-red-50 text-red-700 font-bold focus:ring-1 focus:ring-red-500" placeholder="0"></td>
+                                                </template>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-xs px-2 border-slate-200 bg-red-50 text-red-800 font-bold" x-text="calcFX(financials.income[cIdx][yIdx].deduction)"></td></template>
+                                            </tr>
+
+                                            <!-- Gross Tax Income -->
+                                            <tr class="gross-row font-black text-blue-900 border-t-2 border-blue-300 bg-blue-100/50">
+                                                <td class="input-grid-label !text-blue-900 !bg-transparent text-sm">GROSS TAX INC</td>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-sm px-2 border-slate-200" x-text="formatVal(calculateTaxIncome(cIdx, yIdx))"></td></template>
+                                                <template x-for="(year, yIdx) in financials.years"><td class="text-right text-sm px-2 border-slate-200 bg-blue-200 text-blue-900" x-text="calcFX(calculateTaxIncome(cIdx, yIdx))"></td></template>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- SECTION 3: ASSETS & LIABILITIES -->
+                    <div class="space-y-5">
+                        <div class="bg-slate-800 px-4 py-3 rounded-xl border border-slate-700 shadow-md flex items-center">
+                            <h4 class="text-sm font-black text-white uppercase tracking-widest"><i class="fas fa-balance-scale mr-2 text-blue-400"></i>Section 3 - Assets & Liabilities</h4>
+                        </div>
+
+                        <!-- 3A -->
+                        <div class="border-l-4 border-blue-500 pl-4 py-1 bg-white rounded-r-xl shadow-sm border border-l-0 border-slate-200">
+                            <h5 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">3A. Movable Assets</h5>
+                            
+                            <div class="space-y-4">
+                                <h6 class="text-xs font-black text-blue-800 bg-blue-50 p-2 rounded uppercase tracking-wider inline-block">3A1. Acceptable Assets</h6>
+
+                                <!-- 3A1.a Banks -->
+                                <div class="sec-subtitle mt-2 text-slate-700">3A1.a - Bank Balances</div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>TYPE</th><th>CLIENT</th><th>BANK/INV NAME</th><th>ACC/ISIN</th><th>DATE</th><th>BALANCE (INR)</th><th class="bg-blue-100 text-blue-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.movable.acceptable.banks" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.bank" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.acc" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-slate-800 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-blue-50 text-right text-xs font-bold text-blue-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeItem('acceptable', 'banks', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addItem('acceptable', 'banks')" class="btn-sm bg-white border border-slate-300 text-slate-700 w-full hover:bg-slate-100 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-blue-100 text-blue-900 shadow-sm">
+                                    <span>Total Banks:</span>
+                                    <span>₹ <span x-text="formatVal(sumArray(financials.movable.acceptable.banks))"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumArray(financials.movable.acceptable.banks))"></span></span>
+                                </div>
+
+                                <!-- 3A1.b Current Inv -->
+                                <div class="sec-subtitle mt-4 text-slate-700">3A1.b - Current Investments</div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>TYPE</th><th>CLIENT</th><th>BANK/INV NAME</th><th>ACC/ISIN</th><th>DATE</th><th>BALANCE (INR)</th><th class="bg-blue-100 text-blue-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.movable.acceptable.currentInv" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.name" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.acc" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-slate-800 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-blue-50 text-right text-xs font-bold text-blue-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeItem('acceptable', 'currentInv', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addItem('acceptable', 'currentInv')" class="btn-sm bg-white border border-slate-300 text-slate-700 w-full hover:bg-slate-100 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-blue-100 text-blue-900 shadow-sm">
+                                    <span>Total Current Inv:</span>
+                                    <span>₹ <span x-text="formatVal(sumArray(financials.movable.acceptable.currentInv))"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumArray(financials.movable.acceptable.currentInv))"></span></span>
+                                </div>
+                            </div>
+
+                            <!-- 3A2 Non-Acceptable -->
+                            <div class="space-y-4 mt-6">
+                                <h6 class="text-xs font-black text-red-800 bg-red-100 p-2 rounded uppercase tracking-wider inline-block">3A2. Non-Acceptable Assets</h6>
+
+                                <!-- 3A2.a Non Current -->
+                                <div class="sec-subtitle mt-2 text-slate-700">3A2.a - Non-Current Investments</div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>TYPE</th><th>CLIENT</th><th>DETAILS</th><th>DATE</th><th>BALANCE (INR)</th><th class="bg-red-100 text-red-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.movable.nonAcceptable.nonCurrentInv" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.name" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-slate-800 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-red-50 text-right text-xs font-bold text-red-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeItem('nonAcceptable', 'nonCurrentInv', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addItem('nonAcceptable', 'nonCurrentInv')" class="btn-sm bg-white border border-slate-300 text-slate-700 w-full hover:bg-slate-100 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-red-100 text-red-900 shadow-sm">
+                                    <span>Total Non-Current:</span>
+                                    <span>₹ <span x-text="formatVal(sumArray(financials.movable.nonAcceptable.nonCurrentInv))"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumArray(financials.movable.nonAcceptable.nonCurrentInv))"></span></span>
+                                </div>
+
+                                <!-- 3A2.b Other -->
+                                <div class="sec-subtitle mt-4 text-slate-700">3A2.b - Other Investments</div>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>TYPE</th><th>CLIENT</th><th>DETAILS</th><th>DATE</th><th>BALANCE (INR)</th><th class="bg-red-100 text-red-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.movable.nonAcceptable.otherInv" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.name" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-slate-800 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-red-50 text-right text-xs font-bold text-red-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeItem('nonAcceptable', 'otherInv', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addItem('nonAcceptable', 'otherInv')" class="btn-sm bg-white border border-slate-300 text-slate-700 w-full hover:bg-slate-100 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-red-100 text-red-900 shadow-sm">
+                                    <span>Total Other Inv:</span>
+                                    <span>₹ <span x-text="formatVal(sumArray(financials.movable.nonAcceptable.otherInv))"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumArray(financials.movable.nonAcceptable.otherInv))"></span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3B -->
+                        <div class="border-l-4 border-emerald-500 pl-4 py-1 bg-white rounded-r-xl shadow-sm border border-l-0 border-slate-200">
+                            <h5 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">3B. Immovable Assets</h5>
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                <div class="overflow-x-auto">
+                                    <table class="input-grid-table mb-2">
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th><th>Address</th><th>Area</th><th>Owner</th><th>Share%</th><th>Valuer</th><th class="bg-slate-200">Book Val</th><th class="bg-slate-200 border-r-2 border-slate-400">Mkt Val</th><th class="bg-emerald-100 text-emerald-900">Final (INR)</th><th class="bg-blue-100 text-blue-900" x-text="financials.forex.currency"></th><th></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(item, i) in financials.immovable" :key="i">
+                                                <tr>
+                                                    <td class="p-1"><select x-model="item.type" class="w-28 text-[10px] h-8 border-slate-300 rounded"><option>Residential House</option><option>Residential Land</option><option>Agricultural Land</option><option>Commercial Property</option><option>Commercial Land</option></select></td>
+                                                    <td class="p-1"><textarea x-model="item.address" rows="1" class="w-32 text-xs border-slate-300 rounded p-1 custom-scrollbar"></textarea></td>
+                                                    <td class="p-1"><input type="text" x-model="item.area" class="w-16 text-xs h-8 px-1 border-slate-300 rounded"></td>
+                                                    <td class="p-1"><select x-model="item.owner" class="w-24 text-xs h-8 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                    <td class="p-1"><input type="number" x-model="item.share" class="w-12 text-center text-xs h-8 border-slate-300 rounded font-bold" placeholder="100"></td>
+                                                    <td class="p-1"><input type="text" x-model="item.valuer" class="w-20 text-xs h-8 px-1 border-slate-300 rounded"></td>
+                                                    <td class="p-1 bg-slate-100"><input type="number" x-model="item.bookVal" class="w-20 text-right text-xs h-8 border-slate-300 rounded" placeholder="Book"></td>
+                                                    <td class="p-1 bg-slate-100 border-r-2 border-slate-400"><input type="number" x-model="item.marketVal" class="w-20 text-right text-xs h-8 border-slate-300 rounded font-bold" placeholder="Market"></td>
+                                                    <td class="p-1 bg-emerald-50 text-right text-xs font-bold text-emerald-800" x-text="formatVal(calcPropVal(item))"></td>
+                                                    <td class="p-1 bg-blue-50 text-right text-xs font-bold text-blue-800" x-text="calcFX(calcPropVal(item))"></td>
+                                                    <td class="text-center"><button @click="removeImmovable(i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button @click="addImmovable()" class="btn-sm bg-white border border-slate-300 text-emerald-700 w-full hover:bg-emerald-50 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Property</button>
+                            </div>
+                            <div class="sub-table-total bg-emerald-100 text-emerald-900 shadow-sm mt-1">
+                                <span>Total Immovable:</span>
+                                <span>₹ <span x-text="formatVal(sumImmovable())"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumImmovable())"></span></span>
+                            </div>
+                        </div>
+
+                        <!-- 3D -->
+                        <div class="border-l-4 border-orange-500 pl-4 py-1 bg-white rounded-r-xl shadow-sm border border-l-0 border-slate-200">
+                            <h5 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-3">3D. Loans & Liabilities</h5>
+                            
+                            <div class="space-y-4">
+                                <h6 class="text-xs font-black text-orange-800 bg-orange-100 p-2 rounded uppercase tracking-wider inline-block">3D1. Secured Loans</h6>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>Type</th><th>Owner</th><th>Lender</th><th>Acc No</th><th>Date</th><th class="text-right">Amt</th><th class="text-right bg-blue-100 text-blue-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.liabilities.secured" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.name" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.acc" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-orange-700 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-blue-50 text-right text-xs font-bold text-blue-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeLoan('secured', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addLoan('secured')" class="btn-sm bg-white border border-slate-300 text-orange-700 w-full hover:bg-orange-50 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-orange-100 text-orange-900 shadow-sm">
+                                    <span>Total Secured:</span>
+                                    <span>₹ <span x-text="formatVal(sumSecured())"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumSecured())"></span></span>
+                                </div>
+
+                                <h6 class="text-xs font-black text-orange-800 bg-orange-100 p-2 rounded uppercase tracking-wider inline-block mt-4">3D2. Unsecured Loans</h6>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                                    <div class="overflow-x-auto">
+                                        <table class="input-grid-table mb-2">
+                                            <thead>
+                                                <tr>
+                                                    <th class="w-8">#</th><th>Type</th><th>Owner</th><th>Lender</th><th>Acc No</th><th>Date</th><th class="text-right">Amt</th><th class="text-right bg-blue-100 text-blue-900" x-text="financials.forex.currency"></th><th class="w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(item, i) in financials.liabilities.unsecured" :key="i">
+                                                    <tr>
+                                                        <td class="text-center text-xs font-bold text-slate-500" x-text="i+1"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.type" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><select x-model="item.holder" class="w-full text-xs h-7 border-slate-300 rounded"><option value="">Select</option><template x-for="c in clients.slice(0,clientCount)"><option :value="c.name" x-text="c.name"></option></template></select></td>
+                                                        <td class="p-1"><input type="text" x-model="item.name" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="text" x-model="item.acc" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="date" x-model="item.date" class="w-full text-xs h-7 px-2 border-slate-300 rounded"></td>
+                                                        <td class="p-1"><input type="number" x-model="item.amt" class="w-full text-right text-xs h-7 px-2 font-bold text-orange-700 border-slate-300 rounded"></td>
+                                                        <td class="p-1 bg-blue-50 text-right text-xs font-bold text-blue-800" x-text="calcFX(item.amt)"></td>
+                                                        <td class="text-center"><button @click="removeLoan('unsecured', i)" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded p-1 w-6 h-6"><i class="fas fa-times"></i></button></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <button @click="addLoan('unsecured')" class="btn-sm bg-white border border-slate-300 text-orange-700 w-full hover:bg-orange-50 shadow-sm"><i class="fas fa-plus mr-1"></i> Add Row</button>
+                                </div>
+                                <div class="sub-table-total bg-orange-100 text-orange-900 shadow-sm">
+                                    <span>Total Unsecured:</span>
+                                    <span>₹ <span x-text="formatVal(sumUnsecured())"></span> | <span x-text="financials.forex.currency"></span>: <span x-text="calcFX(sumUnsecured())"></span></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= RIGHT PANEL: LIVE PREVIEW & EXPORT ================= -->
+        <div class="w-full lg:w-[55%] flex flex-col min-h-0 h-full">
+            
+            <!-- Toolbar -->
+            <div class="glass-card p-4 mb-4 flex justify-between items-center flex-shrink-0 shadow-md">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">
+                    <i class="fas fa-eye mr-2 text-blue-600"></i> Live Report Preview
+                </h2>
+                <div class="flex flex-wrap gap-2">
+                    <button @click="downloadDocx()" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md"><i class="fas fa-file-word mr-2"></i> DOCX</button>
+                    <button @click="downloadExcel()" class="btn-compact bg-emerald-600 text-white hover:bg-emerald-700 shadow-md"><i class="fas fa-file-excel mr-2"></i> Excel</button>
+                    <button @click="downloadPdf()" class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-md"><i class="fas fa-file-pdf mr-2"></i> Print/PDF</button>
+                </div>
+            </div>
+
+            <!-- Preview Container -->
+            <div id="preview-panel" class="flex-1 overflow-y-auto bg-slate-200 rounded-xl border border-slate-300 py-8 custom-scrollbar shadow-inner flex flex-col items-center gap-6">
+                <!-- Original templates strictly preserved -->
+                <div style="display:none;" id="header-template">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="w-32"><img src="CALOGO V1.jpg" alt="LOGO" class="w-full h-auto object-contain"></div>
+                        <div class="text-right">
+                            <h1 class="text-2xl font-bold text-gray-900 leading-none mb-1" x-text="firm.name"></h1>
+                            <p class="doc-text-12 font-bold text-gray-800 leading-tight">Chartered Accountants</p>
+                            <p class="doc-text-12 font-bold text-gray-800 leading-tight" x-text="firm.est"></p>
+                            <p class="text-xs font-bold text-gray-600 mt-1" x-text="firm.slogan"></p>
+                        </div>
+                    </div>
+                    <div class="doc-header-line"></div>
+                </div>
+
+                <div style="display:none;" id="footer-template">
+                    <div class="border-t-2 border-gray-800 pt-1 mt-auto">
+                        <div class="flex justify-between items-start doc-text-12 font-bold dense-line mb-1">
+                            <div class="text-left w-1/3"><span x-text="firm.name"></span><br><span x-text="firm.web"
+                                    class="text-sm font-normal"></span></div>
+                            <div class="text-center w-1/3 text-blue-900"><span x-text="firm.phone"></span><br><span
+                                    x-text="firm.email" class="text-sm font-normal"></span></div>
+                            <div class="text-right w-1/3"><span x-text="firm.address"></span></div>
+                        </div>
+                        <div
+                            class="text-[10px] text-center border border-gray-400 p-0.5 bg-gray-100 text-gray-800 font-bold uppercase tracking-wide">
+                            <span x-show="firm.pan">PAN : <span x-text="firm.pan"></span> | </span><span
+                                x-show="firm.gstn">GSTN :
+                                <span x-text="firm.gstn"></span> | </span><span x-show="firm.frn">FRN : <span
+                                    x-text="firm.frn"></span> | </span><span x-show="firm.msme">MSME : <span
+                                    x-text="firm.msme"></span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="document-source" style="display:none;">
+
+                    <!-- COVER LETTER -->
+                    <div class="mb-6 force-break-after">
+                        <div class="mb-6">
+                            <div class="grey-box-header">TO WHOM SO EVER IT MAY CONCERN</div>
+                            <div class="grey-box-content">
+                                <p>Find On The Following Pages A Certified Copy Of The Statement Of Income And Statement Of
+                                    Financial Assets & Liabilities Of <span x-html="generateClientString()"></span>, Being
+                                    Resident Of <span class="font-bold uppercase" x-text="commonAddress"></span>.</p>
+                            </div>
+                        </div>
+                        <table class="doc-table mb-2 avoid-break" style="border:none;">
+                            <tr style="border:none;">
+                                <td style="border:none; width: 60%; padding:0;">
+                                    <table class="doc-table">
+                                        <tr>
+                                            <td class="doc-text-12 font-bold w-24">Date</td>
+                                            <td class="w-4 text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="formatDate(firm.date)"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="doc-text-12 font-bold">Place</td>
+                                            <td class="text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="firm.place"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="doc-text-12 font-bold">UDIN*</td>
+                                            <td class="text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="firm.udin"></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="border:none; width: 5%;"></td>
+                                <td style="border:none; vertical-align: top; text-align: right; padding:0;">
+                                    <div class="doc-text-12 font-bold mb-10 dense-line">For <span
+                                            x-text="firm.name"></span><br>Chartered Accountants</div>
+                                    <div class="doc-text-12 font-bold dense-line">CA. <span x-text="firm.partner"></span>
+                                    </div>
+                                    <div class="doc-text-12 font-bold dense-line"><span
+                                            x-text="firm.type === 'Proprietorship' ? 'Proprietor' : 'Partner'"></span></div>
+                                    <div class="doc-text-12 font-bold dense-line">M.No: <span x-text="firm.mno"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="text-[10px] text-blue-800 font-bold mb-2">* UDIN is to be issued under guidelines from
+                            ICAI, It
+                            can be verified At <a href="#" class="underline">https://udin.icai.org/search-udin</a></div>
+                    </div>
+
+                    <!-- PERSONAL DETAILS -->
+                    <div class="mb-4">
+                        <div class="section-header mb-1">I. PERSONAL DETAILS</div>
+                        <table class="doc-table w-full avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/3 text-left">Name</th>
+                                    <th class="text-left">Father's/Husband's Name</th>
+                                    <th class="text-center w-24">Date Of Birth</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="c in clients.slice(0, clientCount)">
+                                    <tr>
+                                        <td class="font-bold" x-text="c.name"></td>
+                                        <td><span x-text="c.relType"></span> <span x-text="c.relName"></span></td>
+                                        <td class="text-center" x-text="c.dob"></td>
+                                    </tr>
+                                </template>
+                                <tr>
+                                    <td class="font-bold">Address</td>
+                                    <td colspan="2" class="font-bold">:- <span x-text="commonAddress"></span></td>
+                                </tr>
+                                <tr>
+                                    <td class="font-bold">Value Of 1 <span x-text="financials.forex.currency"></span></td>
+                                    <td colspan="2" class="font-bold">:- Rs. <span
+                                            x-text="financials.forex.calcRate"></span>/-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- INCOME STATEMENT -->
+                    <div>
+                        <div class="section-header mb-1">II. STATEMENT OF INCOME</div>
+                        <template x-for="(client, cIdx) in clients.slice(0, clientCount)" :key="cIdx">
+                            <div class="mb-6">
+                                <div
+                                    class="font-bold text-center border bg-gray-200 border-black p-1 text-sm uppercase tracking-wide mb-1">
+                                    <span x-text="client.name"></span>
+                                </div>
+                                <table class="doc-table w-full avoid-break">
+                                    <thead>
+                                        <tr>
+                                            <th rowspan="2" class="align-middle text-left w-32">Particulars</th>
+                                            <th colspan="3" class="sub-header" x-text="'Amount (₹)'"></th>
+                                            <th colspan="3" class="sub-header"
+                                                x-text="'Amount (' + financials.forex.symbol + ')'">
+                                            </th>
+                                        </tr>
+                                        <tr><template x-for="year in financials.years">
+                                                <th class="text-center" x-text="year"></th>
+                                            </template><template x-for="year in financials.years">
+                                                <th class="text-center" x-text="year"></th>
+                                            </template></tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="key in ['salary', 'rent', 'business', 'capGain', 'other', 'agri']">
+                                            <tr>
+                                                <td class="font-bold text-[10px]" x-text="getLabel(key)"></td>
+                                                <template x-for="(year, yIdx) in financials.years">
+                                                    <td class="text-right"
+                                                        x-text="formatVal(financials.income[cIdx][yIdx][key])">
+                                                    </td>
+                                                </template>
+                                                <template x-for="(year, yIdx) in financials.years">
+                                                    <td class="text-right"
+                                                        x-text="calcFX(financials.income[cIdx][yIdx][key])"></td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                        <tr class="font-bold bg-gray-50">
+                                            <td class="text-black">GROSS TOTAL INCOME</td>
+                                            <template x-for="(year, yIdx) in financials.years">
+                                                <td class="text-right text-black"
+                                                    x-text="formatVal(calculateGrossTotal(cIdx, yIdx))"></td>
+                                            </template>
+                                            <template x-for="(year, yIdx) in financials.years">
+                                                <td class="text-right text-black"
+                                                    x-text="calcFX(calculateGrossTotal(cIdx, yIdx))">
+                                                </td>
+                                            </template>
+                                        </tr>
+                                        <tr class="font-bold bg-gray-100">
+                                            <td class="text-blue-900">GROSS TAX INCOME*</td>
+                                            <template x-for="(year, yIdx) in financials.years">
+                                                <td class="text-right text-blue-900"
+                                                    x-text="formatVal(calculateTaxIncome(cIdx, yIdx))"></td>
+                                            </template>
+                                            <template x-for="(year, yIdx) in financials.years">
+                                                <td class="text-right text-blue-900"
+                                                    x-text="calcFX(calculateTaxIncome(cIdx, yIdx))"></td>
+                                            </template>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- DECLARATION -->
+                    <div class="mt-4 text-xs text-justify font-serif-doc border-t pt-2 border-gray-400">
+                        <p class="font-bold text-red-800 mb-1">Proof of annual income is mandatory this includes :-</p>
+                        <p class="text-red-700">Past three year returns Salary certificate Balance Sheet {in case of company
+                            sponsorship} Lease Agreement in case of Rental Income for pension income proof of pension
+                            documents
+                            otherwise bank transaction which shows that the pension is credited.</p>
+                    </div>
+
+                    <!-- 3. Assets Header -->
+                    <div class="section-header mb-1 mt-6 force-break-before">III. STATEMENT OF ASSETS & LIABILITIES</div>
+
+                    <!-- 3A -->
+                    <div class="sub-section-header">3A. Movable Assets</div>
+
+                    <!-- 3A1 Banks -->
+                    <div class="mb-0">
+                        <div class="sub-sub-header">3A1. Acceptable Assets</div>
+                        <div class="sub-sub-header">3A1.a Bank Balances</div>
+                        <table class="doc-table w-full avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-8">#</th>
+                                    <th class="w-20">TYPE</th>
+                                    <th class="w-32">CLIENT</th>
+                                    <th>BANK & ACC NO</th>
+                                    <th class="w-20">DATE</th>
+                                    <th class="text-right w-24" x-text="'Amount (₹)'"></th>
+                                    <th class="text-right w-24" x-text="'Amount (' + financials.forex.symbol + ')'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in financials.movable.acceptable.banks" :key="i">
+                                    <tr>
+                                        <td class="text-center" x-text="i+1"></td>
+                                        <td x-text="item.type"></td>
+                                        <td x-text="item.holder"></td>
+                                        <td>
+                                            <div x-text="item.bank" class="font-bold"></div>
+                                            <div class="text-[9px]" x-text="item.acc"></div>
+                                        </td>
+                                        <td x-text="formatDate(item.date)"></td>
+                                        <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                        <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="financials.movable.acceptable.banks.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    </tr>
+                                </template>
+                                <tr class="font-bold bg-gray-50">
+                                    <td colspan="5" class="text-right">Total</td>
+                                    <td class="text-right"
+                                        x-text="formatVal(sumArray(financials.movable.acceptable.banks))"></td>
+                                    <td class="text-right" x-text="calcFX(sumArray(financials.movable.acceptable.banks))">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3A1.b Current Inv -->
+                    <div class="mb-0 mt-4">
+                        <div class="sub-sub-header">3A1.b Current Investments</div>
+                        <table class="doc-table w-full avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-8">#</th>
+                                    <th class="w-20">TYPE</th>
+                                    <th class="w-32">CLIENT</th>
+                                    <th>INVESTMENT & ACC</th>
+                                    <th class="w-20">DATE</th>
+                                    <th class="text-right w-24" x-text="'Amount (₹)'"></th>
+                                    <th class="text-right w-24" x-text="'Amount (' + financials.forex.symbol + ')'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in financials.movable.acceptable.currentInv" :key="i">
+                                    <tr>
+                                        <td class="text-center" x-text="i+1"></td>
+                                        <td x-text="item.type"></td>
+                                        <td x-text="item.holder"></td>
+                                        <td>
+                                            <div x-text="item.name" class="font-bold"></div>
+                                            <div class="text-[9px]" x-text="item.acc"></div>
+                                        </td>
+                                        <td x-text="formatDate(item.date)"></td>
+                                        <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                        <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="financials.movable.acceptable.currentInv.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    </tr>
+                                </template>
+                                <tr class="font-bold bg-gray-50">
+                                    <td colspan="5" class="text-right">Total</td>
+                                    <td class="text-right"
+                                        x-text="formatVal(sumArray(financials.movable.acceptable.currentInv))">
+                                    </td>
+                                    <td class="text-right"
+                                        x-text="calcFX(sumArray(financials.movable.acceptable.currentInv))"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3A1 TOTAL -->
+                    <div
+                        class="mb-4 border-t border-black border-dashed pt-1 flex justify-between font-bold text-sm text-blue-900">
+                        <span>Total 3A1. Acceptable Assets:</span>
+                        <div class="text-right"><span>INR <span x-text="formatVal(sumAcceptable())"></span></span><span
+                                class="ml-4 border-l border-blue-900 pl-2"><span x-text="financials.forex.symbol"></span>
+                                <span x-text="calcFX(sumAcceptable())"></span></span></div>
+                    </div>
+
+                    <!-- 3A2 Non-Acceptable -->
+                    <div class="pl-0 mt-3">
+                        <div class="sub-sub-header">3A2. Non-Acceptable Assets</div>
+                        <!-- 3A2.a Non Current -->
+                        <div class="mb-0">
+                            <div class="sub-sub-header">3A2.a Non-Current Investments</div>
+                            <table class="doc-table w-full avoid-break">
+                                <thead>
+                                    <tr>
+                                        <th class="w-8">#</th>
+                                        <th class="w-20">TYPE</th>
+                                        <th class="w-32">CLIENT</th>
+                                        <th>DETAILS & ACC</th>
+                                        <th class="w-20">DATE</th>
+                                        <th class="text-right w-24" x-text="'Amount (₹)'"></th>
+                                        <th class="text-right w-24" x-text="'Amount (' + financials.forex.symbol + ')'">
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(item, i) in financials.movable.nonAcceptable.nonCurrentInv" :key="i">
+                                        <tr>
+                                            <td class="text-center" x-text="i+1"></td>
+                                            <td x-text="item.type"></td>
+                                            <td x-text="item.holder"></td>
+                                            <td>
+                                                <div x-text="item.name" class="font-bold"></div>
+                                                <div class="text-[9px]" x-text="item.acc"></div>
+                                            </td>
+                                            <td x-text="formatDate(item.date)"></td>
+                                            <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                            <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="financials.movable.nonAcceptable.nonCurrentInv.length === 0">
+                                        <tr>
+                                            <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                        </tr>
+                                    </template>
+                                    <tr class="font-bold bg-gray-50">
+                                        <td colspan="5" class="text-right">Total</td>
+                                        <td class="text-right"
+                                            x-text="formatVal(sumArray(financials.movable.nonAcceptable.nonCurrentInv))">
+                                        </td>
+                                        <td class="text-right"
+                                            x-text="calcFX(sumArray(financials.movable.nonAcceptable.nonCurrentInv))"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 3A2.b Other -->
+                        <div class="mb-0 mt-4">
+                            <div class="sub-sub-header">3A2.b Other Investments</div>
+                            <table class="doc-table w-full avoid-break">
+                                <thead>
+                                    <tr>
+                                        <th class="w-8">#</th>
+                                        <th class="w-20">TYPE</th>
+                                        <th class="w-32">CLIENT</th>
+                                        <th>DETAILS & ACC</th>
+                                        <th class="w-20">DATE</th>
+                                        <th class="text-right w-24" x-text="'Amount (₹)'"></th>
+                                        <th class="text-right w-24" x-text="'Amount (' + financials.forex.symbol + ')'">
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="(item, i) in financials.movable.nonAcceptable.otherInv" :key="i">
+                                        <tr>
+                                            <td class="text-center" x-text="i+1"></td>
+                                            <td x-text="item.type"></td>
+                                            <td x-text="item.holder"></td>
+                                            <td>
+                                                <div x-text="item.name" class="font-bold"></div>
+                                                <div class="text-[9px]" x-text="item.acc"></div>
+                                            </td>
+                                            <td x-text="formatDate(item.date)"></td>
+                                            <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                            <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="financials.movable.nonAcceptable.otherInv.length === 0">
+                                        <tr>
+                                            <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                        </tr>
+                                    </template>
+                                    <tr class="font-bold bg-gray-50">
+                                        <td colspan="5" class="text-right">Total</td>
+                                        <td class="text-right"
+                                            x-text="formatVal(sumArray(financials.movable.nonAcceptable.otherInv))"></td>
+                                        <td class="text-right"
+                                            x-text="calcFX(sumArray(financials.movable.nonAcceptable.otherInv))">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- 3A2 TOTAL -->
+                        <div
+                            class="mb-2 border-t border-black border-dashed pt-1 flex justify-between font-bold text-sm text-red-900">
+                            <span>Total 3A2. Non-Acceptable Assets:</span>
+                            <div class="text-right"><span>INR <span
+                                        x-text="formatVal(sumNonAcceptable())"></span></span><span
+                                    class="ml-4 border-l border-red-900 pl-2"><span x-text="financials.forex.symbol"></span>
+                                    <span x-text="calcFX(sumNonAcceptable())"></span></span></div>
+                        </div>
+                        <!-- 3A TOTAL MOVABLE -->
+                        <div class="mb-4 border border-black bg-gray-100 p-1 flex justify-between font-bold text-sm">
+                            <span>Total 3A. Movable Assets (3A1 + 3A2):</span>
+                            <div class="text-right"><span>INR <span x-text="formatVal(sumMovable())"></span></span><span
+                                    class="ml-4 border-l border-black pl-2"><span x-text="financials.forex.symbol"></span>
+                                    <span x-text="calcFX(sumMovable())"></span></span></div>
+                        </div>
+                    </div>
+
+
+                    <!-- 3B Immovable -->
+                    <div class="mb-0">
+                        <div class="sub-section-header">3B. Immovable Assets</div>
+                        <table class="doc-table w-full mb-4 avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-8 text-center bg-gray-100 border p-1">#</th>
+                                    <th class="text-left bg-gray-100 border p-1">Property Description</th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1" x-text="'Amount (₹)'"></th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1"
+                                        x-text="'Amount (' + financials.forex.symbol + ')'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in financials.immovable" :key="i">
+                                    <tr>
+                                        <td class="text-center" x-text="i+1"></td>
+                                        <td class="text-left align-top">
+                                            <div class="font-bold text-sm mb-1" x-text="item.type"></div>
+                                            <div class="mb-1" x-text="item.address"></div>
+                                            <div class="text-[10px] text-gray-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                                                <span>Area: <span class="font-bold text-black"
+                                                        x-text="item.area"></span></span>
+                                                <span>Valuer: <span class="font-bold text-black"
+                                                        x-text="item.valuer"></span></span>
+                                                <span class="col-span-2">Owner: <span class="font-bold text-black"
+                                                        x-text="item.owner"></span> (<span
+                                                        x-text="item.share"></span>%)</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-right font-bold align-top pt-2"
+                                            x-text="formatVal(calcPropVal(item))"></td>
+                                        <td class="text-right align-top pt-2" x-text="calcFX(calcPropVal(item))"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="financials.immovable.length === 0">
+                                    <tr>
+                                        <td colspan="6" class="text-center italic text-gray-500">No Immovable Properties
+                                            Added</td>
+                                    </tr>
+                                </template>
+                                <tr class="font-bold bg-gray-50">
+                                    <td colspan="2" class="text-right">Total Immovable Assets</td>
+                                    <td class="text-right" x-text="formatVal(sumImmovable())"></td>
+                                    <td class="text-right" x-text="calcFX(sumImmovable())"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 3C GRAND TOTAL -->
+                    <div class="mb-4 border border-black p-2 bg-gray-100">
+                        <div class="flex justify-between font-bold text-sm">
+                            <span>3C. GRAND TOTAL ASSETS (3A + 3B)</span>
+                            <div class="text-right">
+                                <div>INR <span x-text="formatVal(sumAssets())"></span></div>
+                                <div class="text-xs text-gray-600"><span x-text="financials.forex.currency"></span> <span
+                                        x-text="calcFX(sumAssets())"></span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3D LOANS -->
+                    <div class="mb-0">
+                        <div class="sub-section-header">3D. Loans & Liabilities</div>
+                        <!-- 3D1 Secured -->
+                        <div class="sub-sub-header">3D1. Secured Loans</div>
+                        <table class="doc-table w-full mb-4 avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-8 text-center bg-gray-100 border p-1">Sr. No.</th>
+                                    <th class="text-left bg-gray-100 border p-1">Lender Details</th>
+                                    <th class="text-left w-20 bg-gray-100 border p-1">Lender Type</th>
+                                    <th class="text-left w-24 bg-gray-100 border p-1">Owner</th>
+                                    <th class="text-center w-20 bg-gray-100 border p-1">As on Date</th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1" x-text="'Amount (₹)'"></th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1"
+                                        x-text="'Amount (' + financials.forex.symbol + ')'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in financials.liabilities.secured" :key="i">
+                                    <tr>
+                                        <td class="text-center" x-text="i+1"></td>
+                                        <td>
+                                            <div x-text="item.name" class="font-bold"></div>
+                                            <div class="text-[9px]" x-text="item.acc"></div>
+                                        </td>
+                                        <td x-text="item.type"></td>
+                                        <td x-text="item.holder"></td>
+                                        <td class="text-center" x-text="formatDate(item.date)"></td>
+                                        <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                        <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="financials.liabilities.secured.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    </tr>
+                                </template>
+                                <tr class="font-bold bg-gray-50">
+                                    <td colspan="5" class="text-right">Total</td>
+                                    <td class="text-right" x-text="formatVal(sumSecured())"></td>
+                                    <td class="text-right" x-text="calcFX(sumSecured())"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- 3D2 Unsecured -->
+                        <div class="sub-sub-header">3D2. Unsecured Loans</div>
+                        <table class="doc-table w-full mb-4 avoid-break">
+                            <thead>
+                                <tr>
+                                    <th class="w-8 text-center bg-gray-100 border p-1">Sr. No.</th>
+                                    <th class="text-left bg-gray-100 border p-1">Lender Details</th>
+                                    <th class="text-left w-20 bg-gray-100 border p-1">Lender Type</th>
+                                    <th class="text-left w-24 bg-gray-100 border p-1">Owner</th>
+                                    <th class="text-center w-20 bg-gray-100 border p-1">As on Date</th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1" x-text="'Amount (₹)'"></th>
+                                    <th class="text-right w-24 bg-gray-100 border p-1"
+                                        x-text="'Amount (' + financials.forex.symbol + ')'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-for="(item, i) in financials.liabilities.unsecured" :key="i">
+                                    <tr>
+                                        <td class="text-center" x-text="i+1"></td>
+                                        <td>
+                                            <div x-text="item.name" class="font-bold"></div>
+                                            <div class="text-[9px]" x-text="item.acc"></div>
+                                        </td>
+                                        <td x-text="item.type"></td>
+                                        <td x-text="item.holder"></td>
+                                        <td class="text-center" x-text="formatDate(item.date)"></td>
+                                        <td class="text-right" x-text="formatVal(item.amt)"></td>
+                                        <td class="text-right" x-text="calcFX(item.amt)"></td>
+                                    </tr>
+                                </template>
+                                <template x-if="financials.liabilities.unsecured.length === 0">
+                                    <tr>
+                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    </tr>
+                                </template>
+                                <tr class="font-bold bg-gray-50">
+                                    <td colspan="5" class="text-right">Total</td>
+                                    <td class="text-right" x-text="formatVal(sumUnsecured())"></td>
+                                    <td class="text-right" x-text="calcFX(sumUnsecured())"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Total Liabilities -->
+                        <div
+                            class="mb-4 border border-black bg-red-50 p-1 flex justify-between font-bold text-sm text-red-900">
+                            <span>Total 3D. Loans & Liabilities (3D1 + 3D2):</span>
+                            <div class="text-right"><span>INR <span x-text="formatVal(sumLiabilities())"></span></span><span
+                                    class="ml-4 border-l border-red-900 pl-2"><span x-text="financials.forex.symbol"></span>
+                                    <span x-text="calcFX(sumLiabilities())"></span></span></div>
+                        </div>
+                    </div>
+
+                    <!-- NET WEALTH - Final Section -->
+                    <div class="mt-4 mb-6">
+                        <div class="border border-black bg-white p-2 flex justify-between items-center text-sm font-bold">
+                            <span class="w-3/4">Net Wealth (Grand Total of Moveable & Immoveable Assets Net of Loans)
+                                -</span>
+                            <div class="text-right w-1/4">
+                                <div class="text-black">INR <span x-text="formatVal(netWorth())"></span></div>
+                                <div class="text-gray-600 text-xs"><span x-text="financials.forex.symbol"></span> <span
+                                        x-text="calcFX(netWorth())"></span></div>
+                            </div>
+                        </div>
+                        <!-- Declaration Text -->
+                        <div class="mt-4 text-[11px] text-justify font-serif-doc leading-relaxed">
+                            <span class="font-bold underline">Note That:</span><br>
+                            Of <span x-html="generateClientString().replace('Having PAN No', ', Having PAN No')"></span>,
+                            Both Being Resident Of <span class="font-bold uppercase" x-text="commonAddress"></span> Have
+                            a total net worth of Rupees <span class="font-bold uppercase"
+                                x-text="amountToWords(netWorth()) + ' Only'"></span>. That the same is based on the
+                            documents produced before us for certification.
+                        </div>
+                        <!-- Full Signature Block -->
+                        <table class="doc-table mt-8 w-full avoid-break" style="border:none;">
+                            <tr style="border:none;">
+                                <td style="border:none; width: 60%; vertical-align:top; padding:0;">
+                                    <table class="doc-table">
+                                        <tr>
+                                            <td class="doc-text-12 font-bold w-12">Date</td>
+                                            <td class="w-4 text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="formatDate(firm.date)"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="doc-text-12 font-bold">Place</td>
+                                            <td class="text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="firm.place"></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="doc-text-12 font-bold">UDIN*</td>
+                                            <td class="text-center">:-</td>
+                                            <td class="doc-text-12 font-bold" x-text="firm.udin"></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                                <td style="border:none; width: 5%;"></td>
+                                <td style="border:none; vertical-align: top; text-align: right; padding:0;">
+                                    <div class="doc-text-12 font-bold mb-10 dense-line">For <span
+                                            x-text="firm.name"></span><br>Chartered Accountants<br>FRN No. <span
+                                            x-text="firm.frn"></span></div>
+                                    <div class="doc-text-12 font-bold dense-line">CA. <span x-text="firm.partner"></span>
+                                    </div>
+                                    <div class="doc-text-12 font-bold dense-line"><span
+                                            x-text="firm.type === 'Proprietorship' ? 'Proprietor' : 'Partner'"></span></div>
+                                    <div class="doc-text-12 font-bold dense-line">M.No: <span x-text="firm.mno"></span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="text-[9px] text-blue-800 font-bold mt-2">* UDIN is to be issued under guidelines from
+                            ICAI, It
+                            can be verified At <a href="#" class="underline">https://udin.icai.org/search-udin</a></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PRESERVED SCRIPTS: Pagination, Formatting, and Export Logic -->
+    <script>
+    /**
+     * Table Splitting Utility for CA Report Pagination
+     * Handles splitting large tables across multiple pages with header repetition
+     */
+    window.splitTable = function (tableConfig, availableHeight, maxPageHeight) {
+        const {
+            tableHeader,
+            rows,
+            buildRowHtml,
+            buildTotalRow,
+            estimatedRowHeight = 30,
+            tableClasses = 'doc-table w-full mb-4'
+        } = tableConfig;
+
+        const headerHeight = 60; // Estimated height of <thead>
+        const totalRowHeight = 35; // Estimated height of total row
+        const chunks = [];
+
+        let currentRowIndex = 0;
+        let isFirstChunk = true;
+
+        while (currentRowIndex < rows.length) {
+            const availableForThisPage = isFirstChunk ? availableHeight : maxPageHeight;
+            const availableForRows = availableForThisPage - headerHeight - totalRowHeight;
+            const maxRowsThisPage = Math.floor(availableForRows / estimatedRowHeight);
+
+            if (maxRowsThisPage <= 0) {
+                // No room on this page, must move to next
+                chunks.push({
+                    html: '',
+                    rowsUsed: 0,
+                    heightUsed: 0,
+                    needsNewPage: true
+                });
+                isFirstChunk = false;
+                continue;
+            }
+
+            // Calculate how many rows we can fit
+            const rowsToInclude = Math.min(maxRowsThisPage, rows.length - currentRowIndex);
+            const rowsForThisChunk = rows.slice(currentRowIndex, currentRowIndex + rowsToInclude);
+
+            // Build HTML for this chunk
+            let chunkHtml = `<table class="${tableClasses}">`;
+
+            // Add header (always repeat)
+            chunkHtml += tableHeader;
+
+            // Add continuation indicator if not first chunk
+            if (!isFirstChunk) {
+                chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1">...Continued from previous page</td></tr>`;
+            }
+
+            // Add rows
+            chunkHtml += '<tbody>';
+            rowsForThisChunk.forEach((row, idx) => {
+                const globalIndex = currentRowIndex + idx;
+                chunkHtml += buildRowHtml(row, globalIndex);
+            });
+
+            // Add continuation indicator if more rows remain
+            const hasMoreRows = (currentRowIndex + rowsToInclude) < rows.length;
+            if (hasMoreRows) {
+                chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1">Continued on next page...</td></tr>`;
+            }
+
+            // Add total row only on LAST chunk
+            if (!hasMoreRows && buildTotalRow) {
+                chunkHtml += buildTotalRow(rows);
+            }
+
+            chunkHtml += '</tbody></table>';
+
+            const heightUsed = headerHeight + (rowsToInclude * estimatedRowHeight) + (hasMoreRows ? 0 : totalRowHeight);
+
+            chunks.push({
+                html: chunkHtml,
+                rowsUsed: rowsToInclude,
+                heightUsed: heightUsed,
+                needsNewPage: false
+            });
+
+            currentRowIndex += rowsToInclude;
+            isFirstChunk = false;
+        }
+
+        return chunks;
+    };
+    </script>
+    <script>
+    /**
+     * CA Report - Data-Driven Pagination Engine V3.1
+     */
+    const CONFIG = {
+        PAGE_HEIGHT_PX: 880,  // Content area 
+        DEBOUNCE_MS: 200
+    };
+
+    let paginationTimer = null;
+    let lastDataSnapshot = null;
+
+    window.paginatePreview = function (alpineData) {
+        if (!alpineData) { alpineData = getAlpineDataFallback(); }
+        if (!alpineData) return;
+        if (paginationTimer) clearTimeout(paginationTimer);
+        paginationTimer = setTimeout(() => {
+            try { executePagination(alpineData); } catch (e) { console.error('Pagination error:', e); }
+        }, CONFIG.DEBOUNCE_MS);
+    };
+
+    function getAlpineDataFallback() {
+        const appContainer = document.querySelector('[x-data="reportApp()"]');
+        if (!appContainer || !window.Alpine) return null;
+        return window.Alpine.$data(appContainer);
+    }
+
+    function executePagination(data) {
+        const previewPanel = document.getElementById('preview-panel');
+        if (!previewPanel) return;
+
+        // Clear existing pages
+        previewPanel.querySelectorAll('.a4-page').forEach(p => p.remove());
+
+        const headerTemplate = document.getElementById('header-template');
+        const footerTemplate = document.getElementById('footer-template');
+
+        let pages = [];
+        pages.push(buildCoverPage(data));
+        pages.push(buildPersonalAndIncomePage(data));
+        pages = pages.concat(buildAssetsPages(data));
+
+        pages.forEach((pageContent, index) => {
+            createPageWithContent(previewPanel, headerTemplate, footerTemplate, pageContent, index + 1, pages.length);
+        });
+    }
+
+    function buildCoverPage(data) {
+        const clientString = buildClientString(data);
+        return `
+            <div class="mb-6">
+                <div class="grey-box-header">TO WHOM SO EVER IT MAY CONCERN</div>
+                <div class="grey-box-content">
+                    <p>Find On The Following Pages A Certified Copy Of The Statement Of Income And Statement Of
+                        Financial Assets & Liabilities Of ${clientString}, Being
+                        Resident Of <span class="font-bold uppercase">${data.commonAddress || '___________'}</span>.</p>
+                </div>
+            </div>
+            <table class="doc-table mb-2" style="border:none;">
+                <tr style="border:none;">
+                    <td style="border:none; width: 60%; padding:0;">
+                        <table class="doc-table">
+                            <tr><td class="doc-text-12 font-bold w-24">Date</td><td class="w-4 text-center">:-</td><td class="doc-text-12 font-bold">${formatDate(data.firm.date)}</td></tr>
+                            <tr><td class="doc-text-12 font-bold">Place</td><td class="text-center">:-</td><td class="doc-text-12 font-bold">${data.firm.place || ''}</td></tr>
+                            <tr><td class="doc-text-12 font-bold">UDIN*</td><td class="text-center">:-</td><td class="doc-text-12 font-bold">${data.firm.udin || ''}</td></tr>
+                        </table>
+                    </td>
+                    <td style="border:none; width: 5%;"></td>
+                    <td style="border:none; vertical-align: top; text-align: right; padding:0;">
+                        <div class="doc-text-12 font-bold mb-10 dense-line">For ${data.firm.name || ''}<br>Chartered Accountants</div>
+                        <div class="doc-text-12 font-bold dense-line">CA. ${data.firm.partner || ''}</div>
+                        <div class="doc-text-12 font-bold dense-line">${data.firm.type === 'Proprietorship' ? 'Proprietor' : 'Partner'}</div>
+                        <div class="doc-text-12 font-bold dense-line">M.No: ${data.firm.mno || ''}</div>
+                    </td>
+                </tr>
+            </table>
+            <div class="text-[10px] text-blue-800 font-bold mb-2">* UDIN is to be issued under guidelines from ICAI, It
+                can be verified At <a href="#" class="underline">https://udin.icai.org/search-udin</a></div>
+        `;
+    }
+
+    function buildPersonalAndIncomePage(data) {
+        let html = '<div class="mb-4"><div class="section-header mb-1">I. PERSONAL DETAILS</div>';
+        html += '<table class="doc-table w-full"><thead><tr><th class="w-1/3 text-left">Name</th><th class="text-left">Father\'s/Husband\'s Name</th><th class="text-center w-24">Date Of Birth</th></tr></thead><tbody>';
+
+        for (let i = 0; i < data.clientCount; i++) {
+            const c = data.clients[i];
+            html += `<tr><td class="font-bold">${c.name || ''}</td><td>${c.relType || ''} ${c.relName || ''}</td><td class="text-center">${c.dob || ''}</td></tr>`;
+        }
+
+        html += `<tr><td class="font-bold">Address</td><td colspan="2" class="font-bold">:- ${data.commonAddress || ''}</td></tr>`;
+        html += `<tr><td class="font-bold">Value Of 1 ${data.financials.forex.currency}</td><td colspan="2" class="font-bold">:- Rs. ${data.financials.forex.calcRate}/-</td></tr>`;
+        html += '</tbody></table></div>';
+
+        html += '<div><div class="section-header mb-1">II. STATEMENT OF INCOME</div>';
+
+        for (let cIdx = 0; cIdx < data.clientCount; cIdx++) {
+            const client = data.clients[cIdx];
+            html += `<div class="mb-6"><div class="font-bold text-center border bg-gray-200 border-black p-1 text-sm uppercase tracking-wide mb-1">${client.name || ''}</div>`;
+            html += buildIncomeTable(data, cIdx);
+            html += `</div>`;
+        }
+        html += '</div>';
+
+        html += `<div class="mt-4 text-xs text-justify font-serif-doc border-t pt-2 border-gray-400">
+            <p class="font-bold text-red-800 mb-1">Proof of annual income is mandatory this includes :-</p>
+            <p class="text-red-700">Past three year returns Salary certificate Balance Sheet {in case of company sponsorship} Lease Agreement in case of Rental Income for pension income proof of pension documents otherwise bank transaction which shows that the pension is credited.</p>
+        </div>`;
+        return html;
+    }
+
+    function buildIncomeTable(data, cIdx) {
+        const years = data.financials.years;
+        const currency = data.financials.forex.currency;
+
+        let html = '<table class="doc-table w-full"><thead><tr>';
+        html += '<th rowspan="2" class="align-middle text-left w-32">Particulars</th>';
+        html += `<th colspan="3" class="sub-header">Amount (₹)</th>`;
+        html += `<th colspan="3" class="sub-header">Amount (${currency})</th></tr><tr>`;
+
+        years.forEach(year => html += `<th class="text-center">${year}</th>`);
+        years.forEach(year => html += `<th class="text-center">${year}</th>`);
+        html += '</tr></thead><tbody>';
+
+        const keys = ['salary', 'rent', 'business', 'capGain', 'other', 'agri'];
+        const labels = { salary: 'Salary Income', rent: 'Property Income', business: 'Business Income', capGain: 'Capital Gains', other: 'Other Sources', agri: 'Agricultural Inc.' };
+
+        keys.forEach(key => {
+            html += `<tr><td class="font-bold text-[10px]">${labels[key]}</td>`;
+            years.forEach((_, yIdx) => { html += `<td class="text-right">${formatVal(data.financials.income[cIdx][yIdx][key] || 0)}</td>`; });
+            years.forEach((_, yIdx) => { html += `<td class="text-right">${calcFX(data.financials.income[cIdx][yIdx][key] || 0, data.financials.forex.calcRate)}</td>`; });
+            html += '</tr>';
+        });
+
+        html += '<tr class="font-bold bg-gray-50"><td class="text-black">GROSS TOTAL INCOME</td>';
+        years.forEach((_, yIdx) => { html += `<td class="text-right text-black">${formatVal(calculateGrossTotal(data, cIdx, yIdx))}</td>`; });
+        years.forEach((_, yIdx) => { html += `<td class="text-right text-black">${calcFX(calculateGrossTotal(data, cIdx, yIdx), data.financials.forex.calcRate)}</td>`; });
+        html += '</tr>';
+
+        html += '<tr class="font-bold bg-gray-100"><td class="text-blue-900">GROSS TAX INCOME*</td>';
+        years.forEach((_, yIdx) => { html += `<td class="text-right text-blue-900">${formatVal(calculateTaxIncome(data, cIdx, yIdx))}</td>`; });
+        years.forEach((_, yIdx) => { html += `<td class="text-right text-blue-900">${calcFX(calculateTaxIncome(data, cIdx, yIdx), data.financials.forex.calcRate)}</td>`; });
+        html += '</tr></tbody></table>';
+        return html;
+    }
+
+    function buildAssetsPages(data) {
+        const pages = [];
+        let currentPageHTML = '';
+        let currentPageHeight = 0;
+        const PAGE_MAX_HEIGHT = CONFIG.PAGE_HEIGHT_PX;
+
+        function finalizePage() { if (currentPageHTML) { pages.push(currentPageHTML); currentPageHTML = ''; currentPageHeight = 0; } }
+        function addContent(html, estimatedHeight) {
+            const willExceed = (currentPageHeight + estimatedHeight) > PAGE_MAX_HEIGHT;
+            if (willExceed && currentPageHeight > 0) finalizePage();
+            currentPageHTML += html;
+            currentPageHeight += estimatedHeight;
+        }
+
+        addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-center text-sm mb-1 mt-6">III. STATEMENT OF ASSETS & LIABILITIES</div>', 30);
+
+        const banks = data.financials.movable.acceptable.banks || [];
+        const currentInv = data.financials.movable.acceptable.currentInv || [];
+        const nonCurrentInv = data.financials.movable.nonAcceptable.nonCurrentInv || [];
+        const otherInv = data.financials.movable.nonAcceptable.otherInv || [];
+        const hasAcceptableAssets = banks.length > 0 || currentInv.length > 0;
+        const hasNonAcceptableAssets = nonCurrentInv.length > 0 || otherInv.length > 0;
+        const hasMovableAssets = hasAcceptableAssets || hasNonAcceptableAssets;
+
+        if (hasMovableAssets) {
+            addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-sm">3A. Movable Assets</div>', 25);
+            if (hasAcceptableAssets) {
+                addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A1. Acceptable Assets</div>', 20);
+                if (banks.length > 0) {
+                    addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A1.a Bank Balances</div>', 20);
+                    addContent(buildBankTable(data), 80 + (banks.length * 30), true);
+                }
+                if (currentInv.length > 0) {
+                    addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A1.b Current Investments</div>', 25);
+                    addContent(buildCurrentInvestmentsTable(data), 80 + (currentInv.length * 30), true);
+                }
+            }
+            if (hasNonAcceptableAssets) {
+                addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A2. Non-Acceptable Assets</div>', 25);
+                if (nonCurrentInv.length > 0) {
+                    addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A2.a Non-Current Investments</div>', 20);
+                    addContent(buildNonCurrentInvestmentsTable(data), 80 + (nonCurrentInv.length * 30), true);
+                }
+                if (otherInv.length > 0) {
+                    addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A2.b Other Investments</div>', 25);
+                    addContent(buildOtherInvestmentsTable(data), 80 + (otherInv.length * 30), true);
+                }
+            }
+            addContent(buildMovableTotals(data), 60);
+        }
+
+        const properties = data.financials.immovable || [];
+        if (properties.length > 0) {
+            addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-sm mt-4">3B. Immovable Assets</div>', 30);
+            addContent(buildImmovableTable(data), 80 + (properties.length * 30), true);
+        }
+
+        if (hasMovableAssets || properties.length > 0) addContent(buildGrandTotalAssets(data), 70);
+
+        const securedLoans = data.financials.liabilities.secured || [];
+        const unsecuredLoans = data.financials.liabilities.unsecured || [];
+        const hasLiabilities = securedLoans.length > 0 || unsecuredLoans.length > 0;
+
+        if (hasLiabilities) {
+            addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-sm mt-6">3D. Loans & Liabilities</div>', 35);
+            if (securedLoans.length > 0) {
+                addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3D1. Secured Loans</div>', 20);
+                addContent(buildSecuredLoansTable(data), 80 + (securedLoans.length * 30), true);
+            }
+            if (unsecuredLoans.length > 0) {
+                addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3D2. Unsecured Loans</div>', 25);
+                addContent(buildUnsecuredLoansTable(data), 80 + (unsecuredLoans.length * 30), true);
+            }
+            addContent(buildTotalLiabilities(data), 80);
+        }
+
+        if (hasMovableAssets || properties.length > 0 || hasLiabilities) addContent(buildNetWorth(data), 90);
+        addContent(buildFinalDeclaration(data), 350);
+
+        finalizePage();
+        return pages;
+    }
+
+    function buildBankTable(data) {
+        const banks = data.financials.movable.acceptable.banks || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">#</th><th class="w-20">TYPE</th><th class="w-32">CLIENT</th><th>BANK/BRANCH</th><th>ACC/IBAN</th><th class="w-20">DATE</th><th class="text-right w-24">BALANCE (INR)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        if (banks.length === 0) { html += '<tr><td colspan="8" class="text-center text-gray-500">No Records</td></tr>'; } 
+        else {
+            banks.forEach((bank, idx) => {
+                html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${bank.type || ''}</td><td class="text-xs font-bold">${data.clients[bank.cIdx]?.name || bank.holder || ''}</td><td class="text-xs">${bank.bank || ''}</td><td class="text-xs">${bank.acc || ''}</td><td class="text-center text-xs">${bank.date || ''}</td><td class="text-right">${formatVal(bank.amt)}</td><td class="text-right">${calcFX(bank.amt, data.financials.forex.calcRate)}</td></tr>`;
+            });
+        }
+        const totalBanks = banks.reduce((sum, b) => sum + (parseFloat(b.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="6" class="text-right">TOTAL BANK BALANCES:</td><td class="text-right">${formatVal(totalBanks)}</td><td class="text-right">${calcFX(totalBanks, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildCurrentInvestmentsTable(data) {
+        const invs = data.financials.movable.acceptable.currentInv || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">#</th><th class="w-20">TYPE</th><th class="w-32">CLIENT</th><th>BANK/INV NAME</th><th>ACC/ISIN</th><th class="w-20">DATE</th><th class="text-right w-24">BALANCE (INR)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        invs.forEach((inv, idx) => {
+            html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${inv.type || ''}</td><td class="text-xs font-bold">${inv.holder || ''}</td><td class="text-xs">${inv.name || ''}</td><td class="text-xs">${inv.acc || ''}</td><td class="text-center text-xs">${inv.date || ''}</td><td class="text-right">${formatVal(inv.amt)}</td><td class="text-right">${calcFX(inv.amt, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = invs.reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="6" class="text-right border p-2">TOTAL CURRENT INV:</td><td class="text-right border p-2">${formatVal(total)}</td><td class="text-right border p-2">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildNonCurrentInvestmentsTable(data) {
+        const invs = data.financials.movable.nonAcceptable.nonCurrentInv || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">#</th><th class="w-20">TYPE</th><th class="w-32">CLIENT</th><th>DETAILS</th><th class="w-20">DATE</th><th class="text-right w-24">BALANCE (INR)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        invs.forEach((inv, idx) => {
+            html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${inv.type || ''}</td><td class="text-xs font-bold">${inv.holder || ''}</td><td class="text-xs">${inv.name || ''}</td><td class="text-center text-xs">${inv.date || ''}</td><td class="text-right">${formatVal(inv.amt)}</td><td class="text-right">${calcFX(inv.amt, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = invs.reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="5" class="text-right">TOTAL NON-CURRENT:</td><td class="text-right">${formatVal(total)}</td><td class="text-right">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildOtherInvestmentsTable(data) {
+        const invs = data.financials.movable.nonAcceptable.otherInv || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">#</th><th class="w-20">TYPE</th><th class="w-32">CLIENT</th><th>DETAILS</th><th class="w-20">DATE</th><th class="text-right w-24">BALANCE (INR)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        invs.forEach((inv, idx) => {
+            html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${inv.type || ''}</td><td class="text-xs font-bold">${inv.holder || ''}</td><td class="text-xs">${inv.name || ''}</td><td class="text-center text-xs">${inv.date || ''}</td><td class="text-right">${formatVal(inv.amt)}</td><td class="text-right">${calcFX(inv.amt, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = invs.reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="5" class="text-right">TOTAL OTHER INV:</td><td class="text-right">${formatVal(total)}</td><td class="text-right">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildMovableTotals(data) {
+        const totalBanks = (data.financials.movable.acceptable.banks || []).reduce((sum, b) => sum + (parseFloat(b.amt) || 0), 0);
+        const totalCurrent = (data.financials.movable.acceptable.currentInv || []).reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        const totalNonCurrent = (data.financials.movable.nonAcceptable.nonCurrentInv || []).reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        const totalOther = (data.financials.movable.nonAcceptable.otherInv || []).reduce((sum, i) => sum + (parseFloat(i.amt) || 0), 0);
+        const grandTotal = totalBanks + totalCurrent + totalNonCurrent + totalOther;
+
+        let html = '<table class="doc-table w-full mt-2 mb-2"><tr class="bg-gray-100">';
+        html += `<td class="font-bold p-2 border">3A. TOTAL MOVABLE ASSETS:</td><td class="text-right font-bold p-2 border">${formatVal(grandTotal)}</td><td class="text-right font-bold p-2 border w-24">${calcFX(grandTotal, data.financials.forex.calcRate)}</td>`;
+        html += '</tr></table>';
+        return html;
+    }
+
+    function buildImmovableTable(data) {
+        const properties = data.financials.immovable || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">#</th><th class="w-16">Type</th><th>Address</th><th class="w-16">Area</th><th class="w-20">Owner</th><th class="w-12 text-center">Share%</th><th class="w-16">Valuer</th><th class="text-right w-20">Final (INR)</th><th class="text-right w-16">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        properties.forEach((prop, idx) => {
+            let val = Math.max(parseFloat(prop.bookVal)||0, parseFloat(prop.marketVal)||0) * (parseFloat(prop.share)||0)/100;
+            html += `<tr><td class="text-center text-xs">${idx + 1}</td><td class="text-xs">${prop.type || ''}</td><td class="text-xs">${prop.address || ''}</td><td class="text-xs">${prop.area || ''}</td><td class="text-xs font-bold">${prop.owner || ''}</td><td class="text-center text-xs">${prop.share || ''}</td><td class="text-xs">${prop.valuer || ''}</td><td class="text-right">${formatVal(val)}</td><td class="text-right">${calcFX(val, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = properties.reduce((sum, p) => sum + (Math.max(parseFloat(p.bookVal)||0, parseFloat(p.marketVal)||0) * (parseFloat(p.share)||0)/100), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="7" class="text-right">3B. TOTAL IMMOVABLE:</td><td class="text-right">${formatVal(total)}</td><td class="text-right">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildGrandTotalAssets(data) {
+        let mTot = 0, iTot = 0;
+        // Simplified mapping to get total values directly
+        try { mTot = parseFloat(window.Alpine.$data(document.querySelector('[x-data]')).sumMovable()); } catch(e){}
+        try { iTot = parseFloat(window.Alpine.$data(document.querySelector('[x-data]')).sumImmovable()); } catch(e){}
+        const grandTotal = mTot + iTot;
+
+        let html = '<table class="doc-table w-full mt-2 mb-4"><tr class="bg-gray-100">';
+        html += `<td class="font-bold p-2 border">3C. GRAND TOTAL (3A + 3B):</td><td class="text-right font-bold p-2 border">${formatVal(grandTotal)}</td><td class="text-right font-bold p-2 border w-24">${calcFX(grandTotal, data.financials.forex.calcRate)}</td>`;
+        html += '</tr></table>';
+        return html;
+    }
+
+    function buildSecuredLoansTable(data) {
+        const loans = data.financials.liabilities.secured || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">Sr. No.</th><th class="w-20">TYPE</th><th class="w-32">OWNER</th><th>LENDER</th><th class="w-20">ACC NO</th><th class="w-20">DATE</th><th class="text-right w-24">AMT (₹)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        loans.forEach((loan, idx) => {
+            html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${loan.type || ''}</td><td class="text-xs font-bold">${loan.holder || ''}</td><td class="text-xs">${loan.name || ''}</td><td class="text-xs">${loan.acc || ''}</td><td class="text-center text-xs">${loan.date || ''}</td><td class="text-right">${formatVal(loan.amt)}</td><td class="text-right">${calcFX(loan.amt, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = loans.reduce((sum, l) => sum + (parseFloat(l.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="6" class="text-right border p-2">TOTAL SECURED:</td><td class="text-right border p-2">${formatVal(total)}</td><td class="text-right border p-2">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildUnsecuredLoansTable(data) {
+        const loans = data.financials.liabilities.unsecured || [];
+        let html = '<table class="doc-table w-full mb-4"><thead><tr><th class="w-8">Sr. No.</th><th class="w-20">TYPE</th><th class="w-32">OWNER</th><th>LENDER</th><th class="w-20">ACC NO</th><th class="w-20">DATE</th><th class="text-right w-24">AMT (₹)</th><th class="text-right w-20">' + data.financials.forex.currency + '</th></tr></thead><tbody>';
+        loans.forEach((loan, idx) => {
+            html += `<tr><td class="text-center">${idx + 1}</td><td class="text-xs">${loan.type || ''}</td><td class="text-xs font-bold">${loan.holder || ''}</td><td class="text-xs">${loan.name || ''}</td><td class="text-xs">${loan.acc || ''}</td><td class="text-center text-xs">${loan.date || ''}</td><td class="text-right">${formatVal(loan.amt)}</td><td class="text-right">${calcFX(loan.amt, data.financials.forex.calcRate)}</td></tr>`;
+        });
+        const total = loans.reduce((sum, l) => sum + (parseFloat(l.amt) || 0), 0);
+        html += `<tr class="font-bold bg-gray-100"><td colspan="6" class="text-right border p-2">TOTAL UNSECURED:</td><td class="text-right border p-2">${formatVal(total)}</td><td class="text-right border p-2">${calcFX(total, data.financials.forex.calcRate)}</td></tr></tbody></table>`;
+        return html;
+    }
+
+    function buildTotalLiabilities(data) {
+        let total = 0;
+        try { total = parseFloat(window.Alpine.$data(document.querySelector('[x-data]')).sumLiabilities()); } catch(e){}
+        let html = '<table class="doc-table w-full mt-2 mb-2"><tr class="bg-gray-100">';
+        html += `<td class="font-bold p-2 border">3D. TOTAL LIABILITIES (3D1 + 3D2):</td><td class="text-right font-bold p-2 border">${formatVal(total)}</td><td class="text-right font-bold p-2 border w-24">${calcFX(total, data.financials.forex.calcRate)}</td>`;
+        html += '</tr></table>';
+        return html;
+    }
+
+    function buildNetWorth(data) {
+        let netWorth = 0;
+        try { netWorth = parseFloat(window.Alpine.$data(document.querySelector('[x-data]')).netWorth()); } catch(e){}
+
+        let html = '<table class="doc-table w-full mt-4 mb-4"><tr class="bg-gray-100"><table class="w-full text-lg font-bold"><tr>';
+        html += `<td class="font-bold p-2 border">NET WORTH (3C - 3D):</td><td class="text-right p-2 border">${formatVal(netWorth)}</td><td class="text-right p-2 border w-32">${calcFX(netWorth, data.financials.forex.calcRate)}</td>`;
+        html += '</tr></table>';
+
+        let declarationText = buildClientString(data);
+        let netWorthWords = 'Zero';
+        try { netWorthWords = window.Alpine.$data(document.querySelector('[x-data]')).amountToWords(netWorth); } catch (e) {}
+
+        declarationText += `, Both Being Resident Of ${data.commonAddress || ''} Have a total net worth of Rupees ${netWorthWords} Only.`;
+        html += `<p class="text-xs mt-4 mb-4 text-justify">${declarationText}</p>`;
+        return html;
+    }
+
+    function buildFinalDeclaration(data) {
+        let html = '<div class="mt-6 text-xs text-justify">';
+        html += '<p class="font-bold mb-2">Note :-</p>';
+        html += '<p class="mb-2">A. This Statement Is To Be Used Only For Visa Purposes Issued At Client&#39;s own risk.</p>';
+        html += '<p class="mb-2">B. Hereby I Have No Responsibility If data Is not verified documents.</p>';
+        html += '<p class="mb-2">C. Bearing Above Annual Statement Of Financial Position (Net Worth or Wealth) Of Above Client. It Is Further Certified By ME That Net Wealth/Worth Of Above Client Has Been Assessed On The Basis Of Scrutiny Of The Documents Provided By The Client In Form Of</p>';
+        html += '<ol class="list-decimal list-inside mb-4"><li>Past 3 years ITR returns</li><li>Annexure-Fixed Assets & Liabilities</li><li>Bank Statements</li><li>Loan Account Statement Issued By The Lenders.</li><li>Proof Of Assets In Form Of Immovable Assets Registery/Valuation By Architect.</li><li> Value Of Immovable Assets Were Estimated At Cost, I.e A Purchase Value Or Cost Of Acquisition Is Considered Based On The Registery.</li><li> Passport, PAN And Aadhar Card Copy.</li></ol></div>';
+
+        html += '<table class="doc-table mt-8 w-full" style="border:none;"><tr style="border:none;"><td style="border:none; width: 60%; vertical-align:top; padding:0;"><table class="doc-table"><tbody>';
+        html += `<tr><td class="doc-text-12 font-bold w-24">Date</td><td class="w-4 text-center">:-</td><td class="doc-text-12 font-bold">${formatDate(data.firm.date)}</td></tr>`;
+        html += `<tr><td class="doc-text-12 font-bold">Place</td><td class="text-center">:-</td><td class="doc-text-12 font-bold">${data.firm.place || ''}</td></tr>`;
+        html += `<tr><td class="doc-text-12 font-bold">UDIN*</td><td class="text-center">:-</td><td class="doc-text-12 font-bold">${data.firm.udin || ''}</td></tr>`;
+        html += '</tbody></table></td><td style="border:none; width: 5%;"></td><td style="border:none; vertical-align: top; text-align: right; padding:0;">';
+        html += `<div class="doc-text-12 font-bold mb-10 dense-line">For ${data.firm.name || ''}<br>Chartered Accountants</div>`;
+        html += `<div class="doc-text-12 font-bold dense-line">CA. ${data.firm.partner || ''}</div>`;
+        html += `<div class="doc-text-12 font-bold dense-line">${data.firm.type === 'Proprietorship' ? 'Proprietor' : 'Partner'}</div>`;
+        html += `<div class="doc-text-12 font-bold dense-line">M.No: ${data.firm.mno || ''}</div>`;
+        html += '</td></tr></table>';
+        return html;
+    }
+
+    function buildClientString(data) {
+        let str = '';
+        for (let i = 0; i < data.clientCount; i++) {
+            const c = data.clients[i];
+            if (i > 0) str += i === data.clientCount - 1 ? ' <span class="font-normal">And</span> ' : ', ';
+            str += `<span class="font-bold uppercase border-b border-black">${c.name || '___________'}</span> ${c.relType || ''} <span class="font-bold uppercase border-b border-black">${c.relName || '___________'}</span>, Having PAN No <span class="font-bold border-b border-black">${c.pan || '___________'}</span>`;
+        }
+        return str;
+    }
+
+    function calculateGrossTotal(data, cIdx, yIdx) {
+        const obj = data.financials.income[cIdx][yIdx];
+        return (parseFloat(obj.salary) || 0) + (parseFloat(obj.rent) || 0) + (parseFloat(obj.business) || 0) + (parseFloat(obj.capGain) || 0) + (parseFloat(obj.other) || 0) + (parseFloat(obj.agri) || 0);
+    }
+
+    function calculateTaxIncome(data, cIdx, yIdx) {
+        const gross = calculateGrossTotal(data, cIdx, yIdx);
+        const agri = parseFloat(data.financials.income[cIdx][yIdx].agri) || 0;
+        const deduction = parseFloat(data.financials.income[cIdx][yIdx].deduction) || 0;
+        return gross - agri - deduction;
+    }
+
+    function formatVal(val) { return val ? parseFloat(val).toLocaleString('en-IN') : '0'; }
+    function calcFX(val, rate) { if (!val || val == 0) return '-'; if (!rate || rate == 0) return 'Err'; return (parseFloat(val) / rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function formatDate(d) { if (!d) return ''; const date = new Date(d); const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; return `${String(date.getDate()).padStart(2, '0')}-${months[date.getMonth()]}-${String(date.getFullYear()).slice(-2)}`; }
+
+    function createPageWithContent(container, headerTemplate, footerTemplate, htmlContent, pageNum, totalPages) {
+        const page = document.createElement('div');
+        page.className = 'a4-page';
+        
+        if (headerTemplate) { const header = headerTemplate.cloneNode(true); header.style.display = 'block'; header.removeAttribute('id'); page.appendChild(header); }
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'page-content';
+        contentDiv.style.flex = '1 1 auto';
+        contentDiv.style.maxHeight = '880px';
+        contentDiv.style.overflow = 'hidden';
+        contentDiv.innerHTML = htmlContent;
+        page.appendChild(contentDiv);
+        
+        if (footerTemplate) {
+            const footer = footerTemplate.cloneNode(true);
+            footer.style.display = 'block'; footer.style.marginTop = 'auto'; footer.removeAttribute('id');
+            if (pageNum && totalPages) {
+                const pageNumberDiv = document.createElement('div');
+                pageNumberDiv.className = 'text-center text-xs font-bold text-gray-600 mt-1';
+                pageNumberDiv.textContent = `Page ${pageNum} of ${totalPages}`;
+                footer.appendChild(pageNumberDiv);
+            }
+            page.appendChild(footer);
+        }
+        container.appendChild(page);
+        return page;
+    }
+    </script>
+    <script>
+    function generatePDF() {
+        try {
+            const appElement = document.querySelector('[x-data="reportApp()"]');
+            if (!appElement || !window.Alpine) { alert('Application data not found'); return; }
+            const data = window.Alpine.$data(appElement);
+            
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const clientName = data.clients && data.clients[0] && data.clients[0].name ? data.clients[0].name.replace(/[^a-z0-9]/gi, '_') : 'Client';
+            const suggestedFilename = `CAReport_${dateStr}_${clientName}.pdf`;
+
+            const originalTitle = document.title;
+            document.title = suggestedFilename;
+
+            alert(`PDF Export Instructions:\n\n1. Print dialog will open\n2. Click "More settings" (if available)\n3. UNCHECK "Headers and footers"\n4. Select "Save as PDF" as destination\n5. Suggested filename:\n   ${suggestedFilename}\n6. Click Save\n\nClick OK to continue...`);
+            window.print();
+
+            setTimeout(() => { document.title = originalTitle; }, 1000);
+        } catch (error) {
+            alert(`Error preparing PDF export: ${error.message}`);
+        }
+    }
+    </script>
+    <script>
+    async function generateExcel() {
+        const appElement = document.querySelector('[x-data="reportApp()"]');
+        if (!appElement || !window.Alpine) { alert('Application data not found'); return; }
+        const data = window.Alpine.$data(appElement);
+
+        if (typeof ExcelJS === 'undefined') { alert('ExcelJS library not loaded. Please refresh and try again.'); return; }
+
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'CA Report Generator'; workbook.created = new Date();
+
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+            const clientName = data.clients && data.clients[0] && data.clients[0].name ? data.clients[0].name.replace(/[^a-z0-9]/gi, '_') : 'Client';
+            const filename = `CAReport_${dateStr}_${clientName}.xlsx`;
+
+            await createCoverSheet(workbook, data);
+            await createPersonalDetailsSheet(workbook, data);
+            await createIncomeSheet(workbook, data);
+            await createAssetsSheet(workbook, data);
+            await createLiabilitiesSheet(workbook, data);
+            await createSummarySheet(workbook, data);
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, filename);
+
+        } catch (error) {
+            alert(`Error generating Excel: ${error.message}`);
+        }
+    }
+
+    function applyHeaderStyle(cell) {
+        cell.font = { bold: true, size: 11 };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    }
+    function applyTotalStyle(cell) {
+        cell.font = { bold: true, size: 11 };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE5E7EB' } };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    }
+    function applyDataStyle(cell) {
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+    }
+
+    async function createCoverSheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Cover');
+        sheet.getCell('A1').value = 'TO WHOM SO EVER IT MAY CONCERN'; sheet.getCell('A1').font = { bold: true, size: 14 };
+        const clients = data.clients.slice(0, data.clientCount);
+        const clientString = clients.map(c => `${c.name || '[Name]'} (${c.relType || 'S/O'} ${c.relName || '[Relation]'}), PAN: ${c.pan || '[PAN]'}`).join(' AND ');
+        sheet.getCell('A3').value = 'Find On The Following Pages A Certified Copy Of The Statement Of Income And';
+        sheet.getCell('A4').value = 'Statement Of Financial Assets & Liabilities Of:';
+        sheet.getCell('A5').value = clientString;
+        sheet.getCell('A6').value = `Being Resident Of: ${data.commonAddress || '[Address]'}`;
+        sheet.getCell('A9').value = 'Date:'; sheet.getCell('A9').font = { bold: true }; sheet.getCell('B9').value = data.firm.date || '';
+        sheet.getCell('A10').value = 'Place:'; sheet.getCell('A10').font = { bold: true }; sheet.getCell('B10').value = data.firm.place || '';
+        sheet.getCell('A11').value = 'UDIN*:'; sheet.getCell('A11').font = { bold: true }; sheet.getCell('B11').value = data.firm.udin || '';
+        sheet.getCell('D9').value = `For ${data.firm.name || '[Firm Name]'}`; sheet.getCell('D9').font = { bold: true };
+        sheet.getCell('D10').value = 'Chartered Accountants';
+        sheet.getCell('D11').value = `FRN No. ${data.firm.frn || '[FRN]'}`;
+        sheet.getCell('D12').value = `CA. ${data.firm.partner || '[Partner Name]'}`;
+        sheet.getCell('D13').value = data.firm.type === 'Proprietorship' ? 'Proprietor' : 'Partner';
+        sheet.getCell('D14').value = `M.No: ${data.firm.mno || '[Membership No]'}`;
+        sheet.getColumn(1).width = 15; sheet.getColumn(2).width = 25; sheet.getColumn(3).width = 5; sheet.getColumn(4).width = 35;
+    }
+
+    async function createPersonalDetailsSheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Personal Details');
+        sheet.getCell('A1').value = 'I. PERSONAL DETAILS'; sheet.getCell('A1').font = { bold: true, size: 12 };
+        const headers = ['Name', "Father's/Husband's Name", 'Date of Birth', 'PAN'];
+        headers.forEach((header, idx) => { const cell = sheet.getCell(3, idx + 1); cell.value = header; applyHeaderStyle(cell); });
+        for (let i = 0; i < data.clientCount; i++) {
+            const c = data.clients[i]; const row = sheet.getRow(4 + i);
+            row.getCell(1).value = c.name || ''; row.getCell(2).value = `${c.relType || 'S/O'} ${c.relName || ''}`;
+            row.getCell(3).value = c.dob || ''; row.getCell(4).value = c.pan || '';
+            for (let col = 1; col <= 4; col++) { applyDataStyle(row.getCell(col)); }
+        }
+        const rateRow = 4 + data.clientCount + 2;
+        sheet.getCell(rateRow, 1).value = 'Exchange Rate:'; sheet.getCell(rateRow, 1).font = { bold: true };
+        sheet.getCell(rateRow, 2).value = data.financials.forex.calcRate || 1; sheet.getCell(rateRow, 2).numFmt = '0.00';
+        sheet.getCell(rateRow, 3).value = `(1 ${data.financials.forex.currency || 'USD'} = Rs. X)`;
+        sheet.getColumn(1).width = 25; sheet.getColumn(2).width = 30; sheet.getColumn(3).width = 15; sheet.getColumn(4).width = 15;
+    }
+
+    async function createIncomeSheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Income');
+        sheet.getCell('A1').value = 'II. STATEMENT OF INCOME'; sheet.getCell('A1').font = { bold: true, size: 12 };
+        const years = data.financials.years || ['2022-23', '2023-24', '2024-25'];
+        let currentRow = 3;
+        for (let cIdx = 0; cIdx < data.clientCount; cIdx++) {
+            const client = data.clients[cIdx];
+            sheet.getCell(currentRow, 1).value = client.name || `Client ${cIdx + 1}`; sheet.getCell(currentRow, 1).font = { bold: true, size: 11 }; currentRow += 2;
+            const headerRow = sheet.getRow(currentRow); headerRow.getCell(1).value = 'Particulars'; applyHeaderStyle(headerRow.getCell(1));
+            let col = 2;
+            years.forEach(y => { const cell = headerRow.getCell(col); cell.value = `${y} (INR)`; applyHeaderStyle(cell); col++; });
+            years.forEach(y => { const cell = headerRow.getCell(col); cell.value = `${y} (${data.financials.forex.currency})`; applyHeaderStyle(cell); col++; });
+            currentRow++;
+            const incomeTypes = [ { key: 'salary', label: 'Salary Income' }, { key: 'rent', label: 'Property Income' }, { key: 'business', label: 'Business Income' }, { key: 'capGain', label: 'Capital Gains' }, { key: 'other', label: 'Other Sources' }, { key: 'agri', label: 'Agricultural Inc.' } ];
+            const dataStartRow = currentRow;
+            incomeTypes.forEach(type => {
+                const row = sheet.getRow(currentRow); row.getCell(1).value = type.label; applyDataStyle(row.getCell(1));
+                for (let yIdx = 0; yIdx < years.length; yIdx++) {
+                    const val = data.financials.income[cIdx]?.[yIdx]?.[type.key] || 0; const cell = row.getCell(2 + yIdx); cell.value = val; cell.numFmt = '#,##0.00'; applyDataStyle(cell);
+                }
+                for (let yIdx = 0; yIdx < years.length; yIdx++) {
+                    const inrCol = String.fromCharCode(66 + yIdx); const cell = row.getCell(2 + years.length + yIdx); cell.value = { formula: `${inrCol}${currentRow}/'Personal Details'!$B$8` }; cell.numFmt = '#,##0.00'; applyDataStyle(cell);
+                }
+                currentRow++;
+            });
+            const grossRow = sheet.getRow(currentRow); grossRow.getCell(1).value = 'GROSS TOTAL INCOME'; applyTotalStyle(grossRow.getCell(1));
+            for (let yIdx = 0; yIdx < years.length; yIdx++) { const col = String.fromCharCode(66 + yIdx); const cell = grossRow.getCell(2 + yIdx); cell.value = { formula: `SUM(${col}${dataStartRow}:${col}${currentRow - 1})` }; cell.numFmt = '#,##0.00'; applyTotalStyle(cell); }
+            for (let yIdx = 0; yIdx < years.length; yIdx++) { const col = String.fromCharCode(66 + years.length + yIdx); const cell = grossRow.getCell(2 + years.length + yIdx); cell.value = { formula: `SUM(${col}${dataStartRow}:${col}${currentRow - 1})` }; cell.numFmt = '#,##0.00'; applyTotalStyle(cell); }
+            currentRow++;
+            const taxRow = sheet.getRow(currentRow); taxRow.getCell(1).value = 'GROSS TAX INCOME'; applyTotalStyle(taxRow.getCell(1));
+            const agriRowNum = dataStartRow + 5;
+            for (let yIdx = 0; yIdx < years.length; yIdx++) { const col = String.fromCharCode(66 + yIdx); const cell = taxRow.getCell(2 + yIdx); cell.value = { formula: `${col}${currentRow - 1}-${col}${agriRowNum}` }; cell.numFmt = '#,##0.00'; applyTotalStyle(cell); }
+            for (let yIdx = 0; yIdx < years.length; yIdx++) { const col = String.fromCharCode(66 + years.length + yIdx); const cell = taxRow.getCell(2 + years.length + yIdx); cell.value = { formula: `${col}${currentRow - 1}-${col}${agriRowNum}` }; cell.numFmt = '#,##0.00'; applyTotalStyle(cell); }
+            currentRow += 3;
+        }
+        sheet.getColumn(1).width = 25; for (let i = 2; i <= 1 + years.length * 2; i++) { sheet.getColumn(i).width = 15; }
+    }
+
+    async function createAssetsSheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Assets');
+        sheet.getCell('A1').value = 'III. STATEMENT OF ASSETS'; sheet.getCell('A1').font = { bold: true, size: 12 };
+        let currentRow = 3; const totalRefs = [];
+        const banks = data.financials.movable.acceptable.banks || [];
+        if (banks.length > 0) {
+            sheet.getCell(currentRow, 1).value = '3A1.a - Bank Balances'; sheet.getCell(currentRow, 1).font = { bold: true }; currentRow++;
+            const headers = ['#', 'Type', 'Client', 'Bank/Branch', 'Account', 'Date', 'Balance (INR)', data.financials.forex.currency];
+            headers.forEach((h, idx) => { const cell = sheet.getCell(currentRow, idx + 1); cell.value = h; applyHeaderStyle(cell); }); currentRow++;
+            const startRow = currentRow;
+            banks.forEach((bank, idx) => {
+                const row = sheet.getRow(currentRow); row.getCell(1).value = idx + 1; row.getCell(2).value = bank.type || ''; row.getCell(3).value = data.clients[bank.cIdx]?.name || ''; row.getCell(4).value = bank.bank || ''; row.getCell(5).value = bank.acc || ''; row.getCell(6).value = bank.date || ''; row.getCell(7).value = bank.amt || 0; row.getCell(7).numFmt = '#,##0.00'; row.getCell(8).value = { formula: `G${currentRow}/'Personal Details'!$B$8` }; row.getCell(8).numFmt = '#,##0.00';
+                for (let col = 1; col <= 8; col++) { applyDataStyle(row.getCell(col)); } currentRow++;
+            });
+            const totalRow = sheet.getRow(currentRow); totalRow.getCell(6).value = 'TOTAL:'; applyTotalStyle(totalRow.getCell(6));
+            totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${currentRow - 1})` }; totalRow.getCell(7).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(7));
+            totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${currentRow - 1})` }; totalRow.getCell(8).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(8));
+            totalRefs.push(`G${currentRow}`); currentRow += 2;
+        }
+        
+        const properties = data.financials.immovable || [];
+        if (properties.length > 0) {
+            sheet.getCell(currentRow, 1).value = '3B - Immovable Assets'; sheet.getCell(currentRow, 1).font = { bold: true }; currentRow++;
+            const headers = ['#', 'Type', 'Address', 'Area', 'Owner', 'Book Val', 'Share%', 'Valuer', 'Market Val (INR)', data.financials.forex.currency];
+            headers.forEach((h, idx) => { const cell = sheet.getCell(currentRow, idx + 1); cell.value = h; applyHeaderStyle(cell); }); currentRow++;
+            const startRow = currentRow;
+            properties.forEach((prop, idx) => {
+                const row = sheet.getRow(currentRow); row.getCell(1).value = idx + 1; row.getCell(2).value = prop.type || ''; row.getCell(3).value = prop.address || ''; row.getCell(4).value = prop.area || ''; row.getCell(5).value = prop.owner || ''; row.getCell(6).value = prop.bookVal || 0; row.getCell(6).numFmt = '#,##0.00'; row.getCell(7).value = prop.share || 100; row.getCell(8).value = prop.valuer || ''; row.getCell(9).value = prop.marketVal || 0; row.getCell(9).numFmt = '#,##0.00'; row.getCell(10).value = { formula: `I${currentRow}/'Personal Details'!$B$8` }; row.getCell(10).numFmt = '#,##0.00';
+                for (let col = 1; col <= 10; col++) { applyDataStyle(row.getCell(col)); } currentRow++;
+            });
+            const totalRow = sheet.getRow(currentRow); totalRow.getCell(8).value = 'TOTAL:'; applyTotalStyle(totalRow.getCell(8));
+            totalRow.getCell(9).value = { formula: `SUM(I${startRow}:I${currentRow - 1})` }; totalRow.getCell(9).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(9));
+            totalRow.getCell(10).value = { formula: `SUM(J${startRow}:J${currentRow - 1})` }; totalRow.getCell(10).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(10));
+            totalRefs.push(`I${currentRow}`); currentRow += 2;
+        }
+
+        if (totalRefs.length > 0) {
+            sheet.getCell(currentRow, 6).value = '3C. GRAND TOTAL ASSETS:'; sheet.getCell(currentRow, 6).font = { bold: true, size: 12 }; applyTotalStyle(sheet.getCell(currentRow, 6));
+            sheet.getCell(currentRow, 7).value = { formula: totalRefs.join('+') }; sheet.getCell(currentRow, 7).numFmt = '#,##0.00'; applyTotalStyle(sheet.getCell(currentRow, 7));
+            sheet.getCell(currentRow, 8).value = { formula: `G${currentRow}/'Personal Details'!$B$8` }; sheet.getCell(currentRow, 8).numFmt = '#,##0.00'; applyTotalStyle(sheet.getCell(currentRow, 8));
+        }
+        sheet.getColumn(1).width = 5; sheet.getColumn(2).width = 15; sheet.getColumn(3).width = 25; sheet.getColumn(4).width = 15; sheet.getColumn(5).width = 20; sheet.getColumn(6).width = 12; sheet.getColumn(7).width = 10; sheet.getColumn(8).width = 15; sheet.getColumn(9).width = 18; sheet.getColumn(10).width = 18;
+    }
+
+    async function createLiabilitiesSheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Liabilities');
+        sheet.getCell('A1').value = '3D. LIABILITIES'; sheet.getCell('A1').font = { bold: true, size: 12 };
+        let currentRow = 3; const totalRefs = [];
+        const secured = data.financials.liabilities.secured || [];
+        if (secured.length > 0) {
+            sheet.getCell(currentRow, 1).value = '3D1 - Secured Loans'; sheet.getCell(currentRow, 1).font = { bold: true }; currentRow++;
+            const headers = ['#', 'Type', 'Holder', 'Lender', 'Details', 'Date', 'Balance (INR)', data.financials.forex.currency];
+            headers.forEach((h, idx) => { const cell = sheet.getCell(currentRow, idx + 1); cell.value = h; applyHeaderStyle(cell); }); currentRow++;
+            const startRow = currentRow;
+            secured.forEach((loan, idx) => {
+                const row = sheet.getRow(currentRow); row.getCell(1).value = idx + 1; row.getCell(2).value = loan.type || ''; row.getCell(3).value = loan.holder || ''; row.getCell(4).value = loan.name || ''; row.getCell(5).value = loan.details || ''; row.getCell(6).value = loan.date || ''; row.getCell(7).value = loan.amt || 0; row.getCell(7).numFmt = '#,##0.00'; row.getCell(8).value = { formula: `G${currentRow}/'Personal Details'!$B$8` }; row.getCell(8).numFmt = '#,##0.00';
+                for (let col = 1; col <= 8; col++) { applyDataStyle(row.getCell(col)); } currentRow++;
+            });
+            const totalRow = sheet.getRow(currentRow); totalRow.getCell(6).value = 'TOTAL:'; applyTotalStyle(totalRow.getCell(6));
+            totalRow.getCell(7).value = { formula: `SUM(G${startRow}:G${currentRow - 1})` }; totalRow.getCell(7).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(7));
+            totalRow.getCell(8).value = { formula: `SUM(H${startRow}:H${currentRow - 1})` }; totalRow.getCell(8).numFmt = '#,##0.00'; applyTotalStyle(totalRow.getCell(8));
+            totalRefs.push(`G${currentRow}`); currentRow += 2;
+        }
+        if (totalRefs.length > 0) {
+            sheet.getCell(currentRow, 6).value = 'TOTAL LIABILITIES:'; sheet.getCell(currentRow, 6).font = { bold: true, size: 12 }; applyTotalStyle(sheet.getCell(currentRow, 6));
+            sheet.getCell(currentRow, 7).value = { formula: totalRefs.join('+') }; sheet.getCell(currentRow, 7).numFmt = '#,##0.00'; applyTotalStyle(sheet.getCell(currentRow, 7));
+            sheet.getCell(currentRow, 8).value = { formula: `G${currentRow}/'Personal Details'!$B$8` }; sheet.getCell(currentRow, 8).numFmt = '#,##0.00'; applyTotalStyle(sheet.getCell(currentRow, 8));
+        }
+        sheet.getColumn(1).width = 5; sheet.getColumn(2).width = 15; sheet.getColumn(3).width = 20; sheet.getColumn(4).width = 25; sheet.getColumn(5).width = 30; sheet.getColumn(6).width = 12; sheet.getColumn(7).width = 18; sheet.getColumn(8).width = 18;
+    }
+
+    async function createSummarySheet(workbook, data) {
+        const sheet = workbook.addWorksheet('Net Worth');
+        sheet.getCell('A1').value = 'NET WORTH SUMMARY'; sheet.getCell('A1').font = { bold: true, size: 14 };
+        const clients = data.clients.slice(0, data.clientCount).map(c => c.name).join(' AND ');
+        sheet.getCell('A2').value = `For: ${clients || '[Client Names]'}`;
+        sheet.getCell('A4').value = 'Description'; applyHeaderStyle(sheet.getCell('A4'));
+        sheet.getCell('B4').value = 'Amount (INR)'; applyHeaderStyle(sheet.getCell('B4'));
+        sheet.getCell('C4').value = data.financials.forex.currency; applyHeaderStyle(sheet.getCell('C4'));
+        sheet.getCell('A6').value = 'Total Assets'; sheet.getCell('B6').value = { formula: "Assets!G999" }; sheet.getCell('B6').numFmt = '#,##0.00';
+        sheet.getCell('A7').value = 'Total Liabilities'; sheet.getCell('B7').value = { formula: "Liabilities!G999" }; sheet.getCell('B7').numFmt = '#,##0.00';
+        sheet.getCell('A9').value = 'NET WORTH'; sheet.getCell('A9').font = { bold: true, size: 12 }; sheet.getCell('B9').value = { formula: "B6-B7" }; sheet.getCell('B9').numFmt = '#,##0.00'; applyTotalStyle(sheet.getCell('B9'));
+        sheet.getColumn(1).width = 30; sheet.getColumn(2).width = 20; sheet.getColumn(3).width = 20;
+    }
+    </script>
+    <script>
+    async function generateComprehensiveDocx() {
+        const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, Header, Footer, ImageRun, PageBreak, SimpleField } = window.docx;
+        const appElement = document.querySelector('[x-data="reportApp()"]');
+        if (!appElement || !window.Alpine) { alert('Application data not found'); return; }
+        const data = window.Alpine.$data(appElement);
+
+        const FONTS = { serif: 'Cambria' };
+        const BORDERS = { black: { style: BorderStyle.SINGLE, size: 1, color: '000000' }, none: { style: BorderStyle.NONE } };
+        const SHADING = { headerGray: { fill: 'E5E7EB' }, lightGray: { fill: 'F3F4F6' } };
+
+        const createCell = (text, opts = {}) => {
+            const { bold = false, align = AlignmentType.LEFT, colSpan = 1, bg = undefined, fontSize = 22, width = undefined } = opts;
+            const borders = { top: BORDERS.black, bottom: BORDERS.black, left: BORDERS.black, right: BORDERS.black };
+            const cellConfig = { children: [new Paragraph({ children: [new TextRun({ text: String(text || '-'), font: FONTS.serif, bold, size: fontSize })], alignment: align })], shading: bg ? { fill: bg } : undefined, columnSpan: colSpan, borders, margins: { top: 60, bottom: 60, left: 60, right: 60 }, verticalAlign: 'center' };
+            if (width !== undefined) { cellConfig.width = { size: width, type: WidthType.PERCENTAGE }; }
+            return new TableCell(cellConfig);
+        };
+
+        const createSectionHeader = (text) => {
+            return new Table({ rows: [new TableRow({ children: [new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, font: FONTS.serif, bold: true, size: 20 })], alignment: AlignmentType.CENTER })], shading: SHADING.headerGray, borders: { top: BORDERS.black, bottom: BORDERS.black, left: BORDERS.black, right: BORDERS.black }, margins: { top: 80, bottom: 80 } })] })], width: { size: 100, type: WidthType.PERCENTAGE }, margins: { top: 200, bottom: 100 } });
+        };
+
+        const createSubHeader = (text) => {
+            return new Table({ rows: [new TableRow({ children: [new TableCell({ children: [new Paragraph({ children: [new TextRun({ text, font: FONTS.serif, bold: true, size: 22 })], alignment: AlignmentType.LEFT })], shading: SHADING.lightGray, borders: { top: BORDERS.black, bottom: BORDERS.black, left: BORDERS.black, right: BORDERS.black }, margins: { top: 60, bottom: 60, left: 60 } })] })], width: { size: 100, type: WidthType.PERCENTAGE }, margins: { top: 100, bottom: 50 } });
+        };
+
+        const formatVal = (val) => val ? parseFloat(val).toLocaleString('en-IN') : '0';
+        const calcFX = (val) => { if (!val || val == 0) return '-'; const rate = parseInt(data.financials.forex.calcRate); if (!rate || rate === 0) return 'Err'; return (val / rate).toFixed(2); };
+        const currencyLabel = data.financials.forex.currency || 'USD';
+        const createSpacing = () => new Paragraph({ text: '', spacing: { after: 240 } });
+
+        const LOGO_BASE64 = '/9j/4AAQSkZJRgABAQEA+gD6AAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAHmAn8DASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAorG8ReKtH8LWf2jVLtYyw/dwrzJJ/ur1P16DvXJnxB478TkDQNFj0aydcre6kfnI9QmOPbgj35q4wbV+hEqiTt1O/ubu3soGnu7iKCFRlpJXCqPqTxXHal8V/C1i/k21zNqVweFisoi+T9TgH8CelV7f4W2t5creeKdWvdduhnCyuY4lz2VQcgewIHHSux03RtM0eLytN0+2tEIwfJiC7vqR1PHU0/cXmT+8l5ficUPFXj7Vm3aR4Ojs4M4EmqS7T36plWH60DQfiVqIC3viqwsI2ABWyt959c5Kg57cHFeh0Ue0tskHs77t/16Hnq/DK9nUJqHjfxBcxMP3qLcFAx9gSwAzzjml/4VBocny3Wqa3dxf8APKe7BXPrwor0Gij2s+4exh2PPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPv8AhTPhD/njef8AgQaP+FM+EP8Anjef+BBr0Gij2s+4exp/yo8+/wCFM+EP+eN5/wCBBo/4Uz4Q/wCeN5/4EGvQaKPaz7h7Gn/Kjz7/AIUz4Q/543n/AIEGj/hTPhD/AJ43n/gQa9Boo9rPuHsaf8qPPR8INFjG231jXbeIH5YortQq/T5KP+Fa6pbDGn+OtdgCH90sshkRRnoV3AHj6V6FRR7WfcPYw7Hnn9kfE3S8/ZPEGmapEh+VbyHy3YA9PlHcdct9DSHxh420XD694O8+3Gd8+mSb8Ad9mWOOnUjua9Eoo9pfdIPZtbSZxul/FLwpqT+U9+bC4BIaG+QxFcerfdH0z2rsI5Y5o1kidXRhkMpyD+NZ2q+HtH1yMpqem211kY3SRjcPo3Ufga5CT4aT6NM114N1260qQtuNrKxlt3PoQfbud1FoPbQL1I7q56FRXnf/AAnHiLwztTxh4fc264Dalp3zx/Vl7e/I9h0rt9L1fTtas1u9NvIbqA/xRtnB9COoPsamUHHUqM4y06l2iiipLCiiigAooooAKKKKACiiigAooooAKKKyPEfiPT/C2kSajqMu1F4SNfvyt2VR3P8ALrTSbdkJtJXZqTTRW8LzTSJFEgyzuwVVHqSelee3XjbWfFF7Lpnga0DRRtsm1i4GIYz32Aj5jyPU/wCzjmoLfw9r/wAQpkvvFRfTdE4eDSYZCGk7hpD+PsfZe/oljYWmm2cdpZW8dvbxjCxxrgCtPdhvq/wMryntovx/4Byvh34dabpNz/aWqTSaxrDcvd3Z3BT/ALCnOO3JyfQjpXZUUVEpOTuzSMVFWQUUUVJQUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFADXRZEZHUMjAhlYZBHoa4XVPhvHBftq3hK/fQtRxykQzBL3wydAOnGCOPu13lFVGTjsTKClucDpHj+5sNSTQ/Gloul6gQBDdA5guPcN0Xt3xzzjpXfVn6zoem+INPex1O1S4gbseCp9QRyD9K8/8zxB8LtizNLrPhRSF8zjz7MEgDPqvp2/3ehuyn8OjM+aVP4tV3/zPUKKq6fqNnq1jFe2FzHc20oykkbZB9vY+oPIq1WRtuFFFFABRRRQBDdXUFjaS3V1KsUEKF5JGOAqjkmvOvDNjL488Sv4w1a3I0y3PlaRaycjg8ykdM5Hvz/uipPGk8vi/xNaeB7CUi2XFzq0qYwiAgqn1zg/Ur6GvQra2gs7aK2tokigiUIkaDCqB0AFa/BHzf5GPxy8l+f/AJaKKKyNgooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKa6LIjI6hkYEMrDII9DTqKAPL4Hb4W+KRaSuf+ET1aUtE7YxZzn+EnrtwB17c/wnPp6sGUMpBBGQR3qhrmjWniDRrrS71cw3CFSQOUPZh7g4I+lcp8OdZulju/CesMBq2jEICTzLB/Aw9gCo+hXua1fvx5uqMY+5Ll6Pb/I7uiiisjYKwPGPiaHwp4dn1BgJLg/u7aE/8tZT0GPTufYGt+vObzPir4v21oMPp/hyLz5OmDcPgj64+X6FGq4JN67IzqSaVluzZ8A+GJdA0drrUSZNa1BvPvZX5bcedmfbJ/HNdbRRUyk5O7KjFRVkFFFFIoKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK8/wAOpm3OmXNn420pSbzSyBdRA4E9vn5gfpn8iT2FegU10WRGR1DIwIZWGQR6GqjLldyZx5lYraXqdrrGl22o2UnmW1wgdG6HHofcdDVuvPfhzK+iarrfgu4ck6fMZ7Pc2c27kEflkE+7mvQqJx5XYUJc0bsp6tqMWkaReajPjy7WFpWBOM4GcfU9PxrkvhZpssPhmTWrwFtR1mZrqeRupXJ2D6Yyw/wB6ofitczXGk6b4btWIudavEg4GcRqQWP4Ep+Ga7m0torKzgtIECQwRrHGo7KowB+QqtoepPxVPT9SaiiiszUKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAPOfiAv/CO+J9A8ZRZCRyiyvsDIMLZwfwy3Prtr0aub8e6SNa8D6raBA0ghMsWf76fMMHtnGPxp/gXVzrngnSb5mLSGARyknkunyMT9SpP41o9YJ9tDKOlRrvqc5IF1b46xI2GTSNMLgZyA7Hr7HEg4PpmvRK888CE6j488a6uzBsXSWcZB7R5U9OMYVcfj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t168FT7rnvXzjJ4agIO2dxjHUZzU3h++vvAviex1yydZ1iYrJEePMjYYZe/bgE9MgjpmoxOC56dnuioYOth37SSuj7HoqtY31vqmnWuoWb+Za3MSzRv/eVhkH8jVmvHPUCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAryT48f8gTSP+vl//Qa9bryT48f8gTSP+vl//Qa1ofxEY4j+Eza+DP8AyT6L/r5l/mK9Brz74M/8k+i/6+Zf5ivQaVX42Oj/AA4+gUUUVmahRRRQAUUUUAFFFFABRRRQB4n8W/CU5vk17TrSSQSJtuxFngjhXI7+hx7mvOIr6VBsPzY9q+tKzdU8PaPrcTR6nptvcBgRueMbhzngjkdK3p4lwhyyVzz6+A56vPGVj51jufPG1RhiKZd2v2jZkEbfxrpPibpmleDtdsTpsM4N4jb4ycpEFxyP8AvrgexrLsb6G+QlQQV6huMVdKsqvws8fHQnhvcmrMw3snXOxwT1wTiorS2jnuNkzmMjq31rovKjbOEUbvbrWTfWTq5miBYE5OBVzi7WRzwlHnsmE2jxMCIpDkDAzWHfafNaXEUckZZpSNmOc89q39PvDvaKZgox1Na+0Zz3rkTcXqbvC0qqs3Y9d+CWt/bvBkulyNmXS5vLX2jfLL6dCGHsAK9Kr5w+FPijTvDPxDa2uLjyodXh8vLdBOpyufQY3L9SK+j68jG0+Srddeh9NhXejHUVjKiiiuM6QooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAryT48f8gTSP+vl//Qa9bryT48f8gTSP+vl//Qa1ofxEY4j+Eza+DP8AyT6L/r5l/mK9Brz74M/8k+i/6+Zf5ivQaVX42Oj/AA4+gUUUVmahRRRQAUUUUAFFFFABRRRQAU10WRGR1DIwIZWGQR6GnUUAeAfGnwlbaPeWWv20cghvJRDcsX4EoBwAvoQD09D9a4rTpPKsA0cO0k/ez2r6f8SeHNP8VaHLpWqReZA/KsOGjbswPY8mvlK/ttU8H6tc6JqyGK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

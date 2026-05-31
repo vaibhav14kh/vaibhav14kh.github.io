@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=EngagementLetter';
+                }
+            }
+        })();
+    </script>
+
+    <title>Engagement Letter Generator | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Input Styles */
+        input[type="text"], select, textarea {
+            padding-top: 0.6rem; padding-bottom: 0.6rem; padding-left: 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+            border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
+            background-color: #f8fafc; color: #334155; font-weight: 500;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
+
+        /* A4 Paper Preview - Kept exact to preserve PDF formatting */
+        .a4-paper {
+            width: 210mm; min-height: 297mm; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            padding: 25mm; margin: 0 auto; color: #000; font-family: "Times New Roman", Times, serif;
+            font-size: 11pt; line-height: 1.4; overflow-wrap: break-word; text-align: justify;
+        }
+        .doc-content p { margin-bottom: 1em; }
+        .doc-content ul { list-style-type: disc; margin-left: 1.5em; margin-bottom: 1em; }
+        .doc-content li { margin-bottom: 0.5em; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col overflow-hidden">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <div class="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Left Column: Inputs -->
+        <div class="w-full lg:w-[35%] flex flex-col gap-6">
+            
+            <div class="mb-2">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                    <span class="gradient-text">Engagement Letter</span>
+                </h1>
+                <p class="text-slate-600 text-xs font-medium">Standardized drafts for Tax Audits.</p>
+            </div>
+
+            <!-- Firm Type Selector -->
+            <div class="glass-card p-5 flex-shrink-0 bg-blue-50/50 border-blue-100">
+                <label class="block text-xs font-black text-blue-800 uppercase tracking-widest mb-3">Entity Type</label>
+                <div class="flex gap-5">
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="entityType" value="partnership" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" onchange="toggleEntityType()">
+                        <span class="ml-2 text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Partnership</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer group">
+                        <input type="radio" name="entityType" value="proprietorship" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" onchange="toggleEntityType()">
+                        <span class="ml-2 text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Proprietorship</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Scrollable Input Form -->
+            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
+                <div class="p-5 border-b border-slate-100 bg-white">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Document Variables</h3>
+                </div>
+                
+                <div class="p-5 overflow-y-auto custom-scrollbar space-y-5 bg-white">
+                    <form id="elForm" class="space-y-5">
+                        <!-- Standard Inputs -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Date of Letter</label>
+                            <input type="text" id="date" placeholder="e.g. September 25, 2026" oninput="updatePreview()">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Addressee Title</label>
+                            <input type="text" id="addressee_title" value="The Board of Directors" oninput="updatePreview()">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Entity Name</label>
+                            <input type="text" id="entity_name" placeholder="Client Entity Name" oninput="updatePreview()">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Address Line 1</label>
+                                <input type="text" id="address_1" placeholder="Street/Building" oninput="updatePreview()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Address Line 2</label>
+                                <input type="text" id="address_2" placeholder="Area/Locality" oninput="updatePreview()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">City, State</label>
+                            <input type="text" id="city_state" placeholder="e.g. New Delhi, Delhi" oninput="updatePreview()">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Salutation</label>
+                            <select id="salutation" onchange="updatePreview()">
+                                <option value="Sir/Madam">Sir/Madam</option>
+                                <option value="Sir">Sir</option>
+                                <option value="Madam">Madam</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Previous Year</label>
+                                <input type="text" id="py" placeholder="25-26" oninput="updatePreview()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Assessment Year</label>
+                                <input type="text" id="ay" placeholder="26-27" oninput="updatePreview()">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Appt. Letter Date</label>
+                            <input type="text" id="letter_dated" placeholder="Date of Appt. Letter" oninput="updatePreview()">
+                        </div>
+
+                        <!-- Auditor Section -->
+                        <div class="pt-5 mt-3 border-t border-slate-200">
+                            <h4 class="text-xs font-black text-blue-800 uppercase tracking-widest mb-4"><i class="fas fa-user-tie mr-2"></i>Auditor Details</h4>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Firm Name</label>
+                                    <input type="text" id="firm_name" value="J.L. Khanna & Co." oninput="updatePreview()" class="bg-blue-50 font-bold border-blue-200 text-blue-900">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">FRN</label>
+                                    <input type="text" id="firm_reg_no" placeholder="Firm Reg No..." oninput="updatePreview()">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Fees (INR)</label>
+                                    <input type="text" id="fees" placeholder="e.g. 50,000/-" oninput="updatePreview()">
+                                </div>
+                                <div>
+                                    <label id="signatory_label" class="block text-xs font-bold text-slate-700 mb-1.5">Partner Name</label>
+                                    <input type="text" id="signatory_name" placeholder="Signing Authority Name" oninput="updatePreview()">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Preview -->
+        <div class="w-full lg:w-[65%] flex flex-col min-h-0">
+            <!-- Toolbar -->
+            <div class="glass-card p-4 mb-6 flex justify-between items-center flex-shrink-0 shadow-md">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">
+                    <i class="fas fa-eye mr-2 text-blue-600"></i> Live Document Preview
+                </h2>
+                <div class="flex gap-3">
+                    <button onclick="downloadDoc()" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg">
+                        <i class="fas fa-file-word mr-2"></i> Export DOC
+                    </button>
+                    <button onclick="downloadPDF()" class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg">
+                        <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Container -->
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-8 custom-scrollbar shadow-inner">
+                <div id="document-preview" class="a4-paper doc-content">
+                    <!-- Content Loaded via JS -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration & State ---
+        let currentEntityType = 'partnership'; 
+
+        const state = {
+            date: "[Date]",
+            addressee_title: "The Board of Directors",
+            entity_name: "[Entity Name]",
+            address_1: "[Address Line1]",
+            address_2: "[Address Line 2]",
+            city_state: "[City, State]",
+            salutation: "Sir/Madam",
+            py: "25-26", 
+            ay: "26-27",
+            letter_dated: "[letter dated]",
+            firm_name: "J.L. Khanna & Co.",
+            firm_reg_no: "[Firm Registration Number]",
+            fees: "[INR]",
+            signatory_name: "[Name of Partner Signing Engagement Letter]",
+            signatory_title: "Partner",
+            signatory_placeholder_text: "[Name of Partner Signing Engagement Letter]" 
+        };
+
+        // --- Logic ---
+        function toggleEntityType() {
+            const radios = document.getElementsByName('entityType');
+            for (let r of radios) {
+                if (r.checked) {
+                    currentEntityType = r.value;
+                    break;
+                }
+            }
+
+            const sigLabel = document.getElementById('signatory_label');
+            const sigInput = document.getElementById('signatory_name');
+
+            if (currentEntityType === 'partnership') {
+                state.signatory_title = "Partner";
+                state.signatory_placeholder_text = "[Name of Partner Signing Engagement Letter]";
+                sigLabel.innerText = "Partner Name";
+                sigInput.placeholder = "Name of Signing Authority";
+            } else {
+                state.signatory_title = "Proprietor";
+                state.signatory_placeholder_text = "[Name of Proprietor]";
+                sigLabel.innerText = "Proprietor Name";
+                sigInput.placeholder = "Name of Proprietor";
+            }
+            
+            updatePreview();
+        }
+
+        function updateStateFromDOM() {
+            const getVal = (id, fallback) => {
+                const el = document.getElementById(id);
+                return (el && el.value.trim() !== "") ? el.value : fallback;
+            };
+
+            state.date = getVal('date', "[Date]");
+            state.addressee_title = getVal('addressee_title', "[The Board of Directors/Other Authorised Person]");
+            state.entity_name = getVal('entity_name', "[Entity Name]");
+            state.address_1 = getVal('address_1', "[Address Line1]");
+            state.address_2 = getVal('address_2', "[Address Line 2]");
+            state.city_state = getVal('city_state', "[City, State]");
+            state.salutation = getVal('salutation', "[Sir/Madam]");
+            state.py = getVal('py', "XX-XX");
+            state.ay = getVal('ay', "XX-XX");
+            state.letter_dated = getVal('letter_dated', "[letter dated]");
+            state.firm_name = getVal('firm_name', "[Firm Name]");
+            state.firm_reg_no = getVal('firm_reg_no', "[Firm Registration Number]");
+            state.fees = getVal('fees', "[INR]");
+            
+            const sigVal = document.getElementById('signatory_name').value;
+            state.signatory_name = (sigVal && sigVal.trim() !== "") ? sigVal : state.signatory_placeholder_text;
+        }
+
+        // Reused logic for HTML generation from original script
+        function generateHTML() {
+            return `
+                <div style="margin-bottom: 20px;">
+                    <p>${state.date}</p>
+                    <br>
+                    <p>${state.addressee_title}</p>
+                    <p><strong>${state.entity_name}</strong></p>
+                    <p>${state.address_1}</p>
+                    <p>${state.address_2}</p>
+                    <p>${state.city_state}</p>
+                    <br>
+                    <p>Dear ${state.salutation},</p>
+                    <p><strong>Sub: Tax Audit of ${state.entity_name} for the Previous Year 20${state.py} (Assessment Year 20${state.ay}).</strong></p>
+                    <br>
+                    <p>We refer to your letter dated ${state.letter_dated} informing us about our appointment as the Tax Auditor of <strong>${state.entity_name}</strong> (‘Entity’). This Engagement Letter (‘Agreement’ or ‘Engagement’) confirms the understanding of mutual responsibilities upon which <strong>${state.firm_name}</strong> (Firm Registration Number - ${state.firm_reg_no}) has been engaged to perform the following services, (‘Services’) for the Entity.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Scope of Work</p>
+                    <p>You have requested that we perform the work outlined below in relation to the Previous Year 20${state.py} (Assessment Year 20${state.ay}).</p>
+                    <p>To issue an Audit Report in Form No. 3CA as specified under clause (a) of sub-rule (1) of Rule 6G and to certify the particulars stated in Form No. 3CD of the Entity for the Previous Year 20${state.py} (Assessment Year 20${state.ay}) in accordance with section 44AB of the Income-tax Act, 1961 and Income-tax Rules, 1962 thereto.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Auditor’s Responsibility</p>
+                    <p>We will conduct our audit in accordance with the Standards on Auditing (SAs), issued by the Institute of Chartered Accountants of India (ICAI). Those standards require that we comply with ethical requirements and plan and perform the audit to obtain reasonable, rather than absolute, assurance about whether the particulars in Form No. 3CD are appropriate.</p>
+                    <p>Because of the inherent limitations of an audit, including the possibility of collusion or improper Management override of controls, there is an unavoidable risk that material misstatements due to fraud or error may occur and not be detected, even though the audit is properly planned and performed in accordance with the SAs.</p>
+                    <p>The audit shall be carried out in accordance with auditing standards generally accepted in India which includes an examination of evidence on a test check basis and having regard to the materiality of the items involved. Materiality is assessed based on both quantitative and qualitative factors.</p>
+                    <p>In specific circumstances, when necessary to obtain specialized knowledge or expertise beyond accounting or auditing, we may engage an expert to assist us in the audit process. In such cases we will be relying upon the work performed by the expert (as stated under SA 620 - “Using the work of an Auditor’s Expert”). The expert appointed by us will work under our direction and supervision and we will remain responsible for the audit opinion expressed.</p>
+                    <p>The Tax Audit for the Previous Year 20${state.py} (Assessment Year 20${state.ay}) will be carried out in accordance with the provisions of section 44AB of the Income-tax Act, 1961 and the Income-tax Rules, 1962 of India, the Guidance Note on Tax Audit under section 44AB of the Income-tax Act, 1961 issued by the Institute of Chartered Accountants of India and any other notifications issued by Central Board of Direct Taxes / Ministry of Finance with the objective of expressing an opinion in Form No. 3CA on the correctness of particulars given in Form No. 3CD.</p>
+                    <p>Pursuant to the ICAI requirements, we are required to update certain relevant details of the operations of the Entity on the Unique Document Identification Number (UDIN) Portal of the ICAI for generating the UDIN, which is required to be stated on the reports issued by us.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Management’s Responsibility</p>
+                    <p>Tax Audit will be conducted on the basis that Management and, where appropriate, those charged with governance (Audit Committee / Board of Directors) of the Entity (‘Management’), acknowledge and understand that they have responsibility:</p>
+                    <ul>
+                        <li>For the preparation and accurate presentation of the particulars to be stated in Form No. 3CD;</li>
+                        <li>To provide us with:
+                            <ul style="list-style-type: circle;">
+                                <li>Access, at all times, to all information including the books, accounts, vouchers, other records including digital records and documentation of the Entity, that is relevant for the verification of the particulars stated in Form No. 3CD such as records, documentation and other matters including books of account maintained in electronic mode; and</li>
+                                <li>additional information that we may request from Management for the purpose of the Tax Audit; and</li>
+                            </ul>
+                        </li>
+                        <li>For identifying and ensuring that the Entity complies with the laws and regulations, as applicable to its activities.</li>
+                    </ul>
+                    <p>The Management’s failure to provide us with the information referred to above or access to persons within the Entity may cause us to modify our procedures, delay our report, issue a modified opinion or even terminate our engagement.</p>
+                    <p>The Management understands and acknowledges that the electronic transmission of information via the internet or otherwise, has inherent risks. Unless otherwise agreed, despite the inherent risks the Management authorises us to communicate electronically with all the concerned parties on all matters related to the engagement.</p>
+                    <p>We will make specific inquiries of Management about the representations contained in Form No. 3CD. At the conclusion of the engagement, we will also obtain written representations from Management about these matters and that Management:</p>
+                    <ul>
+                        <li>has fulfilled its responsibility for the preparation and accurate presentation of the particulars as required under Form No. 3CD;</li>
+                        <li>has provided us with all relevant information and access as contemplated in this Agreement; and</li>
+                        <li>understands the importance of the said written Management’s representations for an effective audit, and hence the Entity agrees to release us and our personnel from any liability and costs relating to the Services attributable to any misrepresentations by Management.</li>
+                    </ul>
+                    <p>The responses to those inquiries, the written representations, and the results of our procedures comprise evidence on which we will rely in certifying Form No. 3CD.</p>
+                    <p>Management is responsible for setting up mechanism to identify and address any non-compliance or suspected non-compliance with laws and regulations applicable to the Entity and shall ensure that the relevant information and/or updates in regard to such non-compliance or suspected non-compliance is provided to us on timely basis.</p>
+                    <p>In case where auditor has been provided with documents containing digital signatures embedded therein, Management states that they have adopted sufficient safeguards to prevent any unauthorised access or misuse of the digital signature, including implementing robust security measures, regular monitoring to prevent any misuse of the digital signature, placing relevant security controls, integrity checks and other necessary controls on, using documents embedded with digital signatures.</p>
+                    <p>The Entity consents for use, maintenance and where necessary, transfer of the data and information provided or made available by the Entity (including personal information) and represents that it has the lawful right to provide the same to us. The Entity agrees that on request, it will promptly provide us with supporting documents to corroborate the foregoing.</p>
+                    <p>In case where the auditor has been provided with documents and/ or information in digital format, whether obtained / prepared / extracted from Entity’s Information Technology system or from any other sources in any mode including but not limited to Excel/Word/PDF/Zip files etc., the Management acknowledges its responsibility with respect to reliability and integrity of such information.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Matters to be Communicated to Those Charged with Governance</p>
+                    <p>In accordance with the Standards on Auditing, we will communicate certain matters related to the conduct and results of the audit to you. Such matters include, but may not be limited to, the following:</p>
+                    <ul>
+                        <li>Significant findings from the audit including our views about the significant qualitative aspects of the accounting practices, including accounting policies, accounting estimates, Financial Statements disclosures and other matters that are in our professional judgment, significant and relevant to the Management regarding the oversight of the financial reporting process, including significant matters in connection with the Entity’s related parties; and</li>
+                        <li>Written representations requested from the Management and significant matters, if any, arising from the audit that were discussed, or the subject of correspondence, with the Management.</li>
+                    </ul>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Working Papers</p>
+                    <p>The working papers, files and other electronic documents prepared in connection with our audits are the property of our Firm, constitute confidential information and will be retained by us in accordance with Firm’s policies and procedures. However, we hereby acknowledge that the details or data received from you for the preparation of these working papers are confidential information of the Entity and will not be disclosed by us to any third party, except as set out in para below or when required by legislation, without the prior consent from the Entity.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Confidentiality of Information</p>
+                    <p>We will conduct our audit in accordance with the confidentiality requirements prescribed under the Code of Ethics of the ICAI which requires that the Entity’s information acquired by us under the course of our audit is subject to strict confidentiality. In connection with this engagement, we may access and acquire confidential and other sensitive information (‘confidential information’). We shall adhere to the confidentiality restrictions of the regulatory authorities that govern us, as well as any obligations imposed on us by any applicable laws. The information relating to you, our relationship with you, and to this engagement, including confidential information, may be accessed by other parties who facilitate the administration of our Services or support our infrastructure. We shall remain responsible for preserving confidentiality if confidential information is shared with or accessed by such other parties. We may remove, or arrange for the removal of, names and any other identifiers from confidential information and then use such anonymised information for lawful purposes chosen at our discretion (including UDIN). This clause shall not prohibit our disclosure of confidential information, in confidence, to our professional indemnity insurers or advisers or our disclosure otherwise permitted under this Engagement Letter. This clause shall not apply where confidential information properly enters the public domain or no longer remains confidential without our default.</p>
+                    <p>We also wish to invite your attention to the fact that our audit process is subject to internal quality reviews / Peer Review / Quality Review / any other Regulatory Review under the Chartered Accountants Act, 1949 or any other law for the time being in force. The reviewer(s) may inspect, examine or take abstracts of our working papers during the course of such review. The reviewer(s) shall be bound by similar confidentiality obligation as stated above.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Independence</p>
+                    <p>In connection with our engagement, the Management will assume certain roles and responsibilities in an effort to assist us in maintaining independence, ensuring compliance with the applicable independence requirements and will ensure that the Entity, together with its related entities, has policies and procedures in place for the purpose of ensuring that neither the Entity nor any of its related entities will act to engage us or accept from us any Service that has not been subjected to the pre-approval process, where required, or that would impair our independence.</p>
+                    <p>In connection with the foregoing, the Entity agrees to furnish and keep us updated with:</p>
+                    <ul>
+                        <li>a corporate tree / Entity’s group structure that identifies the legal names of the Entity’s related entities; and</li>
+                        <li>any equity or debt securities of the Entity and its related entities that are available for public subscription together with related securities identification information (e.g., ISIN®, Trading symbol).</li>
+                    </ul>
+                    <p>We will communicate to our employees and partners that the Entity is an audit client.</p>
+                    <p>The Management will coordinate with us to ensure that our independence is not impaired by hiring former or current partners or professional employees who were part of the audit engagement team for certain positions. The Management of the Entity will ensure that the Entity, together with its related entities, also has policies and procedures in place for the purposes of ensuring that our independence will not be impaired by hiring a former or current partner or professional employee as a director or officer; or an employee in a position to exert significant influence over the preparation of the Entity’s accounting records or the Financial Statements that would cause a violation of independence requirements. Any employment opportunities with the Entity for a former or current partner or professional employees who were part of the audit engagement team should be discussed with us before entering into substantive employment conversations with such former or current partner or professional employee.</p>
+                    <p>The Management will coordinate with us to ensure that our independence is not impaired by appointing relative of the Firm’s partner as director or any similar position or hiring relative of the Firm’s partner as key managerial personnel as defined under section 2(51) of the Companies Act, 2013. Any of the stated opportunities with the Entity for a relative of the Firm’s partner should be discussed with us before entering into substantive conversations with the relative of the Firm’s partner.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Limitation of Damages</p>
+                    <p>Nothing in this Engagement Letter shall exclude or restrict or prevent a claim being brought in respect of: (i) any liability finally judicially determined to arise primarily from the fraud or bad faith by us as auditor; or (ii) any other liabilities which cannot lawfully be limited or excluded, save to the extent permitted by law.</p>
+                    <p>The Entity agrees that the auditor shall not be liable to the Entity for any losses for an aggregate amount in excess of the fees paid by the Entity to the auditor under the Agreement.</p>
+                    <p>We will not be liable for losses arising as a result of the provision of false, misleading or incomplete information or documentation or the withholding or concealment or misrepresentation of information or documentation by any person or the Entity.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Indemnification</p>
+                    <p>The Entity, by executing this Agreement, agrees to indemnify and hold us harmless from all third-party claims, damages, liabilities and costs, during or after the period of rendering the Services covered under this Agreement, other than those resulting from our wilful misconduct or negligence.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Fees</p>
+                    <p>Our fees for the Services defined under Scope of Work of this Engagement will be INR ${state.fees} exclusive of Goods and Services Tax (‘GST’).</p>
+                    <p>GST and other statutory liabilities, as applicable will be charged separately. Our bills are payable promptly on presentation.</p>
+                    <p>Our direct out-of-pocket expenses which are necessarily incurred while engaged on this assignment will be billed to you at cost and are to be reimbursed by the Entity. Out-of-pocket expenses include conveyance, external disbursements, outstation travel, lodging and boarding, etc.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Invoicing</p>
+                    <p>Invoices for expenses shall be provided as soon as possible after they have been incurred. Invoices for professional services rendered will be sent after the completion of Services or on progressive basis. Payment of the invoiced amount may be made by direct transfer into our bank account, the details of which will be made available.</p>
+                    <p>Unless specifically waived, interest will be charged on all amounts outstanding, beyond 30 days from the invoice date. The Entity acknowledges and accepts that the Firm may suspend the provision of the Services until such time that all amounts due are paid in full.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Governing Law, Jurisdiction & Dispute Resolution</p>
+                    <p>This Agreement, and any non-contractual obligations arising out of this Agreement or the Services, shall be governed by, and construed in accordance with, the laws of India.</p>
+                    <p>If a dispute arises, the parties will attempt to resolve it by discussion and negotiation before commencing legal proceedings.</p>
+                    <p>All disputes or differences, arising out of the Agreement shall be deemed to have arisen at a place where the head office of the auditor is situated and only courts having jurisdiction over the place where head office of the auditor is situated shall determine the same.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Anti-Money Laundering & Prevention of Corruption</p>
+                    <p>Each party shall comply with applicable policies, laws and regulations relating to Anti-Money Laundering and Prevention of Corruption activities.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Entire Agreement</p>
+                    <p>This Agreement sets out the entire Agreement and understanding between the Parties in connection with the Engagement. Any modifications or variations to the Agreement must be in writing and signed by an authorised representative of each party.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">End-Use</p>
+                    <p>The audit report and the opinion is solely for the purpose of the subject matter specified in Scope of Work clause of this Engagement Letter.</p>
+                    <p>If you intend to publish or otherwise reproduce the opinion or otherwise make reference to our firm in a document that contains other information, you agree to provide us with a draft of the document to read and obtain our approval for inclusion of our report, before it is printed and distributed.</p>
+                    <p>You are responsible for such documents and our responsibility is restricted only to the documents that have been issued under our name.</p>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <p style="text-decoration: underline; font-weight: bold;">Termination of Agreement</p>
+                    <p>Either of the parties to this Agreement may terminate the Agreement by providing 30 days written notice to the other party in case of a material breach by the other party which does not remedy the breach within 5 business days upon receipt of a notice. In these circumstances, the Firm shall be entitled to raise an invoice in respect of fees, on the basis of the time spent at agreed hourly rates, up to the amount of the fixed fee (if applicable), and out-of-pocket expenses incurred till such notice of termination is communicated. The Firm shall be entitled to terminate this Agreement in the event of changes to laws, regulations, or the shareholding / group structure that would render such services illegal or in conflict with independence or professional rules.</p>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <p>If these arrangements are acceptable, please sign one copy of this letter and return it to us.</p>
+                    <p>We very much appreciate the opportunity to serve you and would be pleased to furnish any additional information you may request concerning our responsibilities and functions.</p>
+                    <p>We trust that our association will be a long and mutually beneficial one. We look forward to working with you.</p>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <p>Yours faithfully,</p>
+                    <p>For <strong>${state.firm_name}</strong></p>
+                    <p>Chartered Accountants</p>
+                    <br><br>
+                    <p><strong>${state.signatory_name}</strong></p>
+                    <p>${state.signatory_title}</p>
+                </div>
+
+                <div style="border-top: 1px solid black; padding-top: 20px;">
+                    <p><strong>Acknowledgement</strong></p>
+                    <p>Acknowledged on behalf of <strong>${state.entity_name}</strong> in terms of the approval dated ________________ by the Audit Committee / Board of Directors / Management / Authorised Representative.</p>
+                    <br>
+                    <p>Signature</p>
+                    <br>
+                    <p>Name and Designation: _________________________________</p>
+                    <p>Date: ________________</p>
+                    <p>Place: ________________</p>
+                </div>
+            `;
+        }
+
+        function updatePreview() {
+            updateStateFromDOM();
+            document.getElementById('document-preview').innerHTML = generateHTML();
+        }
+
+        // --- Exports ---
+
+        // Generates a .doc file by wrapping HTML in standard MS Word XML namespace headers
+        function downloadDoc() {
+            const preHtml = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Engagement Letter</title></head><body>";
+            const postHtml = "</body></html>";
+            const html = preHtml + document.getElementById('document-preview').innerHTML + postHtml;
+
+            const blob = new Blob(['\ufeff', html], {
+                type: 'application/msword'
+            });
+            
+            // Create download link
+            const url = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(html);
+            const downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+            
+            if(navigator.msSaveOrOpenBlob ){
+                navigator.msSaveOrOpenBlob(blob, `EL_${state.entity_name}.doc`);
+            } else {
+                downloadLink.href = url;
+                downloadLink.download = `EL_${state.entity_name}.doc`;
+                downloadLink.click();
+            }
+            
+            document.body.removeChild(downloadLink);
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('document-preview');
+            const opt = {
+                margin:       0.25,
+                filename:     `EL_${state.entity_name}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // --- Init ---
+        // Run on load
+        toggleEntityType(); 
+        updatePreview();
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=DeedDrafter';
+                }
+            }
+        })();
+    </script>
+
+    <title>Partnership Deed Drafter | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Input Styles */
+        input[type="text"], input[type="number"], input[type="date"], textarea {
+            padding-top: 0.6rem; padding-bottom: 0.6rem; padding-left: 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
+            border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
+            background-color: #f8fafc; color: #334155; font-weight: 500;
+        }
+        input:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Preview Area */
+        #output-deed {
+            font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; font-size: 0.875rem;
+            line-height: 1.6; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+            padding: 2rem; height: 600px; overflow-y: auto; color: #1e293b; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        /* Progress Steps */
+        .step-circle { width: 2.25rem; height: 2.25rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .step-line { flex: 1; height: 3px; background-color: #e2e8f0; border-radius: 2px; }
+        .step-active .step-circle { background-color: #2563eb; color: white; border: 2px solid #bfdbfe; }
+        .step-completed .step-circle { background-color: #10b981; color: white; border: 2px solid #bbf7d0; }
+        .step-completed .step-line { background-color: #10b981; }
+        .step-inactive .step-circle { background-color: #f1f5f9; color: #94a3b8; border: 2px solid #e2e8f0; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col">
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow mb-12">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                <span class="gradient-text">Partnership Deed Drafter</span>
+            </h1>
+            <p class="text-slate-600 text-sm font-medium">Automated legal drafting with dynamic partner clauses and formatting.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left Column: Form Input -->
+            <div class="glass-card p-6 md:p-8 flex flex-col h-[750px]">
+                
+                <!-- Progress Indicator -->
+                <div class="flex items-center justify-between mb-8 px-2 flex-shrink-0">
+                    <div class="flex flex-col items-center step-completed">
+                        <div class="step-circle"><i class="fas fa-check"></i></div>
+                        <span class="text-xs mt-2 font-bold text-green-600 uppercase tracking-wider">Start</span>
+                    </div>
+                    <div class="step-line mx-3 bg-green-500"></div>
+                    <div class="flex flex-col items-center step-active">
+                        <div class="step-circle">2</div>
+                        <span class="text-xs mt-2 font-bold text-blue-600 uppercase tracking-wider">Details</span>
+                    </div>
+                    <div class="step-line mx-3"></div>
+                    <div class="flex flex-col items-center step-inactive">
+                        <div class="step-circle">3</div>
+                        <span class="text-xs mt-2 font-bold text-slate-400 uppercase tracking-wider">Download</span>
+                    </div>
+                </div>
+
+                <form id="deed-form" class="space-y-8 overflow-y-auto pr-4 custom-scrollbar flex-grow">
+                    
+                    <!-- General Details -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                            <i class="fas fa-building mr-2 text-blue-500"></i>General Details
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Firm Name (M/s)</label>
+                                <input type="text" id="firm_name" placeholder="e.g., Acme Enterprises">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Place of Execution</label>
+                                <input type="text" id="execution_place" placeholder="e.g., Mumbai">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Deed Date</label>
+                                <input type="date" id="deed_date">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Commencement Date</label>
+                                <input type="date" id="date_of_commencement">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Details -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                            <i class="fas fa-briefcase mr-2 text-purple-500"></i>Business Details
+                        </h3>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Business Description</label>
+                                <textarea id="business_description" rows="2" placeholder="Nature of business..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Principal Address</label>
+                                <textarea id="principal_place_address" rows="2" placeholder="Full address..."></textarea>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Object Clause (a)</label>
+                                    <input type="text" id="object_clause_a" placeholder="Primary object...">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Total Capital (Words)</label>
+                                    <input type="text" id="total_capital" placeholder="e.g. One Lakh">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Partner 1 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                            <i class="fas fa-user mr-2 text-green-500"></i>Partner 1 (First Party)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <input type="text" id="partner1_name" placeholder="Full Name">
+                            <input type="text" id="partner1_father_name" placeholder="Father's Name">
+                            <input type="date" id="partner1_dob" title="Date of Birth">
+                            <input type="text" id="partner1_pan" placeholder="PAN">
+                            <textarea id="partner1_address" rows="2" class="md:col-span-2" placeholder="Residential Address"></textarea>
+                            <input type="number" id="partner1_profit_share" placeholder="Profit Share %">
+                        </div>
+                    </div>
+
+                    <!-- Partner 2 -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                            <i class="fas fa-user mr-2 text-green-500"></i>Partner 2 (Second Party)
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <input type="text" id="partner2_name" placeholder="Full Name">
+                            <input type="text" id="partner2_father_name" placeholder="Father's Name">
+                            <input type="date" id="partner2_dob" title="Date of Birth">
+                            <input type="text" id="partner2_pan" placeholder="PAN">
+                            <textarea id="partner2_address" rows="2" class="md:col-span-2" placeholder="Residential Address"></textarea>
+                            <input type="number" id="partner2_profit_share" placeholder="Profit Share %">
+                        </div>
+                    </div>
+
+                    <!-- Optional Partners (3 & 4) -->
+                    <div class="bg-orange-50/50 p-5 rounded-xl border border-orange-100 shadow-sm">
+                        <h3 class="text-sm font-black text-orange-800 uppercase tracking-widest border-b border-orange-200 pb-3 mb-5">
+                            <i class="fas fa-users mr-2 text-orange-500"></i>Optional Partners
+                        </h3>
+                        <div class="space-y-6">
+                            <!-- Partner 3 -->
+                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm">
+                                <h4 class="text-xs font-black text-orange-700 uppercase tracking-wider mb-4">Partner 3</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" id="partner3_name" placeholder="Full Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner3_father_name" placeholder="Father's Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="date" id="partner3_dob" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner3_pan" placeholder="PAN" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner3_address" class="md:col-span-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400" placeholder="Address">
+                                    <input type="number" id="partner3_profit_share" placeholder="Share %" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                </div>
+                            </div>
+                            <!-- Partner 4 -->
+                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm">
+                                <h4 class="text-xs font-black text-orange-700 uppercase tracking-wider mb-4">Partner 4</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <input type="text" id="partner4_name" placeholder="Full Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner4_father_name" placeholder="Father's Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="date" id="partner4_dob" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner4_pan" placeholder="PAN" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                    <input type="text" id="partner4_address" class="md:col-span-2 border-orange-200 focus:border-orange-400 focus:ring-orange-400" placeholder="Address">
+                                    <input type="number" id="partner4_profit_share" placeholder="Share %" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Witnesses -->
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-3 mb-5">
+                            <i class="fas fa-pen-nib mr-2 text-slate-500"></i>Witnesses
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <input type="text" id="witness1_name" placeholder="Witness 1 Name">
+                            <input type="text" id="witness2_name" placeholder="Witness 2 Name">
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- Form Actions (Sticky Bottom) -->
+                <div class="flex gap-4 pt-5 mt-auto bg-white border-t border-slate-100 flex-shrink-0">
+                    <button type="button" id="generate-button" class="flex-1 btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-lg py-3 text-base">
+                        <i class="fas fa-magic mr-2"></i> Generate Deed
+                    </button>
+                    <button type="reset" id="reset-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm py-3" onclick="document.getElementById('deed-form').reset();">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Preview & Export -->
+        <div class="glass-card flex flex-col h-[750px] overflow-hidden">
+            <div class="p-5 bg-white border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 flex-shrink-0">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-file-contract mr-2 text-blue-600"></i>Deed Preview</h2>
+                
+                <div class="flex flex-wrap justify-center gap-3 hidden" id="action-buttons">
+                    <button id="copy-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" title="Copy Text">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                    <button id="print-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" title="Print">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <button id="download-word-button" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-sm" title="Download Word">
+                        <i class="fas fa-file-word mr-2"></i> DOC
+                    </button>
+                    <button id="download-pdf-button" class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-sm" title="Download PDF">
+                        <i class="fas fa-file-pdf mr-2"></i> PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-grow relative bg-slate-200 p-6 overflow-hidden">
+                <pre id="output-deed" class="custom-scrollbar">
+<div class="flex flex-col justify-center items-center h-full text-center text-slate-400">
+    <i class="fas fa-file-signature text-6xl mb-4 text-slate-300"></i>
+    <p class="font-medium text-lg">Fill details and click Generate to preview the legal draft</p>
+</div>
+                </pre>
+                <!-- Message Toast -->
+                <div id="message-box" class="absolute top-8 right-8 hidden bg-slate-800 text-white text-sm font-bold px-4 py-3 rounded-lg shadow-2xl transition-opacity">
+                    <i class="fas fa-check-circle text-green-400 mr-2"></i>Action Successful
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 
+      DEED TEMPLATES (Hidden)
+    -->
+    <script type="text/template" id="deed-template">
+DEED OF PARTNERSHIP
+
+OF
+
+M/s {{firm_name}}
+
+
+THIS DEED OF Partnership is made at {{execution_place}} on this {{deed_date}}.
+
+BETWEEN
+
+1) {{partner1_name}}
+   FATHER'S NAME      : {{partner1_father_name}}
+   DATE OF BIRTH      : {{partner1_dob}}
+   RESIDING AT        : {{partner1_address}}
+   PAN                : {{partner1_pan}}
+(Hereinafter called "THE FIRST PARTNER") being the party of "THE FIRST PART".
+
+2) {{partner2_name}}
+   FATHER'S NAME      : {{partner2_father_name}}
+   DATE OF BIRTH      : {{partner2_dob}}
+   RESIDING AT        : {{partner2_address}}
+   PAN                : {{partner2_pan}}
+(Hereinafter called "THE SECOND PARTNER") being the party of "THE SECOND PART".
+{{partner_3_between_block}}
+{{partner_4_between_block}}
+
+WHEREAS all the parties are willing to carry on in Partnership the business of {{business_description}} and any other business as may be mutually agreed upon by the partners.
+
+NOW THIS DEED WITNESSETH THAT THE PARTIES HERETO HEREBY MUTUALLY AGREE AS UNDER:
+
+1.  NAME OF THE FIRM:
+That the business of the partnership firm shall be carried on under the name and style of "{{firm_name}}".
+The business of the firm shall be carried under this name or such other name as may be mutually decided by the parties hereto from time to time.
+
+2.  DATE OF COMMENCEMENT:
+The Partnership hereby constituted shall be deemed to have commenced as on {{date_of_commencement}}.
+
+3.  DURATION OF PARTNERSHIP:
+The Partnership shall be "AT WILL", but in case any Partner desires to retire from the said Partnership, he/she shall be at a liberty to do so by giving "THREE MONTHS" notice in writing to the other Partner(s).
+
+4.  PRINCIPAL PLACE OF BUSINESS:
+The business of the partnership will be carried on from its premises at {{principal_place_address}} or from/at such other place or places as the partners may mutually agree upon from time to time. The parties may open branches at such other places as may be agreed upon.
+
+5.  OBJECTS OF BUSINESS:
+The objects for which the partnership has been formed are as under:
+a) {{object_clause_a}}
+b) Any other business, as may be mutually agreed upon.
+
+6.  ACCOUNTING YEAR:
+Accounts of partnership firm will be maintained in accordance with financial year i.e. from 1st of April to 31st of March of subsequent year.
+
+7.  CAPITAL CONTRIBUTION AND INTEREST THEREON:
+a) The partners shall contribute Capital of Rs. {{total_capital}} (Rupees {{total_capital}} only) while joining the firm either in form of cash or assets. Any Additional Capital, if any, whenever required shall be introduced by partners in their Profit Sharing Ratio, and/or otherwise as may be decided by the Partners hereto from time to time.
+b) Interest at the rate as may be prescribed u/s. 40 (b) of the Income Tax Act, 1961, or any other applicable provisions as may be in force in the income Tax Assessment of the Partnership Firm for the relevant accounting period shall be payable to the Partners or the amount standing to the credit of the account of the Partners. Such interest shall be calculated and credited to the A/c. of each Partner at the time of closing of the Accounting Year. If there is any debit balance in the account of any partner, interest at the same rate shall be payable by him/ her to the firm.
+
+8.  REMUNERATION TO PARTNERS:
+a) As the partners are working partners, the remuneration payable to the above referred partners shall be credited to their respective accounts at the close of the Accounting period when final accounts of the Partnership made up or by such method as may be mutually decided by the Parties hereto whether monthly or yearly, and the amount of remuneration shall fall due to turn as determined in the above manner, which shall be equal to the sum computed according to the method of computation as laid down in part (1) of sub clause (v) of Clause (b) of section 40 of the Income Tax act, 1961 or permitted as permissible deductions under the provisions of Income Tax act or other statutes, as the case may be and as amended from time to time.
+b) The partners shall be entitled to increase or reduce the above remuneration and may agree to pay remuneration to other working partner or partners as the case may be. The parties hereto may also agree to revise the mode of calculating the above said remuneration as may be agreed to by and between the partners from time to time.
+c) In case if any of the partners is unable to attend to business of the partnership firm temporarily due to any illness or reasons beyond his/ her control then partners may mutually decide to revise remuneration for such period.
+d) The partners shall be entitled to modify the above terms relating to remuneration, interest etc., payable to the partners by executing a supplementary agreement or deed & such supplementary deed or agreement when executed shall have effect unless otherwise provided, from the 1st day of the accounting period in which such supplementary agreement or deed is executed and the same shall form part of this Deed of Partnership.
+
+9.  PROFIT/LOSS SHARING RATIO:
+The net profit / loss of the partnership business, whether on account of capital or revenue, as per the accounts maintained by the partners, after deduction of all expenses relating to manufacturing, contracting and/or trading activities and/or the business of the partnership including rent, salaries and other establishment expenses as well as interest and remuneration payable to the partners in accordance with this deed of partnership shall be divided and distributed amongst the partners on the close of the accounting year in the following proportion.
+
+   Name of the Partners                   Share in Profit/Loss
+
+a. {{partner1_name}}                     {{partner1_profit_share}}%
+b. {{partner2_name}}                     {{partner2_profit_share}}%
+{{partner_3_profit_block}}
+{{partner_4_profit_block}}
+
+10. BANK ACCOUNT:
+The bank account or accounts or the partnership business shall be maintained with any nationalized Bank or any other bank as mutually decided by the partners, such bank account or accounts of the firm shall always remain in the name of the firm to be operated under the joint signatures of all the partners.
+
+11. OUTSIDE BORROWINGS / LOANS:
+The partners may borrow, raise, secure the payment of money for and on behalf of the partnership business at interest or otherwise and on such terms and conditions as may be mutually agreed between them.
+
+12. ADMISSION / RETIREMENT / DEATH OF PARTNERS:
+a) A new partner may be admitted into partnership business by mutual consent of all the partners.
+b) If any parties hereto shall at anytime during the subsistence of partnership be desirous of retiring from the firm, it shall be competent for him to do so provided always that he shall in such case give at least THREE calendar months notice of his intention to do so.
+c) In the event of death, retirement, lunacy, insolvency of any one of the partners, the remaining partner shall have the right to continue the partnership business under the same name and at the same place after adjustment of accounts of the outgoing partner; and the heirs, legal successors shall not have any right to become the partner/s of the firm, unless the surviving partners agree; and the retiring partner and/or legal representative/s of the deceased Partner shall be entitled to their share of profit shown in the Books of Account for every completed month preceding his/ her death as if the profits of the firm were evenly earned during the year.
+
+13. BOOKS OF ACCOUNTS:
+The books of accounts of partnership firm shall be kept at the place of its business or as may be decided by the parties and shall be maintained in accordance with the rules, regulations and/ or custom in the Market.
+
+14. OTHERS:
+a) Any dispute, question or difference that may arise between the partners relating to the partnership business or any matter incidental or otherwise connected thereto including the question of interpretation of this deed, whether arising during the subsistence of the partnership or upon determination thereof shall be referred to for arbitration by a 'Sole Arbitrator' to be appointed by the partners by mutual consent. The award given by the sole arbitrator shall be final, binding and conclusive upon all the parties to the disputes referred for arbitration as aforesaid. Arbitration proceedings contemplated hereinabove shall be subject to and governed by the provisions of the Arbitration Act, 1940 along with all its statutory modifications in force for the time being.
+b) All other matters for which no provision has been made in this deed and also matters for which provisions has been made in this deed but which are to be eliminated, modified shall be decided with the mutual consent of the partners in writing.
+c) Save as aforesaid the provisions of the Indian Partnership Act, 1932 or any modification thereof for the time being in force shall govern this partnership.
+d) Upon every reasonable request, inform the other partners of all letters, writings, notices, demands, and other things, which shall come to his/her hands or knowledge, concerning the partnership business.
+e) No partner shall without the consent in writing of the other partners, release or compound any debt owing to the firm or diminish security of the firm without recovering the full amount thereof or lend any money or deliver any goods belonging to the firm otherwise than in the usual course of business or make himself as bail or surety for any person or make any assignment either absolute or by way of mortgage or declaration of trust or of his her share of interest in the firm or do or knowingly permit to be done anything whereby the property of the firm may expose to the danger of being seized, attacked or taken in execution.
+f) It is agreed between the parties hereto that whenever any type of agreement is entered into with any party it will be done with the knowledge of all the PARTNERS and also all the PARTNERS will have concurrence to execute the agreement and will decided the party who will sign on behalf of the firm.
+g) The partners will apply their personal liabilities promptly and in any case the firm will not be responsible for the personal liabilities of the partner.
+h) Under any circumstances no partner shall be entitled to any goodwill.
+i) No partner without the consent of other partners shall:
+   1) Employ any of the money, goods or effect of the partnership or pledge the credits thereof or otherwise dispose off the same.
+   2) Grant power of attorney to anyone to manage affairs of the firm.
+
+15. RESTRICTIONS:
+a) No partner shall, unless agreed to by all other partners in writing be entitled to assign or transfer his share in the firm to any other person/s or partner/s.
+b) No partner shall transfer, mortgage or create any charge on his interest in the firm without the consent of the other partners in writing.
+c) Each partner shall :
+   I.   Diligently attend to the business and devote his time and attention thereto.
+   II.  Punctually pay his separate debts and indemnify the other partners and the assets of the firm against the same and all expenses thereof.
+   III. Upon every reasonable request, inform the other partners, of all letters, accounts and other things which shall come to his/her hands or knowledge concerning the business of partnership.
+   IV.  Any change or modification to be effected in this deed shall be only in writing and advancing mutual consent of all parties concern.
+
+16. SUPPLEMENT:
+The parties hereto shall be entitled to add, delete from or modify the terms hereof by mutual consent in writing, which shall be treated and become a part of this deed.
+
+17. Explanation:
+All matters not specifically provided for in the deed, shall be governed by the provisions of Indian Partnership Act, 1932 or any other law for the time being in force.
+The terms used in this deed such as First Partner, Second Partner etc. shall unless repugnant to the context of or meaning thereof, mean and include their respective heirs, successors, survivors, legal representatives, administrators, executors and assigns.
+
+IN WITNESS WHEREOF THE PARTIES HERETO HAVE SIGNED THIS DEED ON THE DAY AND YEAR HEREIN ABOVE MENTIONED.
+
+WITNESSES:                                 PARTNERS:
+
+1) {{witness1_name}}                       1) {{partner1_name}}
+                                              (FIRST PARTNER)
+
+2) {{witness2_name}}                       2) {{partner2_name}}
+                                              (SECOND PARTNER)
+{{partner_3_signature_block}}
+{{partner_4_signature_block}}
+    </script>
+
+    <script type="text/template" id="p3-between-template">
+3) {{partner3_name}}
+   FATHER'S NAME      : {{partner3_father_name}}
+   DATE OF BIRTH      : {{partner3_dob}}
+   RESIDING AT        : {{partner3_address}}
+   PAN                : {{partner3_pan}}
+(Hereinafter called "THE THIRD PARTNER") being the party of "THE THIRD PART".
+    </script>
+    <script type="text/template" id="p4-between-template">
+4) {{partner4_name}}
+   FATHER'S NAME      : {{partner4_father_name}}
+   DATE OF BIRTH      : {{partner4_dob}}
+   RESIDING AT        : {{partner4_address}}
+   PAN                : {{partner4_pan}}
+(Hereinafter called "THE FOURTH PARTNER") being the party of "THE FOURTH PART".
+    </script>
+    <script type="text/template" id="p3-profit-template">
+c. {{partner3_name}}                     {{partner3_profit_share}}%
+    </script>
+    <script type="text/template" id="p4-profit-template">
+d. {{partner4_name}}                     {{partner4_profit_share}}%
+    </script>
+    <script type="text/template" id="p3-signature-template">
+
+                                             3) {{partner3_name}}
+                                                 (THIRD PARTNER)
+    </script>
+    <script type="text/template" id="p4-signature-template">
+
+                                             4) {{partner4_name}}
+                                                 (FOURTH PARTNER)
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const generateButton = document.getElementById('generate-button');
+            const copyButton = document.getElementById('copy-button');
+            const printButton = document.getElementById('print-button');
+            const resetButton = document.getElementById('reset-button');
+            const outputDeed = document.getElementById('output-deed');
+            const messageBox = document.getElementById('message-box');
+            const downloadWordButton = document.getElementById('download-word-button');
+            const downloadPdfButton = document.getElementById('download-pdf-button');
+            const actionButtons = document.getElementById('action-buttons');
+            
+            // Template Loading
+            const baseTemplate = document.getElementById('deed-template').innerHTML;
+            const p3BetweenTemplate = document.getElementById('p3-between-template').innerHTML;
+            const p4BetweenTemplate = document.getElementById('p4-between-template').innerHTML;
+            const p3ProfitTemplate = document.getElementById('p3-profit-template').innerHTML;
+            const p4ProfitTemplate = document.getElementById('p4-profit-template').innerHTML;
+            const p3SigTemplate = document.getElementById('p3-signature-template').innerHTML;
+            const p4SigTemplate = document.getElementById('p4-signature-template').innerHTML;
+
+            generateButton.addEventListener('click', () => {
+                let finalDeed = baseTemplate;
+                const data = {};
+                document.querySelectorAll('#deed-form input, #deed-form textarea').forEach(el => {
+                    data[el.id] = el.value.trim();
+                });
+
+                const placeholder = '__________';
+
+                // Partner 3 Logic
+                if (data.partner3_name) {
+                    let p3Between = p3BetweenTemplate
+                        .replace('{{partner3_name}}', data.partner3_name || placeholder)
+                        .replace('{{partner3_father_name}}', data.partner3_father_name || placeholder)
+                        .replace('{{partner3_dob}}', data.partner3_dob || placeholder)
+                        .replace('{{partner3_address}}', data.partner3_address || placeholder)
+                        .replace('{{partner3_pan}}', data.partner3_pan || placeholder);
+                    let p3Profit = p3ProfitTemplate
+                        .replace('{{partner3_name}}', data.partner3_name || placeholder)
+                        .replace('{{partner3_profit_share}}', data.partner3_profit_share || '0');
+                    let p3Sig = p3SigTemplate.replace('{{partner3_name}}', data.partner3_name || placeholder);
+                    
+                    finalDeed = finalDeed.replace('{{partner_3_between_block}}', p3Between)
+                                         .replace('{{partner_3_profit_block}}', p3Profit)
+                                         .replace('{{partner_3_signature_block}}', p3Sig);
+                } else {
+                    finalDeed = finalDeed.replace('{{partner_3_between_block}}', '')
+                                         .replace('{{partner_3_profit_block}}', '')
+                                         .replace('{{partner_3_signature_block}}', '');
+                }
+
+                // Partner 4 Logic
+                if (data.partner4_name) {
+                    let p4Between = p4BetweenTemplate
+                        .replace('{{partner4_name}}', data.partner4_name || placeholder)
+                        .replace('{{partner4_father_name}}', data.partner4_father_name || placeholder)
+                        .replace('{{partner4_dob}}', data.partner4_dob || placeholder)
+                        .replace('{{partner4_address}}', data.partner4_address || placeholder)
+                        .replace('{{partner4_pan}}', data.partner4_pan || placeholder);
+                    let p4Profit = p4ProfitTemplate
+                        .replace('{{partner4_name}}', data.partner4_name || placeholder)
+                        .replace('{{partner4_profit_share}}', data.partner4_profit_share || '0');
+                    let p4Sig = p4SigTemplate.replace('{{partner4_name}}', data.partner4_name || placeholder);
+                    
+                    finalDeed = finalDeed.replace('{{partner_4_between_block}}', p4Between)
+                                         .replace('{{partner_4_profit_block}}', p4Profit)
+                                         .replace('{{partner_4_signature_block}}', p4Sig);
+                } else {
+                    finalDeed = finalDeed.replace('{{partner_4_between_block}}', '')
+                                         .replace('{{partner_4_profit_block}}', '')
+                                         .replace('{{partner_4_signature_block}}', '');
+                }
+
+                // Global Replace
+                Object.keys(data).forEach(key => {
+                    const regex = new RegExp(`{{${key}}}`, 'g');
+                    finalDeed = finalDeed.replace(regex, data[key] || placeholder);
+                });
+
+                outputDeed.textContent = finalDeed;
+                actionButtons.classList.remove('hidden');
+            });
+
+            // Reset
+            resetButton.addEventListener('click', () => {
+                outputDeed.innerHTML = `<div class="flex flex-col justify-center items-center h-full text-center text-slate-400"><i class="fas fa-file-signature text-6xl mb-4 text-slate-300"></i><p class="font-medium text-lg">Fill details and click Generate to preview the legal draft</p></div>`;
+                actionButtons.classList.add('hidden');
+            });
+
+            // Copy
+            copyButton.addEventListener('click', () => {
+                navigator.clipboard.writeText(outputDeed.textContent).then(() => showMessage('<i class="fas fa-check-circle text-green-400 mr-2"></i>Text Copied!'));
+            });
+
+            function showMessage(msgHTML) {
+                messageBox.innerHTML = msgHTML;
+                messageBox.classList.remove('hidden');
+                setTimeout(() => messageBox.classList.add('hidden'), 2500);
+            }
+
+            // Word Download
+            downloadWordButton.addEventListener('click', () => {
+                const content = `<html><body><pre style="font-family: 'Courier New', monospace; font-size: 10pt;">${outputDeed.textContent}</pre></body></html>`;
+                const fileName = `${(document.getElementById('firm_name').value || 'Deed').replace(/ /g, '_')}.doc`;
+                const link = document.createElement('a');
+                link.href = 'data:application/msword;charset=utf-8,' + encodeURIComponent(content);
+                link.download = fileName;
+                link.click();
+            });
+
+            // PDF Download
+            downloadPdfButton.addEventListener('click', () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFont("courier", "normal");
+                doc.setFontSize(10);
+                const lines = doc.splitTextToSize(outputDeed.textContent, 180);
+                doc.text(lines, 15, 15);
+                doc.save(`${(document.getElementById('firm_name').value || 'Deed').replace(/ /g, '_')}.pdf`);
+            });
+
+            // Print
+            printButton.addEventListener('click', () => {
+                const w = window.open();
+                w.document.write(`<html><head><title>Print Deed</title><style>body{font-family:serif;white-space:pre-wrap;padding:20px;}</style></head><body>${outputDeed.textContent}</body></html>`);
+                w.document.close();
+                setTimeout(() => { w.print(); w.close(); }, 200);
+            });
+        });
+    </script>
+</body>
+</html>

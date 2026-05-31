@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=ESICExtractor';
+                }
+            }
+        })();
+    </script>
+
+    <title>ESIC Challan Extractor | J.L. Khanna & Co.</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js and SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        
+        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+
+        /* Upload Zone Styles */
+        .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
+        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+
+        /* Stat Cards */
+        .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Table Styles */
+        .table-container { overflow-x: auto; max-height: 60vh; }
+        table { min-width: 100%; }
+        thead th {
+            position: sticky; top: 0; z-index: 10; background-color: #f8fafc; font-size: 0.75rem;
+            text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem;
+            text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+        }
+        tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
+        tbody tr:hover { background-color: #f8fafc; }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .spinner {
+            width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="hero-pattern min-h-screen flex flex-col">
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+            <div class="spinner mb-4 mx-auto"></div>
+            <h4 class="text-xl font-bold text-slate-800">Processing ESIC Challans</h4>
+            <p class="text-sm text-slate-500 mt-2">Extracting contribution data locally...</p>
+        </div>
+    </div>
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">AI</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800">CA Firm<span class="text-blue-600"> Automation</span></span>
+                </div>
+                <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    Vaibhav Khanna | Professional Automation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow mb-12">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+                <span class="gradient-text">ESIC Challan Extractor</span>
+            </h1>
+            <p class="text-slate-600 text-sm font-medium">Local PDF processing. Zero data leaves your browser.</p>
+        </div>
+
+        <div class="space-y-6">
+            
+            <!-- Upload Section -->
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-pdf mr-2 text-red-600"></i>Upload Files</h2>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Monthly Contribution Challans</span>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm" onclick="document.getElementById('fileInput').click()">
+                    <div class="space-y-4">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-blue-400"></i>
+                        <div>
+                            <p class="text-base font-bold text-slate-700">Drop ESIC PDF files here or click to browse</p>
+                            <p class="text-sm text-slate-500 mt-1">Supports batch processing of multiple files</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
+                </div>
+
+                <!-- Action Bar -->
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="processFiles()" id="processButton" disabled class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2">
+                        <i class="fas fa-cogs mr-2"></i> Process Files
+                    </button>
+                    <button onclick="clearAll()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm px-6 py-2">
+                        <i class="fas fa-trash mr-2"></i> Clear
+                    </button>
+                </div>
+
+                <!-- File List Preview -->
+                <div id="fileList" class="mt-4 space-y-2 text-sm font-medium hidden"></div>
+                
+                <!-- Error Display -->
+                <div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-lg flex items-center shadow-sm">
+                    <i class="fas fa-exclamation-circle mr-3 text-lg"></i> <span id="errorText"></span>
+                </div>
+            </div>
+
+            <!-- Results Dashboard -->
+            <div id="resultsSection" class="hidden space-y-6">
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl shadow-sm"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Challans</p>
+                            <p id="totalChallans" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Amount</p>
+                            <p id="totalAmount" class="text-xl font-black text-slate-800">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Successful</p>
+                            <p id="successCount" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600 text-xl shadow-sm"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Pending</p>
+                            <p id="pendingCount" class="text-xl font-black text-slate-800">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center">
+                        <h3 class="text-base font-bold text-slate-800"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
+                        <div class="flex gap-3">
+                            <button onclick="exportToCSV()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm"><i class="fas fa-file-csv mr-2 text-blue-600"></i>CSV</button>
+                            <button onclick="exportToExcel()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm"><i class="fas fa-file-excel mr-2 text-green-600"></i>Excel</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead>
+                                <tr>
+                                    <th>Sr. No.</th>
+                                    <th>Status</th>
+                                    <th>Employer Code</th>
+                                    <th>Employer Name</th>
+                                    <th>Period</th>
+                                    <th>Challan No</th>
+                                    <th>Created Date</th>
+                                    <th>Submitted Date</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Transaction No</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        let selectedFiles = [];
+        let extractedData = [];
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+            document.getElementById('processButton').disabled = selectedFiles.length === 0;
+        });
+        
+        // Drag and Drop handlers
+        const dropZone = document.querySelector('.drop-zone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                selectedFiles = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+                updateFileList();
+                document.getElementById('processButton').disabled = selectedFiles.length === 0;
+            }
+        });
+
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            if (selectedFiles.length > 0) {
+                fileList.classList.remove('hidden');
+                selectedFiles.forEach((file, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200';
+                    div.innerHTML = `
+                        <span class="text-slate-700 truncate"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
+                        <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 ml-2 font-bold">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    fileList.appendChild(div);
+                });
+            } else {
+                fileList.classList.add('hidden');
+            }
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            document.getElementById('processButton').disabled = selectedFiles.length === 0;
+        }
+
+        function clearAll() {
+            selectedFiles = [];
+            extractedData = [];
+            updateFileList();
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('error').classList.add('hidden');
+        }
+        
+        async function processFiles() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('resultsSection').classList.add('hidden');
+            extractedData = [];
+            
+            try {
+                for (const file of selectedFiles) {
+                    const text = await extractTextFromPDF(file);
+                    const challanData = parseChallanData(text);
+                    if (challanData) {
+                        extractedData.push(challanData);
+                    }
+                }
+                
+                if (extractedData.length > 0) {
+                    displayResults();
+                } else {
+                    throw new Error('No data could be extracted from the uploaded files.');
+                }
+            } catch (error) {
+                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('errorText').textContent = `Error: ${error.message}`;
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+        
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let fullText = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                // Logic for structured text extraction preserved
+                let lines = [], currentLine = [], lastY = null;
+                textContent.items.forEach(item => {
+                    if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+                        lines.push(currentLine.join(' ')); currentLine = [];
+                    }
+                    currentLine.push(item.str); lastY = item.transform[5];
+                });
+                if (currentLine.length > 0) lines.push(currentLine.join(' '));
+                fullText += lines.join('\n') + '\n';
+                fullText += '\n' + textContent.items.map(item => item.str).join(' ') + '\n';
+            }
+            return fullText;
+        }
+        
+        function parseChallanData(text) {
+            const data = { transactionStatus: '', employerCode: '', employerName: '', challanPeriod: '', challanNumber: '', challanCreatedDate: '', challanSubmittedDate: '', amountPaid: '', transactionNumber: '' };
+            const cleanText = text.replace(/\s+/g, ' ').trim();
+            const textWithLines = text.replace(/\s\s+/g, '\n');
+            
+            // Helper to safely get match
+            const getMatch = (patterns) => {
+                for (let p of patterns) {
+                    const m = cleanText.match(p) || textWithLines.match(p);
+                    if (m) return m[1].trim();
+                }
+                return '';
+            };
+
+            data.transactionStatus = getMatch([/Transaction\s*status\s*[:]\s*(\w+)/i, /Transaction\s*status\s+(\w+)/i]);
+            data.employerCode = getMatch([/Employer['']?s\s*Code\s*No\s*[:]\s*([A-Z0-9]+)/i, /Employer['']?s\s*Code\s*[:]\s*([A-Z0-9]+)/i]);
+            data.employerName = getMatch([/Employer['']?s\s*Name\s*[:]\s*([^:\n]+?)(?=\s*Challan|$)/i]);
+            data.challanPeriod = getMatch([/Challan\s*Period\s*[:]\s*(\w{3}-\d{4})/i]);
+            data.challanNumber = getMatch([/Challan\s*Number\s*[:]\s*(\w+)/i, /Challan\s*Number\s+(\w+)/i]);
+            data.challanCreatedDate = getMatch([/Challan\s*Created\s*Date\s*[:]\s*([0-9X-]+)/i, /Challan\s*Created\s*Date\s+([0-9X-]+)/i]);
+            
+            // Complex Date Logic Preserved
+            let submittedDate = getMatch([/Challan\s*Submitted\s*Date\s*[:]\s*(\d{2}-\d{2}-\d{4})/i, /Challan\s*Submitted\s*Date\s+(\d{2}-\d{2}-\d{4})/i]);
+            if (!submittedDate) {
+                const submittedIndex = cleanText.search(/Challan\s*Submitted\s*Date/i);
+                if (submittedIndex !== -1) {
+                    const afterText = cleanText.substring(submittedIndex + 20, submittedIndex + 150);
+                    const dateMatch = afterText.match(/(\d{2}-\d{2}-\d{4})/);
+                    if (dateMatch) submittedDate = dateMatch[1];
+                }
+            }
+            data.challanSubmittedDate = submittedDate;
+
+            const amt = cleanText.match(/Amount\s*Paid\s*[:]\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i);
+            if (amt) data.amountPaid = amt[1].replace(/,/g, '');
+            data.transactionNumber = getMatch([/Transaction\s*Number\s*[:]\s*(\w+)/i, /Transaction\s*Number\s+(\w+)/i]);
+            
+            return data;
+        }
+        
+        function displayResults() {
+            document.getElementById('resultsSection').classList.remove('hidden');
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            let totalAmount = 0, successCount = 0, pendingCount = 0;
+            
+            extractedData.forEach((data, index) => {
+                const row = document.createElement('tr');
+                
+                let statusBadge = '';
+                if (data.transactionStatus.toLowerCase() === 'success') {
+                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200">Success</span>';
+                    successCount++;
+                } else if (data.transactionStatus.toLowerCase() === 'pending') {
+                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">Pending</span>';
+                    pendingCount++;
+                } else {
+                    statusBadge = `<span class="px-2 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200">${data.transactionStatus}</span>`;
+                }
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${statusBadge}</td>
+                    <td>${data.employerCode}</td>
+                    <td>${data.employerName}</td>
+                    <td>${data.challanPeriod}</td>
+                    <td>${data.challanNumber}</td>
+                    <td>${data.challanCreatedDate}</td>
+                    <td>${data.challanSubmittedDate}</td>
+                    <td class="font-bold text-slate-800">${parseFloat(data.amountPaid).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
+                    <td>${data.transactionNumber}</td>
+                `;
+                tbody.appendChild(row);
+                totalAmount += parseFloat(data.amountPaid) || 0;
+            });
+            
+            document.getElementById('totalChallans').textContent = extractedData.length;
+            document.getElementById('totalAmount').textContent = totalAmount.toLocaleString('en-IN', {style:'currency', currency:'INR'});
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('pendingCount').textContent = pendingCount;
+        }
+        
+        function exportToCSV() {
+            let csv = 'Sr. No.,Transaction Status,Employer Code,Employer Name,Challan Period,Challan Number,Created Date,Submitted Date,Amount Paid,Transaction Number\n';
+            extractedData.forEach((data, index) => {
+                csv += `${index + 1},"${data.transactionStatus}","${data.employerCode}","${data.employerName}","${data.challanPeriod}","${data.challanNumber}","${data.challanCreatedDate}","${data.challanSubmittedDate}","${data.amountPaid}","${data.transactionNumber}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'esic_challan_data.csv'; a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            const headers = ['Sr. No.', 'Transaction Status', 'Employer Code', 'Employer Name', 'Challan Period', 'Challan Number', 'Created Date', 'Submitted Date', 'Amount Paid (₹)', 'Transaction Number'];
+            const excelData = [headers];
+            extractedData.forEach((data, index) => {
+                excelData.push([
+                    index + 1, data.transactionStatus, data.employerCode, data.employerName, data.challanPeriod,
+                    data.challanNumber, data.challanCreatedDate, data.challanSubmittedDate, parseFloat(data.amountPaid) || 0, data.transactionNumber
+                ]);
+            });
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, ws, 'ESIC Challan Data');
+            XLSX.writeFile(wb, 'esic_challan_data.xlsx');
+        }
+    </script>
+</body>
+</html>
