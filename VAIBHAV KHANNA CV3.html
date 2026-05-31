@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV | CA. Vaibhav Khanna</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <style>
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 1rem; }
+        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 24px 24px; }
+        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .dark .gradient-text { background: linear-gradient(to right, #60a5fa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Print Styles: Strips away UI and forces white background for clean PDF generation */
+        @media print {
+            body { background: white !important; color: black !important; background-image: none !important; }
+            nav, footer, .no-print { display: none !important; }
+            .glass-card { border: none !important; box-shadow: none !important; padding: 0 !important; background: white !important; }
+            .dark { color: black !important; }
+            a { text-decoration: none !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
+
+    <!-- Navigation (No Print) -->
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 no-print transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="index.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
+                    <span class="font-bold text-xl tracking-tight">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <button onclick="window.print()" class="text-sm font-semibold bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"><i class="fas fa-print mr-2"></i> Print / Save PDF</button>
+                    <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main CV Content -->
+    <main class="flex-grow w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-12">
+        <div class="glass-card p-8 md:p-12">
+            
+            <!-- Header -->
+            <header class="border-b border-slate-200 dark:border-slate-700 pb-8 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-2">CA. Vaibhav Khanna</h1>
+                    <h2 class="text-xl md:text-2xl font-medium text-blue-600 dark:text-blue-400">AI & Tech-Driven Chartered Accountant</h2>
+                </div>
+                <div class="text-sm text-slate-600 dark:text-slate-400 space-y-1 md:text-right font-medium">
+                    <p><i class="fas fa-map-marker-alt w-5 text-center mr-1"></i> Amritsar, Punjab, India</p>
+                    <p><i class="fas fa-envelope w-5 text-center mr-1"></i> kh.vaibhav@gmail.com</p>
+                    <p><i class="fas fa-phone w-5 text-center mr-1"></i> +91-9814770030</p>
+                    <p><i class="fab fa-linkedin w-5 text-center mr-1"></i> linkedin.com/in/vaibhav14k</p>
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                
+                <!-- Left Column (Main Content) -->
+                <div class="lg:col-span-2 space-y-10">
+                    
+                    <!-- Summary -->
+                    <section>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center"><i class="fas fa-user-circle mr-3 text-blue-500"></i> Professional Summary</h3>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+                            AI & Tech-Driven Chartered Accountant with over 16 years of experience bridging the gap between traditional financial compliance and modern data engineering. Specializing in Statutory & Internal Audits, ERP Control Implementations, and Direct/Indirect Taxation. Proven track record of engineering zero-cost, locally hosted automation workflows utilizing Python, VBA, and n8n to instantly transform raw, unstructured financial data into actionable architectural insights. Dedicated to eradicating manual data drudgery within the finance and audit fraternity.
+                        </p>
+                    </section>
+
+                    <!-- Experience -->
+                    <section>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-6 flex items-center"><i class="fas fa-briefcase mr-3 text-blue-500"></i> Experience</h3>
+                        
+                        <div class="space-y-8">
+                            <!-- Role 1 -->
+                            <div>
+                                <div class="flex justify-between items-baseline flex-wrap gap-2 mb-2">
+                                    <h4 class="text-lg font-bold text-slate-900 dark:text-slate-100">Partner</h4>
+                                    <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Nov 2008 – Present</span>
+                                </div>
+                                <h5 class="text-md font-medium text-blue-600 dark:text-blue-400 mb-3">J.L. Khanna & Co. | Amritsar, India</h5>
+                                <ul class="list-disc list-outside ml-5 space-y-2 text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <li>Spearhead strategic audit and advisory services for diverse sectors, including manufacturing, automotive dealerships, hospitality, healthcare, and educational institutions.</li>
+                                    <li>Conducted 70+ high-level Internal & Statutory Audits across India, engineering bespoke audit processes to enhance efficiency and compliance.</li>
+                                    <li>Lead ERP implementation assessments and control checks, bridging traditional accounting frameworks with robust digital infrastructure.</li>
+                                    <li>Design and deploy custom automation workflows (Python, VBA, n8n) to streamline data extraction (e.g., TDS/ESIC challans, Tally daybooks, bank statements), reducing manual reconciliation time by 60% and saving [Y] hours per audit cycle.</li>
+                                    <li>Provide strategic advisory on taxation, company law matters, and corporate restructuring for mid-to-large-scale organizations.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Role 2 -->
+                            <div>
+                                <div class="flex justify-between items-baseline flex-wrap gap-2 mb-2">
+                                    <h4 class="text-lg font-bold text-slate-900 dark:text-slate-100">Co-Founder & Digital Architect <span class="text-sm font-normal text-slate-500 italic">(Operational Case Study)</span></h4>
+                                    <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">Apr 2014 – Present</span>
+                                </div>
+                                <h5 class="text-md font-medium text-blue-600 dark:text-blue-400 mb-3">Mani Dua Khanna | Amritsar, India</h5>
+                                <ul class="list-disc list-outside ml-5 space-y-2 text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <li><strong>Business Case:</strong> Scaled a boutique designer wear brand into a digital-first enterprise, establishing a footprint on luxury platforms including Nykaa Luxe, TATA Cliq Luxury, and Ajio Luxe, resulting in a 150% increase in online revenue.</li>
+                                    <li>Architected and managed end-to-end digital operations, automated accounting workflows, and e-commerce strategies.</li>
+                                    <li>Engineered robust inventory control and packaging workflows to ensure seamless order fulfillment and logistics tracking.</li>
+                                </ul>
+                            </div>
+
+                            <!-- Role 3 -->
+                            <div>
+                                <div class="flex justify-between items-baseline flex-wrap gap-2 mb-2">
+                                    <h4 class="text-lg font-bold text-slate-900 dark:text-slate-100">Article Trainee</h4>
+                                    <span class="text-sm font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">2006 – 2008</span>
+                                </div>
+                                <h5 class="text-md font-medium text-blue-600 dark:text-blue-400 mb-3">S.C. Vasudeva & Co. | New Delhi, India</h5>
+                                <ul class="list-disc list-outside ml-5 space-y-2 text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    <li>Executed internal, statutory, tax, and limited review audits for major corporate clients including Hindustan Media Pvt. Ltd., Reliance Industries, and Apollo Pharmacy.</li>
+                                    <li>Gained foundational expertise in navigating and auditing major enterprise ERP systems (SAP, Prologic) in complex corporate environments.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- Right Column (Sidebar) -->
+                <div class="space-y-10">
+                    
+                    <!-- Core Competencies -->
+                    <section>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">Core Competencies</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">Statutory Audits</span>
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">Internal Audits</span>
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">Tax Advisory</span>
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">GST Compliance</span>
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">ERP Controls</span>
+                            <span class="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-sm font-semibold">Digital Operations</span>
+                        </div>
+                    </section>
+
+                    <!-- Tech Stack -->
+                    <section>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">Tech & Systems</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-bold">Python</span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-bold">VBA Macros</span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-bold">n8n Automation</span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-bold">AI Studio</span>
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded text-sm font-bold">SAP / Tally</span>
+                        </div>
+                    </section>
+
+                    <!-- Education -->
+                    <section>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">Education & Certs</h3>
+                        <ul class="space-y-4">
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">Artificial Intelligence for CA (AICA)</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Level 2 (May 2026) | Level 1 (Feb 2025)</p>
+                            </li>
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">Peer Reviewer</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">ICAI (2023 - 2029)</p>
+                            </li>
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">DISA</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">ICAI (2010 - 2011)</p>
+                            </li>
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">Chartered Accountant (F.C.A.)</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">ICAI (2004 - 2009)</p>
+                            </li>
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">B.Com. (Honours)</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Delhi University (2003 - 2006)</p>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <!-- Achievements (NEW) -->
+                    <section class="mt-8">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b border-slate-200 dark:border-slate-700 pb-2">Achievements</h3>
+                        <ul class="space-y-4">
+                            <li>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">AI in ICAI Hackathon (Season 4)</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400"><i class="fas fa-trophy text-amber-500 mr-1"></i> National Finalist (Dec 2025)</p>
+                            </li>
+                        </ul>
+                    </section>
+
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <script>
+        // Theme Toggle Logic
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+    </script>
+</body>
+</html>
