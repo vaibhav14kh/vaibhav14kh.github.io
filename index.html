@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automation Hub | Vaibhav Khanna</title>
     
+    <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Tailwind Dark Mode Config -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -49,12 +51,13 @@
     <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-3">
+                <!-- LOGO HYPERLINK TO MAIN PAGE -->
+                <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
                     <span class="font-bold text-xl tracking-tight">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
-                </div>
+                </a>
                 <div class="flex items-center gap-4">
-                    <a href="#portfolio" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Automation Hub</a>
+                    <a href="#portfolio" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">The Hub</a>
                     <a href="#tools" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Tools Arsenal</a>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
                         <i class="fas fa-sun hidden dark:inline"></i>
@@ -67,7 +70,8 @@
 
     <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 space-y-16">
         
-        <section id="portfolio" class="glass-card p-8 md:p-12 overflow-hidden relative">
+        <!-- SCROLL-MT-24 ADDED HERE TO PREVENT CUTOFF -->
+        <section id="portfolio" class="glass-card p-8 md:p-12 overflow-hidden relative scroll-mt-24">
             <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 dark:opacity-20"></div>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center relative z-10">
                 <div class="lg:col-span-2 space-y-6">
@@ -79,7 +83,7 @@
                         </h1>
                     </div>
                     <p class="text-base md:text-lg text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
-                        Based in Amritsar, I am a Chartered Accountant bridging the gap between traditional financial compliance and modern data engineering. Since joining the legacy firm <strong>Automation Hub</strong> (est. 1982) as a partner in 2010, my practice has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
+                        Based in Amritsar, I am a Chartered Accountant bridging the gap between traditional financial compliance and modern data engineering. Since joining the legacy firm <strong>J.L. Khanna & Co.</strong> (est. 1982) as a partner in 2010, my practice has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
                     </p>
                     <p class="text-base md:text-lg text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
                         My vision is to eradicate manual data drudgery within the CA fraternity. I engineer zero-cost, locally hosted automation workflows utilizing Python, VBA, and n8n to instantly transform raw, unstructured financial data into actionable architectural insights. 
@@ -115,7 +119,8 @@
             </div>
         </section>
 
-        <section id="tools" class="space-y-8">
+        <!-- SCROLL-MT-24 ADDED HERE TO PREVENT CUTOFF -->
+        <section id="tools" class="space-y-8 scroll-mt-24">
             <div class="text-center">
                 <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                     The <span class="gradient-text">Automation Arsenal</span>
@@ -123,8 +128,10 @@
                 <p class="text-slate-600 dark:text-slate-400">Exclusive, privacy-first web tools designed specifically for modern accounting firms.</p>
             </div>
 
+            <!-- Dynamic Tool Grid -->
             <div id="dynamicToolGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                </div>
+                <!-- Javascript will inject tools here based on release date -->
+            </div>
         </section>
 
     </main>
@@ -138,6 +145,7 @@
         </div>
     </footer>
 
+    <!-- Time Release Engine & Theme Logic -->
     <script>
         // Theme Toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
@@ -153,19 +161,19 @@
 
         // The Automation Arsenal Configuration
         const automationTools = [
-            { id: 'PDFKIT', title: 'PDF Kit', date: '2026-05-25T00:00:00+05:30', icon: 'fas fa-file-pdf', color: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400', desc: 'A unified suite of essential PDF manipulation utilities engineered for secure, local processing.', videoLink: 'https://youtu.be/1B4rsPKWpAg?si=_wp6JtIBx2ILZLOS' },
-            { id: 'EMBASSY', title: 'CA Report Generator', date: '2026-06-07T00:00:00+05:30', icon: 'fas fa-passport', color: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400', desc: 'Automates the generation of net worth and financial reports specifically formatted for Visa and Embassy submissions.' },
-            { id: 'DEED', title: 'Partnership Deed Drafter', date: '2026-06-14T00:00:00+05:30', icon: 'fas fa-file-contract', color: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300', desc: 'Automates the drafting of legal partnership deeds with dynamic partner clauses, instant calculations, and legal formatting.' },
+            { id: 'PDFKIT', title: 'PDF Kit V 0.5', date: '2026-05-25T00:00:00+05:30', icon: 'fas fa-file-pdf', color: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400', desc: 'A unified suite of essential PDF manipulation utilities engineered for secure, local processing.', videoLink: 'https://youtu.be/1B4rsPKWpAg?si=_wp6JtIBx2ILZLOS' },
+            { id: 'EMBASSY', title: 'CA Report Generator V2', date: '2026-06-07T00:00:00+05:30', icon: 'fas fa-passport', color: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400', desc: 'Automates the generation of net worth and financial reports specifically formatted for Visa and Embassy submissions.' },
+            { id: 'DEED', title: 'Partnership Deed Drafter V2', date: '2026-06-14T00:00:00+05:30', icon: 'fas fa-file-contract', color: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300', desc: 'Automates the drafting of legal partnership deeds with dynamic partner clauses, instant calculations, and legal formatting.' },
             { id: 'ENGAGE', title: 'Engagement Letter Generator', date: '2026-06-21T00:00:00+05:30', icon: 'fas fa-file-signature', color: 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400', desc: 'Standardizes audit engagement letters for diverse firm structures with instant, clean PDF generation.' },
-            { id: 'BOARD', title: 'Board Resolution Generator', date: '2026-06-28T00:00:00+05:30', icon: 'fas fa-gavel', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400', desc: 'Instantly draft compliant Board Resolutions for corporate actions including banking limits and director changes.' },
-            { id: 'DIR', title: 'Directors\' Report', date: '2026-07-05T00:00:00+05:30', icon: 'fas fa-users-cog', color: 'bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400', desc: 'Companies Act, 2013 compliant Directors\' Report Mail Merge Engine for private limited companies.' },
-            { id: 'ESIC', title: 'ESIC Challan Extractor', date: '2026-07-12T00:00:00+05:30', icon: 'fas fa-file-invoice', color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400', desc: 'Batch extract structured monthly contribution data directly from ESIC PDF Challans into Excel.' },
-            { id: 'TDS', title: 'TDS Challan Extractor', date: '2026-07-19T00:00:00+05:30', icon: 'fas fa-file-invoice-dollar', color: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400', desc: 'Local PDF processing engine to extract payment details and BSR codes from Form 281 TDS Challans.' },
-            { id: 'CHALLAN', title: 'Multi-Challan Extractor', date: '2026-07-26T00:00:00+05:30', icon: 'fas fa-layer-group', color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400', desc: 'Bulk upload PF, ESIC, and TDS challans and automatically extract structured payment data locally.' },
-            { id: 'BANK', title: 'Bank Statement Analyzer', date: '2026-08-02T00:00:00+05:30', icon: 'fas fa-university', color: 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400', desc: 'Transforms massive, unstructured Excel bank statements into visual KPIs and cash flow trends.' },
-            { id: 'DAYBOOK', title: 'Tally DayBook Dashboard', date: '2026-08-09T00:00:00+05:30', icon: 'fas fa-chart-line', color: 'bg-fuchsia-100 dark:bg-fuchsia-900/50 text-fuchsia-600 dark:text-fuchsia-400', desc: 'Turn raw Tally cash/bank book exports into interactive visual analytics and management dashboards.' },
-            { id: 'DEFF', title: 'Deferred Tax Calculator', date: '2026-08-16T00:00:00+05:30', icon: 'fas fa-calculator', color: 'bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400', desc: 'Instant computation of Current & Deferred Taxes (AS 22) with automated journal entries generation.' },
-            { id: 'CONV', title: 'Conveyance Reimbursement', date: '2026-08-23T00:00:00+05:30', icon: 'fas fa-car-side', color: 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400', desc: 'A secure, digital employee reimbursement claim system with local receipt attachment handling.' }
+            { id: 'BOARD', title: 'Board Resolution Generator V2', date: '2026-06-28T00:00:00+05:30', icon: 'fas fa-gavel', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400', desc: 'Instantly draft compliant Board Resolutions for corporate actions including banking limits and director changes.' },
+            { id: 'DIR', title: 'Directors\' Report V2', date: '2026-07-05T00:00:00+05:30', icon: 'fas fa-users-cog', color: 'bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400', desc: 'Companies Act, 2013 compliant Directors\' Report Mail Merge Engine for private limited companies.' },
+            { id: 'ESIC', title: 'ESIC Challan Extractor V2', date: '2026-07-12T00:00:00+05:30', icon: 'fas fa-file-invoice', color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400', desc: 'Batch extract structured monthly contribution data directly from ESIC PDF Challans into Excel.' },
+            { id: 'TDS', title: 'TDS Challan Extractor V2', date: '2026-07-19T00:00:00+05:30', icon: 'fas fa-file-invoice-dollar', color: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400', desc: 'Local PDF processing engine to extract payment details and BSR codes from Form 281 TDS Challans.' },
+            { id: 'CHALLAN', title: 'Multi-Challan Extractor V2', date: '2026-07-26T00:00:00+05:30', icon: 'fas fa-layer-group', color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400', desc: 'Bulk upload PF, ESIC, and TDS challans and automatically extract structured payment data locally.' },
+            { id: 'BANK', title: 'Bank Statement Analyzer V2', date: '2026-08-02T00:00:00+05:30', icon: 'fas fa-university', color: 'bg-cyan-100 dark:bg-cyan-900/50 text-cyan-600 dark:text-cyan-400', desc: 'Transforms massive, unstructured Excel bank statements into visual KPIs and cash flow trends.' },
+            { id: 'DAYBOOK', title: 'Tally DayBook Dashboard V2', date: '2026-08-09T00:00:00+05:30', icon: 'fas fa-chart-line', color: 'bg-fuchsia-100 dark:bg-fuchsia-900/50 text-fuchsia-600 dark:text-fuchsia-400', desc: 'Turn raw Tally cash/bank book exports into interactive visual analytics and management dashboards.' },
+            { id: 'DEFF', title: 'Deferred Tax Calculator V2', date: '2026-08-16T00:00:00+05:30', icon: 'fas fa-calculator', color: 'bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400', desc: 'Instant computation of Current & Deferred Taxes (AS 22) with automated journal entries generation.' },
+            { id: 'CONV', title: 'Conveyance Reimbursement V2', date: '2026-08-23T00:00:00+05:30', icon: 'fas fa-car-side', color: 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400', desc: 'A secure, digital employee reimbursement claim system with local receipt attachment handling.' }
         ];
 
         // Render Logic
@@ -207,6 +215,7 @@
                     const lockedCardHTML = `
                     <div class="glass-card flex flex-col p-6 h-full relative overflow-hidden opacity-90 border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
                         
+                        <!-- Lock Icon Badge -->
                         <div class="absolute top-4 right-4 bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 p-2 rounded-full shadow-sm flex items-center justify-center w-8 h-8 z-10">
                             <i class="fas fa-lock text-sm"></i>
                         </div>
@@ -215,10 +224,13 @@
                             <i class="${tool.icon}"></i>
                         </div>
                         
+                        <!-- Visible Title -->
                         <h3 class="text-lg font-bold text-slate-700 dark:text-slate-300 mb-2">${tool.title}</h3>
                         
+                        <!-- Blurred Description -->
                         <p class="text-sm text-slate-500 dark:text-slate-500 flex-grow mb-6 text-blur select-none" aria-hidden="true">${tool.desc}</p>
                         
+                        <!-- Disabled Button showing Drop Date -->
                         <div class="flex flex-col mt-auto relative z-10">
                             <button disabled class="btn-primary !bg-slate-200 dark:!bg-slate-700 !text-slate-500 dark:!text-slate-400 w-full shadow-none text-sm cursor-not-allowed border border-slate-300 dark:border-slate-600">
                                 <i class="fas fa-calendar-alt mr-2"></i> Drops on ${dropDateStr}
