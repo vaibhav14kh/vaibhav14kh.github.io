@@ -735,17 +735,8 @@
                 },
 
                 downloadPdf() {
-                    try {
-                        // Call PDF export function from pdf_export.js
-                        if (typeof generatePDF === 'function') {
-                            generatePDF();
-                        } else {
-                            throw new Error('PDF export function not loaded');
-                        }
-                    } catch (e) {
-                        console.error(e);
-                        alert("Error generating PDF: " + e.message);
-                    }
+                    // Trigger the browser's native print dialog for Microsoft Print to PDF
+                    window.print();
                 },
 
                 downloadExcel() {
@@ -3783,6 +3774,11 @@
 			await createLiabilitiesSheet(workbook, data);
 			await createSummarySheet(workbook, data);
 
+						// Auto-fit all worksheets
+			workbook.eachSheet(function(worksheet, sheetId) {
+				autoFitColumns(worksheet);
+			});
+
 			// Generate and download
 			console.log('Generating Excel file...');
 			const buffer = await workbook.xlsx.writeBuffer();
@@ -3795,6 +3791,23 @@
 			console.error('❌ Excel generation error:', error);
 			alert(`Error generating Excel: ${error.message}`);
 		}
+	}
+
+
+	/**
+	 * Helper: Auto-fit columns
+	 */
+	function autoFitColumns(worksheet) {
+		worksheet.columns.forEach(column => {
+			let maxLength = 0;
+			column.eachCell({ includeEmpty: true }, cell => {
+				let columnLength = cell.value ? cell.value.toString().length : 10;
+				if (columnLength > maxLength) {
+					maxLength = columnLength;
+				}
+			});
+			column.width = maxLength < 10 ? 10 : maxLength + 2;
+		});
 	}
 
 	/**
