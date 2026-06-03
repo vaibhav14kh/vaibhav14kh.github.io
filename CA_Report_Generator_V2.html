@@ -762,6 +762,160 @@
                     }
                 },
 
+                exportTemplate() {
+                    try {
+                        // Create template data object (exclude computed/API data)
+                        const template = {
+                            version: '2.0',
+                            exportDate: new Date().toISOString(),
+                            firm: this.firm,
+                            clientCount: this.clientCount,
+                            clients: this.clients,
+                            commonAddress: this.commonAddress,
+                            financials: {
+                                forex: this.financials.forex,
+                                years: this.financials.years,
+                                income: this.financials.income,
+                                movable: this.financials.movable,
+                                immovable: this.financials.immovable,
+                                liabilities: this.financials.liabilities
+                            }
+                        };
+
+                        // Convert to JSON
+                        const jsonStr = JSON.stringify(template, null, 2);
+                        const blob = new Blob([jsonStr], { type: 'application/json' });
+
+                        // Generate filename with date
+                        const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
+                        const filename = `CAReport_Template_${dateStr}.json`;
+
+                        // Download file
+                        saveAs(blob, filename);
+
+                        console.log('✅ Template exported successfully');
+                    } catch (e) {
+                        console.error('Template export error:', e);
+                        alert('Error exporting template: ' + e.message);
+                    }
+                },
+
+                importTemplate() {
+                    // Show confirmation dialog
+                    const confirmed = confirm(
+                        '⚠️ WARNING: Importing a template will REPLACE all current data.\n\n' +
+                        'Are you sure you want to continue?'
+                    );
+
+                    if (!confirmed) {
+                        console.log('Template import cancelled by user');
+                        return;
+                    }
+
+                    // Trigger file input
+                    const fileInput = document.getElementById('template-file-input');
+                    if (!fileInput) {
+                        alert('Error: File input not found');
+                        return;
+                    }
+
+                    fileInput.click();
+                },
+
+                handleTemplateFileSelect(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+
+                    reader.onload = (e) => {
+                        try {
+                            // Parse JSON
+                            const template = JSON.parse(e.target.result);
+
+                            // Validate template
+                            const validation = this.validateTemplate(template);
+                            if (!validation.valid) {
+                                alert('Invalid template file:\n\n' + validation.errors.join('\n'));
+                                return;
+                            }
+
+                            // Import data
+                            this.firm = template.firm;
+                            this.clientCount = template.clientCount;
+                            this.clients = template.clients;
+                            this.commonAddress = template.commonAddress;
+
+                            // Import financials
+                            this.financials.forex = template.financials.forex;
+                            this.financials.years = template.financials.years;
+                            this.financials.income = template.financials.income;
+                            this.financials.movable = template.financials.movable;
+                            this.financials.immovable = template.financials.immovable;
+                            this.financials.liabilities = template.financials.liabilities;
+
+                            // Trigger preview update
+                            this.triggerPreviewUpdate();
+
+                            // Show success notification
+                            alert('✅ Template imported successfully!\n\nAll data has been loaded from the template.');
+                            console.log('✅ Template imported successfully');
+
+                        } catch (e) {
+                            console.error('Template import error:', e);
+                            if (e instanceof SyntaxError) {
+                                alert('Error: Invalid JSON file format.\n\nPlease select a valid template file.');
+                            } else {
+                                alert('Error importing template:\n\n' + e.message);
+                            }
+                        }
+                    };
+
+                    reader.onerror = () => {
+                        alert('Error reading file. Please try again.');
+                    };
+
+                    reader.readAsText(file);
+
+                    // Reset file input so the same file can be selected again
+                    event.target.value = '';
+                },
+
+                validateTemplate(data) {
+                    const errors = [];
+
+                    // Check required top-level fields
+                    if (!data.firm) errors.push('Missing "firm" data');
+                    if (!data.clients) errors.push('Missing "clients" data');
+                    if (!data.financials) errors.push('Missing "financials" data');
+                    if (typeof data.clientCount !== 'number') errors.push('Invalid "clientCount"');
+
+                    // Check firm structure
+                    if (data.firm && typeof data.firm !== 'object') {
+                        errors.push('"firm" must be an object');
+                    }
+
+                    // Check clients structure
+                    if (data.clients && !Array.isArray(data.clients)) {
+                        errors.push('"clients" must be an array');
+                    }
+
+                    // Check financials structure
+                    if (data.financials) {
+                        if (!data.financials.forex) errors.push('Missing "financials.forex"');
+                        if (!data.financials.income) errors.push('Missing "financials.income"');
+                        if (!data.financials.movable) errors.push('Missing "financials.movable"');
+                        if (!data.financials.immovable) errors.push('Missing "financials.immovable"');
+                        if (!data.financials.liabilities) errors.push('Missing "financials.liabilities"');
+                    }
+
+                    return {
+                        valid: errors.length === 0,
+                        errors: errors
+                    };
+                },
+
+
                 generateDocx() {
                     const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, BorderStyle, WidthType, AlignmentType, Header, Footer, PageOrientation } = window.docx;
 
@@ -1078,7 +1232,17 @@
                     <span class="ml-4 border-l border-slate-300 dark:border-slate-700 pl-4 text-sm font-bold text-slate-600 dark:text-slate-400 hidden md:block">CA Report For VISA/Embassy</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button @click="downloadDocx()" class="flex items-center justify-center px-3 py-1.5 font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-sm text-xs rounded transition-colors"><i class="fas fa-file-word mr-1"></i> Docx</button>
+                                <!-- Template Export/Import Buttons -->
+            <button @click="exportTemplate()"
+                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition">
+                <i class="fas fa-download"></i> Export Template
+            </button>
+            <button @click="importTemplate()"
+                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition">
+                <i class="fas fa-upload"></i> Import Template
+            </button>
+
+<button @click="downloadDocx()" class="flex items-center justify-center px-3 py-1.5 font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-sm text-xs rounded transition-colors"><i class="fas fa-file-word mr-1"></i> Docx</button>
                     <button @click="downloadExcel()" class="flex items-center justify-center px-3 py-1.5 font-semibold bg-green-600 text-white hover:bg-green-700 shadow-sm text-xs rounded transition-colors"><i class="fas fa-file-excel mr-1"></i> Excel</button>
                     <button @click="downloadPdf()" class="flex items-center justify-center px-3 py-1.5 font-semibold bg-red-600 text-white hover:bg-red-700 shadow-sm text-xs rounded transition-colors"><i class="fas fa-file-pdf mr-1"></i> PDF</button>
                     
@@ -1089,6 +1253,9 @@
                 </div>
             </div>
         </div>
+        <!-- Hidden File Input for Template Import -->
+        <input type="file" id="template-file-input" accept=".json" style="display: none;"
+            @change="handleTemplateFileSelect($event)">
     </nav>
 	
     <!-- MAIN APP CONTAINER (50:50 SPLIT) -->
