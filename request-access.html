@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,51 +19,139 @@
         }
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif;   }
-        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
-        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
-        .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
-        .badge-blue { background-color: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
-        .btn-launch { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 0.75rem; background-color: #2563eb; color: white; font-weight: 600; border-radius: 0.5rem; transition: background-color 0.2s; cursor: pointer; border: none; }
-        .btn-launch:hover { background-color: #1d4ed8; }
-        .btn-launch:disabled { background-color: #94a3b8; cursor: not-allowed; }
-        .input-field { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; outline: none; transition: border-color 0.2s; font-family: 'Inter', sans-serif; }
-        .input-field:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #2563eb, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-blue {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+        }
+
+        .btn-launch {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #2563eb;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-launch:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-launch:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-field:focus {
+            border-color: #2563eb;
+            ring: 2px solid #bfdbfe;
+        }
+
         /* Honeypot styling */
-        .visually-hidden { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-    
-        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
-        .dark .glass-card:hover { border-color: #475569; box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4); }
+        .visually-hidden {
+            position: absolute;
+            left: -10000px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark .glass-card:hover {
+            border-color: #475569;
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
 
     <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
-                    <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
+                <a href="https://ai.manidesigns.in/"
+                    class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div
+                        class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">
+                        VK</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span
+                            class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
                     <div class="text-sm font-medium text-slate-500 hidden sm:block">
                         Vaibhav Khanna | Professional Automation
                     </div>
-                    <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
-                <i class="fas fa-sun hidden dark:inline"></i>
-                <i class="fas fa-moon inline dark:hidden"></i>
-                </button>
-            </div>
+                    <button id="themeToggle"
+                        class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
     <div class="flex-grow flex items-center justify-center p-4">
         <div class="w-full max-w-lg">
-            
+
             <div class="text-center mb-8">
                 <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
                     Access the <br>
@@ -82,9 +171,9 @@
                 </div>
 
                 <form id="leadForm" class="space-y-5">
-                    
+
                     <input type="hidden" id="toolId" name="toolId" value="">
-                    
+
                     <div class="visually-hidden" aria-hidden="true">
                         <label for="_gotcha">Leave this field blank</label>
                         <input type="text" name="_gotcha" id="_gotcha" tabindex="-1" autocomplete="off">
@@ -93,30 +182,37 @@
                     <div>
                         <label for="name" class="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <input type="text" id="name" name="name" required class="input-field pl-10" placeholder="CA. John Doe">
+                            <input type="text" id="name" name="name" required class="input-field pl-10"
+                                placeholder="CA. John Doe">
                         </div>
                     </div>
 
                     <div>
                         <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">WhatsApp Number</label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fab fa-whatsapp"></i>
                             </div>
-                            <input type="tel" id="phone" name="phone" required class="input-field pl-10" placeholder="+91 98765 43210">
+                            <input type="tel" id="phone" name="phone" required class="input-field pl-10"
+                                placeholder="+91 98765 43210">
                         </div>
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Professional Email</label>
+                        <label for="email" class="block text-sm font-medium text-slate-700 mb-1">Professional
+                            Email</label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fas fa-envelope"></i>
                             </div>
-                            <input type="email" id="email" name="email" required class="input-field pl-10" placeholder="ca.john@firm.com">
+                            <input type="email" id="email" name="email" required class="input-field pl-10"
+                                placeholder="ca.john@firm.com">
                         </div>
                     </div>
 
@@ -128,9 +224,10 @@
 
                 </form>
             </div>
-            
+
             <p class="text-center text-xs text-slate-400 mt-6">
-                <i class="fas fa-shield-alt mr-1"></i> Your information is secure and will only be used to send the requested access link.
+                <i class="fas fa-shield-alt mr-1"></i> Your information is secure and will only be used to send the
+                requested access link.
             </p>
 
         </div>
@@ -138,11 +235,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            
+
             // 1. Parse URL Parameter to identify requested tool
             const urlParams = new URLSearchParams(window.location.search);
             const toolParam = urlParams.get('tool') || 'FullSuite';
-            
+
             // Dictionary to map URL parameters to readable names
             const toolNames = {
                 'PDFKIT': 'PDF Kit V 0.5',
@@ -161,7 +258,7 @@
             };
 
             const displayToolName = toolNames[toolParam] || 'Specific Automation Tool';
-            
+
             // Set UI and Hidden Field
             document.getElementById('requestedToolDisplay').innerHTML = `<i class="fas fa-unlock-alt mr-2"></i> ${displayToolName}`;
             document.getElementById('toolId').value = toolParam;
@@ -169,17 +266,17 @@
             // 2. Handle Form Submission
             document.getElementById('leadForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 // Anti-spam check
                 const honeypot = document.getElementById('_gotcha').value;
                 if (honeypot) {
                     console.warn('Bot detected. Submission aborted.');
                     return; // Silently fail without notifying the bot
                 }
-                
+
                 const btn = document.getElementById('submitBtn');
                 const status = document.getElementById('statusMessage');
-                
+
                 // Form Data
                 const payload = {
                     name: document.getElementById('name').value,
@@ -196,8 +293,8 @@
 
                 try {
                     // Production Webhook Endpoint (removed /webhook-test/)
-                    const n8nWebhookUrl = 'https://n8n.srv1718280.hstgr.cloud/webhook/lead-capture'; 
-                    
+                    const n8nWebhookUrl = 'https://n8n.manidesigns.in/webhook/lead-capture';
+
                     const response = await fetch(n8nWebhookUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -210,10 +307,10 @@
                     btn.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Link Sent!';
                     btn.classList.replace('bg-blue-600', 'bg-green-600');
                     btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
-                    
+
                     status.textContent = "Check your email for the secure access link.";
                     status.className = "text-sm text-center bg-green-100 text-green-700 rounded p-3 mt-4 block font-medium";
-                    
+
                     document.getElementById('leadForm').reset();
 
                 } catch (error) {
@@ -241,4 +338,5 @@
         });
     </script>
 </body>
+
 </html>
