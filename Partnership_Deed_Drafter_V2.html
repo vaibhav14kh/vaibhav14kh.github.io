@@ -73,7 +73,7 @@
 
         /* Preview Area */
         #output-deed {
-            font-family: 'Courier New', Courier, monospace; white-space: pre-wrap; font-size: 0.875rem;
+            font-family: 'Inter', sans-serif; white-space: pre-wrap; font-size: 0.875rem;
             line-height: 1.6; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem;
             padding: 2rem; height: 600px; overflow-y: auto; color: #1e293b; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
         }
@@ -290,7 +290,6 @@
                     </button>
                 </div>
             </div>
-        </div>
 
         <!-- Right Column: Preview & Export -->
         <div class="glass-card flex flex-col h-[750px] overflow-hidden">
@@ -325,6 +324,7 @@
                     <i class="fas fa-check-circle text-green-400 mr-2"></i>Action Successful
                 </div>
             </div>
+        </div>
         </div>
     </div>
 
@@ -514,6 +514,81 @@ d. {{partner4_name}}                     {{partner4_profit_share}}%
             const p3SigTemplate = document.getElementById('p3-signature-template').innerHTML;
             const p4SigTemplate = document.getElementById('p4-signature-template').innerHTML;
 
+            // --- Real-time Profit Share Check ---
+            const profitInputs = [
+                document.getElementById('partner1_profit_share'),
+                document.getElementById('partner2_profit_share'),
+                document.getElementById('partner3_profit_share'),
+                document.getElementById('partner4_profit_share')
+            ];
+            
+            const p3Block = document.getElementById('partner3_name').closest('.bg-white');
+            const p4Block = document.getElementById('partner4_name').closest('.bg-white');
+            
+            function updatePartnerAvailability() {
+                let total = 0;
+                // Sum all current profit shares
+                profitInputs.forEach(input => {
+                    const val = parseFloat(input.value) || 0;
+                    total += val;
+                });
+                
+                // We want to grey out/disable P3 and P4 if P1 + P2 is >= 100
+                const p1Val = parseFloat(profitInputs[0].value) || 0;
+                const p2Val = parseFloat(profitInputs[1].value) || 0;
+                const coreTotal = p1Val + p2Val;
+                
+                if (coreTotal >= 100) {
+                    // Disable and grey out P3
+                    p3Block.classList.add('opacity-50', 'pointer-events-none');
+                    p3Block.querySelectorAll('input, textarea').forEach(el => {
+                        el.disabled = true;
+                        if(el.id !== 'partner3_profit_share') el.value = '';
+                    });
+                    document.getElementById('partner3_profit_share').value = '0';
+                    
+                    // Disable and grey out P4
+                    p4Block.classList.add('opacity-50', 'pointer-events-none');
+                    p4Block.querySelectorAll('input, textarea').forEach(el => {
+                        el.disabled = true;
+                        if(el.id !== 'partner4_profit_share') el.value = '';
+                    });
+                    document.getElementById('partner4_profit_share').value = '0';
+                } else {
+                    // Enable P3
+                    p3Block.classList.remove('opacity-50', 'pointer-events-none');
+                    p3Block.querySelectorAll('input, textarea').forEach(el => {
+                        el.disabled = false;
+                    });
+                    
+                    // For P4, let's enable it if P1+P2+P3 < 100
+                    const p3Val = parseFloat(profitInputs[2].value) || 0;
+                    if (coreTotal + p3Val >= 100) {
+                        p4Block.classList.add('opacity-50', 'pointer-events-none');
+                        p4Block.querySelectorAll('input, textarea').forEach(el => {
+                            el.disabled = true;
+                            if(el.id !== 'partner4_profit_share') el.value = '';
+                        });
+                        document.getElementById('partner4_profit_share').value = '0';
+                    } else {
+                        p4Block.classList.remove('opacity-50', 'pointer-events-none');
+                        p4Block.querySelectorAll('input, textarea').forEach(el => {
+                            el.disabled = false;
+                        });
+                    }
+                }
+            }
+
+            // Attach event listeners to all profit inputs
+            profitInputs.forEach(input => {
+                if(input) {
+                    input.addEventListener('input', updatePartnerAvailability);
+                }
+            });
+            
+            // Initial check on load
+            updatePartnerAvailability();
+
             generateButton.addEventListener('click', () => {
                 let finalDeed = baseTemplate;
                 const data = {};
@@ -596,7 +671,7 @@ d. {{partner4_name}}                     {{partner4_profit_share}}%
 
             // Word Download
             downloadWordButton.addEventListener('click', () => {
-                const content = `<html><body><pre style="font-family: 'Courier New', monospace; font-size: 10pt;">${outputDeed.textContent}</pre></body></html>`;
+                const content = `<html><body><pre style="font-family: 'Inter', sans-serif; font-size: 10pt;">${outputDeed.textContent}</pre></body></html>`;
                 const fileName = `${(document.getElementById('firm_name').value || 'Deed').replace(/ /g, '_')}.doc`;
                 const link = document.createElement('a');
                 link.href = 'data:application/msword;charset=utf-8,' + encodeURIComponent(content);
@@ -608,7 +683,7 @@ d. {{partner4_name}}                     {{partner4_profit_share}}%
             downloadPdfButton.addEventListener('click', () => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                doc.setFont("courier", "normal");
+                doc.setFont("helvetica", "normal");
                 doc.setFontSize(10);
                 const lines = doc.splitTextToSize(outputDeed.textContent, 180);
                 doc.text(lines, 15, 15);
@@ -618,7 +693,7 @@ d. {{partner4_name}}                     {{partner4_profit_share}}%
             // Print
             printButton.addEventListener('click', () => {
                 const w = window.open();
-                w.document.write(`<html><head><title>Print Deed</title><style>body {font-family:serif;white-space:pre-wrap;padding:20px;}</style></head><body>${outputDeed.textContent}</body></html>`);
+                w.document.write(`<html><head><title>Print Deed</title><style>body {font-family:'Inter', sans-serif;white-space:pre-wrap;padding:20px;}</style></head><body>${outputDeed.textContent}</body></html>`);
                 w.document.close();
                 setTimeout(() => { w.print(); w.close(); }, 200);
             });
