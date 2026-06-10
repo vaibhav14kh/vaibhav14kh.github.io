@@ -76,7 +76,7 @@
         </div>
     </nav>
 
-    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16 space-y-20">
+    <main class="flex-grow w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
         
         <section id="portfolio" class="glass-card p-8 md:p-12 overflow-hidden relative scroll-mt-28">
             <div class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 dark:opacity-20"></div>
@@ -90,7 +90,7 @@
                         </h1>
                     </div>
                     <p class="text-base md:text-lg text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
-                        Based in Amritsar, I am an <strong>AI & Tech-Driven Chartered Accountant</strong> bridging the gap between traditional financial compliance and modern data engineering. Since joining the legacy firm <strong>J.L. Khanna & Co.</strong> (est. 1982) as a partner in 2010, my practice has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
+                        Based in Amritsar, I am an <strong>AI & Tech-Driven Chartered Accountant</strong> bridging the gap between traditional financial compliance and modern data engineering. Since joining <strong>a 40+ Years old Legacy Firm</strong> (est. 1982) as a partner in 2010, my practice has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
                     </p>
                     <p class="text-base md:text-lg text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
                         My vision is to eradicate manual data drudgery within the CA fraternity. I engineer zero-cost, locally hosted automation workflows utilizing Python, VBA, and n8n to instantly transform raw, unstructured financial data into actionable architectural insights. 
@@ -131,78 +131,83 @@
                 </div>
             </div>
         </section>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12 mt-12">
+            
+            <!-- LEFT 75%: Tools Arsenal -->
+            <div class="lg:col-span-3 order-1">
+                <section id="tools" class="space-y-8 scroll-mt-28">
+                    <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                            The <span class="gradient-text">Automation Arsenal</span>
+                        </h2>
+                        <p class="text-slate-600 dark:text-slate-400">Exclusive, privacy-first web tools designed specifically for modern accounting firms.</p>
+                    </div>
 
-        <section id="projects" class="space-y-8 scroll-mt-28">
-            <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4 flex justify-between items-end flex-wrap gap-4">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
-                        Operational <span class="gradient-text">Case Studies</span>
-                    </h2>
-                    <p class="text-slate-600 dark:text-slate-400">Demonstrating practical capabilities across e-commerce, systems engineering, and automated finance.</p>
-                </div>
+                    <div id="dynamicToolGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    </div>
+                </section>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="project-card group">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl">
-                            <i class="fas fa-briefcase"></i>
+            <!-- RIGHT 25%: Case Studies & Achievements -->
+            <div class="lg:col-span-1 order-2">
+                <section id="projects" class="space-y-8 scroll-mt-28">
+                    <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
+                            Operational <span class="gradient-text">Case Studies</span>
+                        </h2>
+                        <p class="text-slate-600 dark:text-slate-400">Capabilities across automated finance.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="project-card group !p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <span class="text-[10px] font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">2010 - Present</span>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Professional Practice</h3>
+                            <div class="text-xs text-slate-600 dark:text-slate-400 flex-grow mb-4">
+                                <p class="italic text-[10px] text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-100 dark:border-slate-700 pb-2">Co-founder, Mani Dua Khanna</p>
+                                <ul class="list-disc pl-3 space-y-1">
+                                    <li><strong>Statutory & Internal Audits</strong></li>
+                                    <li><strong>Taxation (Direct/Indirect)</strong></li>
+                                    <li><strong>Workflow Automation (n8n, Python)</strong></li>
+                                    <li><strong>Legal Drafting</strong></li>
+                                </ul>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
+                                <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Advisory</span>
+                                <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Audit</span>
+                            </div>
                         </div>
-                        <span class="text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">2010 - Present</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Professional Practice & Competencies</h3>
-                    <div class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">
-                        <p class="italic text-xs text-slate-500 dark:text-slate-400 mb-3 border-b border-slate-100 dark:border-slate-700 pb-2">Co-founder, Mani Dua Khanna (Digital Operations & Scaling)</p>
-                        <ul class="list-disc pl-4 space-y-2">
-                            <li><strong>Statutory & Internal Audits:</strong> Comprehensive compliance, peer reviews, and UDIN generation.</li>
-                            <li><strong>Taxation:</strong> Specialized in Direct Tax (IT Act 1961 & 2025) and Indirect Tax (GST Act 2017).</li>
-                            <li><strong>Workflow Automation:</strong> Engineering Python, VBA, and n8n pipelines for practice management and client correspondence.</li>
-                            <li><strong>Legal Drafting:</strong> Drafting responses under Section 263 and 148 of Income Tax.</li>
-                        </ul>
-                    </div>
-                    <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-700">
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Tax Advisory</span>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Audit Controls</span>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Automation</span>
-                    </div>
-                </div>
 
-                <div class="project-card group border-amber-200 dark:border-amber-700">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl">
-                            <i class="fas fa-robot"></i>
+                        <div class="project-card group border-amber-200 dark:border-amber-700 !p-4">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <span class="text-[10px] font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">Core</span>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Audit Intelligence Engine</h3>
+                            
+                            <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold mb-2 shadow-sm">
+                                <i class="fas fa-trophy"></i> AI in ICAI Hackathon Finalist
+                            </div>
+                            
+                            <p class="text-xs text-slate-600 dark:text-slate-400 flex-grow mb-4">
+                                Zero-cost, locally hosted automations eliminating manual data entry in statutory audits by structuring TDS/ESIC challans and Tally ledgers instantly.
+                            </p>
+                            <div class="flex flex-wrap gap-1 mt-auto pt-3 border-t border-slate-100 dark:border-slate-700">
+                                <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> Python</span>
+                                <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> n8n</span>
+                            </div>
                         </div>
-                        <span class="text-xs font-semibold px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">Core Practice</span>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Audit Intelligence & Financial Automation Engine</h3>
-                    
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold mb-3 shadow-sm">
-                        <i class="fas fa-trophy"></i> National Finalist - AI in ICAI Hackathon (Season 4)
-                    </div>
-                    
-                    <p class="text-sm text-slate-600 dark:text-slate-400 flex-grow mb-6">
-                        Engineered zero-cost, locally hosted workflow automations to completely eliminate manual data entry in statutory audits. By utilizing Python and n8n, this architecture instantly extracts, structures, and reconciles unstructured data from TDS/ESIC challans, Tally daybooks, and complex banking ledgers directly into actionable audit models.
-                    </p>
-                    <div class="flex flex-wrap gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-700">
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> Python</span>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> n8n</span>
-                        <span class="text-xs font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> Data Engineering</span>
-                    </div>
-                </div>
+                </section>
             </div>
-        </section>
-
-        <section id="tools" class="space-y-8 scroll-mt-28">
-            <div class="text-center">
-                <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
-                    The <span class="gradient-text">Automation Arsenal</span>
-                </h2>
-                <p class="text-slate-600 dark:text-slate-400">Exclusive, privacy-first web tools designed specifically for modern accounting firms.</p>
-            </div>
-
-            <div id="dynamicToolGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                </div>
-        </section>
+            
+        </div>
 
     </main>
 

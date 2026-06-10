@@ -21,6 +21,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -119,6 +120,15 @@
             border-color: #475569;
             box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
         }
+
+        /* Intl-tel-input Theme Overrides */
+        .iti { width: 100%; display: block; }
+        .dark .iti__country-list { background-color: #1e293b; border-color: #334155; color: #f1f5f9; }
+        .dark .iti__country-list .iti__country.iti__highlight { background-color: #334155; }
+        .dark .iti__selected-dial-code { color: #f1f5f9; }
+        .dark .iti__country-name { color: #cbd5e1; }
+        .iti__selected-flag { border-radius: 0.5rem 0 0 0.5rem; padding: 0 12px; }
+        /* When using separateDialCode, we need to adjust the input padding */
     </style>
 </head>
 
@@ -192,14 +202,10 @@
                     </div>
 
                     <div>
-                        <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">WhatsApp Number</label>
+                        <label for="phone" class="block text-sm font-medium text-slate-700 mb-1">WhatsApp Number <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <div
-                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                <i class="fab fa-whatsapp"></i>
-                            </div>
-                            <input type="tel" id="phone" name="phone" required class="input-field pl-10"
-                                placeholder="+91 98765 43210">
+                            <input type="tel" id="phone" name="phone" required class="input-field !pl-[90px]"
+                                placeholder="98765 43210">
                         </div>
                     </div>
 
@@ -233,8 +239,17 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+
+            // Initialize Intl-Tel-Input
+            const phoneInput = document.querySelector("#phone");
+            const iti = window.intlTelInput(phoneInput, {
+                initialCountry: "in",
+                separateDialCode: true,
+                utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js",
+            });
 
             // 1. Parse URL Parameter to identify requested tool
             const urlParams = new URLSearchParams(window.location.search);
@@ -277,10 +292,17 @@
                 const btn = document.getElementById('submitBtn');
                 const status = document.getElementById('statusMessage');
 
+                // Validate Phone Number
+                if (!iti.isValidNumber()) {
+                    status.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> Please enter a valid WhatsApp number.';
+                    status.className = 'text-sm text-center rounded p-2 mt-2 bg-red-100 text-red-700 border border-red-200 block';
+                    return;
+                }
+
                 // Form Data
                 const payload = {
                     name: document.getElementById('name').value,
-                    phone: document.getElementById('phone').value,
+                    phone: iti.getNumber(),
                     email: document.getElementById('email').value,
                     toolId: document.getElementById('toolId').value,
                     timestamp: new Date().toISOString()
