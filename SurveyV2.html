@@ -18,6 +18,7 @@
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/css/intlTelInput.css">
     <style>
         body { font-family: 'Inter', sans-serif; }
         
@@ -148,6 +149,14 @@
         }
 
         .error-msg { display: none; font-size: 0.75rem; color: #ef4444; margin-top: 0.25rem; font-weight: 500; }
+        
+        /* Intl-tel-input Theme Overrides */
+        .iti { width: 100%; display: block; }
+        .dark .iti__country-list { background-color: #1e293b; border-color: #334155; color: #f1f5f9; }
+        .dark .iti__country-list .iti__country.iti__highlight { background-color: #334155; }
+        .dark .iti__selected-dial-code { color: #f1f5f9; }
+        .dark .iti__country-name { color: #cbd5e1; }
+        .iti__selected-flag { border-radius: 0.5rem 0 0 0.5rem; padding: 0 12px; }
     </style>
 </head>
 
@@ -254,15 +263,8 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Phone Number <span class="text-blue-600">*</span></label>
-                                <div class="flex gap-2">
-                                    <select name="country_code" class="input-field w-1/3 cursor-pointer" required>
-                                        <option value="+91">+91 (IN)</option>
-                                        <option value="+1">+1 (US)</option>
-                                        <option value="+44">+44 (UK)</option>
-                                        <option value="+971">+971 (UAE)</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                    <input type="tel" name="phone_number" required class="input-field w-2/3" placeholder="98765 43210" />
+                                <div class="relative">
+                                    <input type="tel" id="phone" name="phone_number" required class="input-field !pl-[90px]" placeholder="98765 43210" />
                                 </div>
                             </div>
                         </div>
@@ -492,6 +494,7 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/intlTelInput.min.js"></script>
     <script>
         // Theme Toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
@@ -507,6 +510,14 @@
 
         // Wizard Logic
         let currentStep = 1;
+
+        // Initialize Intl-Tel-Input
+        const phoneInput = document.querySelector("#phone");
+        const iti = window.intlTelInput(phoneInput, {
+            initialCountry: "in",
+            separateDialCode: true,
+            utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@18.2.1/build/js/utils.js",
+        });
 
         function validateStep(step) {
             const stepDiv = document.getElementById(`step-${step}`);
@@ -591,6 +602,18 @@
                     data[key] = value;
                 }
             });
+
+            // Validate Phone Number
+            if (!iti.isValidNumber()) {
+                status.innerHTML = '<i class="fas fa-exclamation-circle mr-1"></i> Please enter a valid phone number.';
+                status.className = 'text-sm text-center rounded p-2 mt-4 bg-red-100 text-red-700 border border-red-200 block';
+                status.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = 'Submit Registration <i class="fas fa-check ml-2"></i>';
+                return;
+            }
+
+            data['phone_number'] = iti.getNumber();
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Submitting...';
