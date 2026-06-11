@@ -68,6 +68,33 @@ A specialized tool for AS 22 compliance.
 Internal firm management and HR tool.
 - **Functionality**: A secure, digital employee reimbursement claim system that handles local receipt attachment and expense aggregation, generating a structured claim report.
 
+## 🎨 Design System & Workspace Guidelines
+
+To maintain a standardized UI/UX across the workspace, all tools and landing pages must adhere to the following design rules:
+
+### 1. Typography (Fonts)
+- **Primary Font**: `Inter` (Sans-serif) for all main UI components.
+- **Headings**: Highly emphasized. Use `text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white` for section titles.
+- **Degrees/Qualifications**: Specialized styling using `font-serif italic text-slate-500 dark:text-slate-400`.
+- **Body Text**: Readable contrast using `text-sm text-slate-600 dark:text-slate-300 leading-relaxed`.
+
+### 2. Layout & Theme Structure
+- **Global Layout**: A modular "T-Shape" grid structure. Primary content spans full width, while secondary content sits in equal-width multi-column grids (e.g., `grid-cols-1 lg:grid-cols-3 gap-8`).
+- **Main Containers (Outer)**: Use the custom `.glass-card` class with `p-6 md:p-8` and `h-full` to create floating, frosted-glass sections.
+
+### 3. Inner Cards Style & Color Schema
+When nesting cards inside glass containers, strictly alternate between these two color schemas to create visual hierarchy:
+
+**A. Slate Schema (Default)**
+- **Container**: `bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700`
+- **Inner Dividers**: `border-slate-200 dark:border-slate-600`
+- **Pills/Badges**: `bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300`
+
+**B. Blue Tint Schema (Accent)**
+- **Container**: `bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800`
+- **Inner Dividers**: `border-blue-100 dark:border-blue-800`
+- **Pills/Badges**: `bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300`
+
 ---
 
 ## 💻 Technical Stack
