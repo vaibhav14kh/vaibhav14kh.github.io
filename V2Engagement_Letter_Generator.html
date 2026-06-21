@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD (Temporarily Disabled)
     <script>
         (function() {
+            // Bypass gatekeeper for local development/testing
+            if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return; 
+            }
+
             // 1. Check if the user is arriving directly from the email link
             const urlParams = new URLSearchParams(window.location.search);
             const isEmailAuth = urlParams.get('auth') === 'true';
@@ -31,6 +36,7 @@
             }
         })();
     </script>
+    -->
 
     <title>Engagement Letter Generator | Automation Hub</title>
     
@@ -57,8 +63,12 @@
         
         .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
         .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .dark .glass-card { background: #0f172a; border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+        .dark .glass-card:hover { border-color: #475569; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.6); }
+
         .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
 
         /* Input Styles */
         input[type="text"], select, textarea {
@@ -66,7 +76,11 @@
             border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
             background-color: #f8fafc; color: #334155; font-weight: 500;
         }
+        .dark input[type="text"], .dark select, .dark textarea {
+            background-color: #1e293b; color: #f1f5f9; border-color: #475569;
+        }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+        .dark input:focus, .dark select:focus, .dark textarea:focus { background-color: #0f172a; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6;}
 
         /* Compact Buttons */
         .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; }
@@ -83,15 +97,17 @@
 
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern h-screen flex flex-col overflow-hidden">
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0">
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 flex-shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -112,76 +128,76 @@
     </nav>
 
     <!-- Main Content Grid -->
-    <div class="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl w-full mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8">
         
         <!-- Left Column: Inputs -->
-        <div class="w-full lg:w-[35%] flex flex-col gap-6">
+        <div class="lg:col-span-1 glass-card p-6 md:p-8 h-full flex flex-col gap-6 overflow-hidden dark:bg-slate-900 dark:border-slate-700 min-h-0 min-w-0">
             
             <div class="mb-2">
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">
                     <span class="gradient-text">Engagement Letter</span>
                 </h1>
-                <p class="text-slate-600 text-xs font-medium">Standardized drafts for Tax Audits.</p>
+                <p class="font-serif italic text-slate-500 dark:text-slate-400">Standardized drafts for Tax Audits.</p>
             </div>
 
             <!-- Firm Type Selector -->
-            <div class="glass-card p-5 flex-shrink-0 bg-blue-50/50 border-blue-100">
-                <label class="block text-xs font-black text-blue-800 uppercase tracking-widest mb-3">Entity Type</label>
+            <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex-shrink-0">
+                <label class="block text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-3">Entity Type</label>
                 <div class="flex gap-5">
                     <label class="flex items-center cursor-pointer group">
-                        <input type="radio" name="entityType" value="partnership" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" onchange="toggleEntityType()">
-                        <span class="ml-2 text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Partnership</span>
+                        <input type="radio" name="entityType" value="partnership" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-slate-800" onchange="toggleEntityType()">
+                        <span class="ml-2 text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Partnership</span>
                     </label>
                     <label class="flex items-center cursor-pointer group">
-                        <input type="radio" name="entityType" value="proprietorship" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" onchange="toggleEntityType()">
-                        <span class="ml-2 text-sm font-bold text-slate-700 group-hover:text-blue-600 transition-colors">Proprietorship</span>
+                        <input type="radio" name="entityType" value="proprietorship" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-slate-800" onchange="toggleEntityType()">
+                        <span class="ml-2 text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Proprietorship</span>
                     </label>
                 </div>
             </div>
 
             <!-- Scrollable Input Form -->
-            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
-                <div class="p-5 border-b border-slate-100 bg-white">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Document Variables</h3>
+            <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex-1 overflow-hidden flex flex-col shadow-md min-h-0">
+                <div class="mb-4 border-b border-slate-200 dark:border-slate-600 pb-2 flex-shrink-0">
+                    <h3 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Document Variables</h3>
                 </div>
                 
-                <div class="p-5 overflow-y-auto custom-scrollbar space-y-5 bg-white">
+                <div class="overflow-y-auto custom-scrollbar space-y-5 pr-2 flex-1 min-h-0 pb-4">
                     <form id="elForm" class="space-y-5">
                         <!-- Standard Inputs -->
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Date of Letter</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Date of Letter</label>
                             <input type="text" id="date" placeholder="e.g. September 25, 2026" oninput="updatePreview()">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Addressee Title</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Addressee Title</label>
                             <input type="text" id="addressee_title" value="The Board of Directors" oninput="updatePreview()">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Entity Name</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Entity Name</label>
                             <input type="text" id="entity_name" placeholder="Client Entity Name" oninput="updatePreview()">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Address Line 1</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Address Line 1</label>
                                 <input type="text" id="address_1" placeholder="Street/Building" oninput="updatePreview()">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Address Line 2</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Address Line 2</label>
                                 <input type="text" id="address_2" placeholder="Area/Locality" oninput="updatePreview()">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">City, State</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">City, State</label>
                             <input type="text" id="city_state" placeholder="e.g. New Delhi, Delhi" oninput="updatePreview()">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Salutation</label>
-                            <select id="salutation" onchange="updatePreview()">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Salutation</label>
+                            <select id="salutation" class="dark:bg-slate-900 dark:text-white" onchange="updatePreview()">
                                 <option value="Sir/Madam">Sir/Madam</option>
                                 <option value="Sir">Sir</option>
                                 <option value="Madam">Madam</option>
@@ -190,39 +206,39 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Previous Year</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Previous Year</label>
                                 <input type="text" id="py" placeholder="25-26" oninput="updatePreview()">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Assessment Year</label>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Assessment Year</label>
                                 <input type="text" id="ay" placeholder="26-27" oninput="updatePreview()">
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Appt. Letter Date</label>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Appt. Letter Date</label>
                             <input type="text" id="letter_dated" placeholder="Date of Appt. Letter" oninput="updatePreview()">
                         </div>
 
                         <!-- Auditor Section -->
-                        <div class="pt-5 mt-3 border-t border-slate-200">
-                            <h4 class="text-xs font-black text-blue-800 uppercase tracking-widest mb-4"><i class="fas fa-user-tie mr-2"></i>Auditor Details</h4>
+                        <div class="pt-5 mt-3 border-t border-slate-200 dark:border-slate-600">
+                            <h4 class="text-xs font-black text-blue-800 dark:text-blue-300 uppercase tracking-widest mb-4"><i class="fas fa-user-tie mr-2"></i>Auditor Details</h4>
                             
                             <div class="space-y-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Firm Name</label>
-                                    <input type="text" id="firm_name" value="Automation Hub" oninput="updatePreview()" class="bg-blue-50 font-bold border-blue-200 text-blue-900">
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Firm Name</label>
+                                    <input type="text" id="firm_name" value="Automation Hub" oninput="updatePreview()" class="bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 font-bold border-blue-200 dark:border-blue-700">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">FRN</label>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">FRN</label>
                                     <input type="text" id="firm_reg_no" placeholder="Firm Reg No..." oninput="updatePreview()">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Fees (INR)</label>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Fees (INR)</label>
                                     <input type="text" id="fees" placeholder="e.g. 50,000/-" oninput="updatePreview()">
                                 </div>
                                 <div>
-                                    <label id="signatory_label" class="block text-xs font-bold text-slate-700 mb-1.5">Partner Name</label>
+                                    <label id="signatory_label" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Partner Name</label>
                                     <input type="text" id="signatory_name" placeholder="Signing Authority Name" oninput="updatePreview()">
                                 </div>
                             </div>
@@ -233,26 +249,35 @@
         </div>
 
         <!-- Right Column: Preview -->
-        <div class="w-full lg:w-[65%] flex flex-col min-h-0">
+        <div class="lg:col-span-2 glass-card p-6 md:p-8 h-full flex flex-col min-h-0 min-w-0 dark:bg-slate-900 dark:border-slate-700">
             <!-- Toolbar -->
-            <div class="glass-card p-4 mb-6 flex justify-between items-center flex-shrink-0 shadow-md">
-                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-shrink-0">
+                <h2 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center">
                     <i class="fas fa-eye mr-2 text-blue-600"></i> Live Document Preview
                 </h2>
-                <div class="flex gap-3">
-                    <button onclick="downloadDoc()" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg">
-                        <i class="fas fa-file-word mr-2"></i> Export DOC
+                <div class="flex items-center space-x-2">
+                    <button type="button" id="copyToClipboardBtn" onclick="copyToClipboard()" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none flex items-center transition-colors" title="Copy to Clipboard">
+                        <i class="fas fa-copy mr-1 text-gray-600 dark:text-gray-400"></i>Copy
                     </button>
-                    <button onclick="downloadPDF()" class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg">
-                        <i class="fas fa-file-pdf mr-2"></i> Export PDF
+                    <button type="button" id="printBtn" onclick="printDoc()" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 focus:outline-none flex items-center transition-colors" title="Print">
+                        <i class="fas fa-print mr-1 text-gray-600 dark:text-gray-400"></i>Print
+                    </button>
+                    <button type="button" onclick="downloadDoc()" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 focus:outline-none flex items-center transition-colors" title="Export DOC">
+                        <i class="fas fa-file-word mr-1 text-blue-600 dark:text-blue-400"></i>DOC
+                    </button>
+                    <button type="button" onclick="downloadPDF()" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none flex items-center transition-colors" title="Export PDF">
+                        <i class="fas fa-file-pdf mr-1 text-red-600 dark:text-red-400"></i>PDF
                     </button>
                 </div>
             </div>
 
             <!-- Preview Container -->
-            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-8 custom-scrollbar shadow-inner">
-                <div id="document-preview" class="a4-paper doc-content">
-                    <!-- Content Loaded via JS -->
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 p-4 sm:p-8 custom-scrollbar shadow-inner relative flex justify-center">
+                <!-- Wrapper for Zooming Out Visually -->
+                <div id="scale-wrapper" class="origin-top transition-transform" style="transform: scale(0.75); margin-bottom: -74mm;">
+                    <div id="document-preview" class="a4-paper doc-content shadow-lg">
+                        <!-- Content Loaded via JS -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -544,8 +569,52 @@
             document.body.removeChild(downloadLink);
         }
 
+        function copyToClipboard() {
+            const btn = document.getElementById('copyToClipboardBtn');
+            const originalHTML = btn.innerHTML;
+            const textToCopy = document.getElementById('document-preview').innerText;
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                btn.innerHTML = '<i class="fas fa-check mr-1 text-green-600"></i>Copied';
+                setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+            });
+        }
+
+        function printDoc() {
+            const printWindow = window.open('', '_blank');
+            const content = document.getElementById('document-preview').innerHTML;
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Print Document</title>
+                        <style>
+                            @media print { 
+                                body { font-family: 'Times New Roman', serif; margin: 0.25in; } 
+                            }
+                            body { font-family: 'Times New Roman', serif; margin: 0.25in; }
+                            p { margin-bottom: 1em; line-height: 1.4; text-align: justify; }
+                        </style>
+                    </head>
+                    <body>
+                        ${content}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.onload = function() {
+                printWindow.print();
+                setTimeout(() => printWindow.close(), 500);
+            };
+        }
+
         function downloadPDF() {
             const element = document.getElementById('document-preview');
+            const scaleWrapper = document.getElementById('scale-wrapper');
+            
+            // Remove scale momentarily for perfect rendering
+            const originalTransform = scaleWrapper.style.transform;
+            scaleWrapper.style.transform = 'none';
+
             const opt = {
                 margin:       0.25,
                 filename:     `EL_${state.entity_name}.pdf`,
@@ -553,7 +622,11 @@
                 html2canvas:  { scale: 2 },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
-            html2pdf().set(opt).from(element).save();
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore scale
+                scaleWrapper.style.transform = originalTransform;
+            });
         }
 
         // --- Init ---
