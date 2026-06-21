@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD (Temporarily Disabled)
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
     <script>
         (function() {
-            // Bypass gatekeeper for local development/testing
-            if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Bypass gatekeeper for local development/testing on localhost only
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 return; 
             }
 
@@ -36,7 +36,6 @@
             }
         })();
     </script>
-    -->
 
     <title>Engagement Letter Generator | Automation Hub</title>
     
