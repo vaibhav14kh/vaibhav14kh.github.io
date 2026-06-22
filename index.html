@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automation Hub | Vaibhav Khanna</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -22,52 +24,198 @@
     </script>
 
     <style>
-        body { transition: background-color 0.3s ease, color 0.3s ease; scroll-behavior: smooth; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 1rem; transition: all 0.3s ease; }
-        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
-        .glass-card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
-        .dark .glass-card:hover { border-color: #475569; box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4); }
-        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .dark .gradient-text { background: linear-gradient(to right, #60a5fa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
-        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 24px 24px; }
-        .btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; background-color: #2563eb; color: white; font-weight: 600; border-radius: 0.5rem; transition: background-color 0.2s; cursor: pointer; border: none; }
-        .btn-primary:hover { background-color: #1d4ed8; }
-        .dark .btn-primary { background-color: #3b82f6; }
-        .dark .btn-primary:hover { background-color: #2563eb; }
-        .btn-secondary { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; background-color: transparent; color: #2563eb; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; border: 2px solid #2563eb; }
-        .btn-secondary:hover { background-color: #eff6ff; }
-        .dark .btn-secondary { color: #60a5fa; border-color: #3b82f6; }
-        .dark .btn-secondary:hover { background-color: rgba(59, 130, 246, 0.1); }
-        .social-btn { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 9999px; background-color: #f1f5f9; color: #475569; transition: all 0.2s; }
-        .social-btn:hover { background-color: #e2e8f0; color: #0f172a; transform: scale(1.1); }
-        .dark .social-btn { background-color: #334155; color: #cbd5e1; }
-        .dark .social-btn:hover { background-color: #475569; color: #f8fafc; }
-        
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+            scroll-behavior: smooth;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+        }
+
+        .dark .glass-card:hover {
+            border-color: #475569;
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #2563eb, #4f46e5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dark .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .dark .hero-pattern {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            background-color: #2563eb;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .dark .btn-primary {
+            background-color: #3b82f6;
+        }
+
+        .dark .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            background-color: transparent;
+            color: #2563eb;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 2px solid #2563eb;
+        }
+
+        .btn-secondary:hover {
+            background-color: #eff6ff;
+        }
+
+        .dark .btn-secondary {
+            color: #60a5fa;
+            border-color: #3b82f6;
+        }
+
+        .dark .btn-secondary:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            background-color: #f1f5f9;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+        .social-btn:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            transform: scale(1.1);
+        }
+
+        .dark .social-btn {
+            background-color: #334155;
+            color: #cbd5e1;
+        }
+
+        .dark .social-btn:hover {
+            background-color: #475569;
+            color: #f8fafc;
+        }
+
         /* Obfuscation for locked cards */
-        .text-blur { filter: blur(3.5px); user-select: none; }
-        
+        .text-blur {
+            filter: blur(3.5px);
+            user-select: none;
+        }
+
         /* Project Card Styling */
-        .project-card { display: flex; flex-direction: column; height: 100%; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; background: white; transition: all 0.3s ease; }
-        .dark .project-card { background: rgba(30, 41, 59, 0.5); border-color: #334155; }
-        .project-card:hover { border-color: #2563eb; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1); }
+        .project-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .dark .project-card {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: #334155;
+        }
+
+        .project-card:hover {
+            border-color: #2563eb;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
 
-    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
+    <nav
+        class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
-                <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
-                    <span class="font-bold text-xl tracking-tight">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
+                <a href="https://ai.manidesigns.in/"
+                    class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div
+                        class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">
+                        VK</div>
+                    <span class="font-bold text-xl tracking-tight">Automation <span
+                            class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <a href="#portfolio" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">The Hub</a>
-                    <a href="#projects" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Case Studies</a>
-                    <a href="#tools" class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Tools Arsenal</a>
-                    <a href="cv.html" class="hidden sm:block text-sm font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors">View CV</a>
-                    <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                    <a href="#portfolio"
+                        class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">The Hub</a>
+                    <a href="#projects"
+                        class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Case
+                        Studies</a>
+                    <a href="#tools"
+                        class="hidden sm:block text-sm font-semibold hover:text-blue-600 transition-colors">Tools
+                        Arsenal</a>
+                    <a href="cv.html"
+                        class="hidden sm:block text-sm font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors">View
+                        CV</a>
+                    <button id="themeToggle"
+                        class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
                         <i class="fas fa-sun hidden dark:inline"></i>
                         <i class="fas fa-moon inline dark:hidden"></i>
                     </button>
@@ -77,14 +225,15 @@
     </nav>
 
     <main class="flex-grow w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-        
+
         <!-- TOP: Tools Arsenal -->
         <section id="tools" class="space-y-8 scroll-mt-28 mb-12">
             <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4">
                 <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
                     The <span class="gradient-text">Automation Arsenal</span>
                 </h2>
-                <p class="text-slate-600 dark:text-slate-400">Exclusive, privacy-first web tools designed specifically for modern accounting firms.</p>
+                <p class="text-slate-600 dark:text-slate-400">Exclusive, privacy-first web tools designed specifically
+                    for modern accounting firms.</p>
             </div>
             <div id="dynamicToolGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             </div>
@@ -92,7 +241,7 @@
 
         <!-- BOTTOM: 3-Column Split -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
+
             <!-- COLUMN 1: Bio -->
             <section id="portfolio" class="glass-card p-6 md:p-8 space-y-6 scroll-mt-28 h-full flex flex-col">
                 <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4">
@@ -103,31 +252,45 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 flex-grow">
-                    <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div
+                        class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                         <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed text-justify">
-                            Based in Amritsar, I am an <strong>AI & Tech-Driven Chartered Accountant</strong> bridging the gap between traditional financial compliance and modern data engineering. Since joining <strong>a 40+ Years old Legacy Firm</strong> (est. 1982) as a partner in 2010, my practice has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
+                            Based in Amritsar, I am an <strong>AI & Tech-Driven Chartered Accountant</strong> bridging
+                            the gap between traditional financial compliance and modern data engineering. Since joining
+                            <strong>a 40+ Years old Legacy Firm</strong> (est. 1982) as a partner in 2010, my practice
+                            has focused on Statutory & Internal Audits, Direct/Indirect Taxation, and ERP Controls.
                         </p>
                     </div>
 
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
                         <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed text-justify">
-                            My vision is to eradicate manual data drudgery within the CA fraternity. I engineer zero-cost, locally hosted automation workflows utilizing Python, VBA, and n8n to instantly transform raw, unstructured financial data into actionable architectural insights.
+                            My vision is to eradicate manual data drudgery within the CA fraternity. I engineer
+                            zero-cost, locally hosted automation workflows utilizing Python, VBA, and n8n to instantly
+                            transform raw, unstructured financial data into actionable architectural insights.
                         </p>
                     </div>
 
-                    <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                    <div
+                        class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                         <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 text-center italic">
                             "I don't just audit the data. I automate the intelligence."
                         </p>
                     </div>
 
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-center justify-center">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800 flex items-center justify-center">
                         <div class="flex flex-wrap gap-4">
-                            <a href="https://www.linkedin.com/in/vaibhav14k/" target="_blank" class="social-btn"><i class="fab fa-linkedin-in text-base"></i></a>
-                            <a href="https://x.com/vaibhav14k" target="_blank" class="social-btn"><i class="fab fa-twitter text-base"></i></a>
-                            <a href="https://www.instagram.com/vaibhav14k" target="_blank" class="social-btn"><i class="fab fa-instagram text-base"></i></a>
-                            <a href="https://profile.scube.me/072db933-f3da-481d-8a61-556e7f17acef" target="_blank" class="social-btn"><i class="fas fa-id-card text-base"></i></a>
-                            <a href="https://www.jlkhanna.com/" target="_blank" class="social-btn"><i class="fas fa-globe text-base"></i></a>
+                            <a href="https://www.linkedin.com/in/vaibhav14k/" target="_blank" class="social-btn"><i
+                                    class="fab fa-linkedin-in text-base"></i></a>
+                            <a href="https://x.com/vaibhav14k" target="_blank" class="social-btn"><i
+                                    class="fab fa-twitter text-base"></i></a>
+                            <a href="https://www.instagram.com/vaibhav14k" target="_blank" class="social-btn"><i
+                                    class="fab fa-instagram text-base"></i></a>
+                            <a href="https://profile.scube.me/072db933-f3da-481d-8a61-556e7f17acef" target="_blank"
+                                class="social-btn"><i class="fas fa-id-card text-base"></i></a>
+                            <a href="https://www.jlkhanna.com/" target="_blank" class="social-btn"><i
+                                    class="fas fa-globe text-base"></i></a>
                         </div>
                     </div>
                 </div>
@@ -143,16 +306,22 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-6 flex-grow">
-                    <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div
+                        class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                         <div class="flex justify-between items-start mb-3">
-                            <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
                                 <i class="fas fa-briefcase"></i>
                             </div>
-                            <span class="text-[10px] font-semibold px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">2010 - Present</span>
+                            <span
+                                class="text-[10px] font-semibold px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded">2010
+                                - Present</span>
                         </div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Professional Practice</h3>
                         <div class="text-xs text-slate-600 dark:text-slate-400 flex-grow mb-4">
-                            <p class="italic text-[10px] text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-600 pb-2">Co-founder, Mani Dua Khanna</p>
+                            <p
+                                class="italic text-[10px] text-slate-500 dark:text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-600 pb-2">
+                                Co-founder, Mani Dua Khanna</p>
                             <ul class="list-disc pl-3 space-y-1">
                                 <li><strong>Statutory & Internal Audits</strong></li>
                                 <li><strong>Taxation (Direct/Indirect)</strong></li>
@@ -161,30 +330,39 @@
                             </ul>
                         </div>
                         <div class="flex flex-wrap gap-1 mt-auto pt-3 border-t border-slate-200 dark:border-slate-600">
-                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Advisory</span>
-                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-check-circle mr-1"></i> Audit</span>
+                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i
+                                    class="fas fa-check-circle mr-1"></i> Advisory</span>
+                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i
+                                    class="fas fa-check-circle mr-1"></i> Audit</span>
                         </div>
                     </div>
 
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
                         <div class="flex justify-between items-start mb-3">
-                            <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
                                 <i class="fas fa-robot"></i>
                             </div>
-                            <span class="text-[10px] font-semibold px-2 py-1 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded">Core</span>
+                            <span
+                                class="text-[10px] font-semibold px-2 py-1 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded">Core</span>
                         </div>
                         <h3 class="text-sm font-bold text-slate-900 dark:text-white mb-2">Audit Intelligence Engine</h3>
-                        
-                        <div class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold mb-2 shadow-sm">
+
+                        <div
+                            class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold mb-2 shadow-sm">
                             <i class="fas fa-trophy"></i> AI in ICAI Hackathon Finalist
                         </div>
-                        
+
                         <p class="text-xs text-slate-600 dark:text-slate-400 flex-grow mb-4">
-                            Zero-cost, locally hosted automations eliminating manual data entry in statutory audits by structuring TDS/ESIC challans and Tally ledgers instantly.
+                            Zero-cost, locally hosted automations eliminating manual data entry in statutory audits by
+                            structuring TDS/ESIC challans and Tally ledgers instantly.
                         </p>
                         <div class="flex flex-wrap gap-1 mt-auto pt-3 border-t border-blue-100 dark:border-blue-800">
-                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> Python</span>
-                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i class="fas fa-code mr-1"></i> n8n</span>
+                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i
+                                    class="fas fa-code mr-1"></i> Python</span>
+                            <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400"><i
+                                    class="fas fa-code mr-1"></i> n8n</span>
                         </div>
                     </div>
                 </div>
@@ -193,27 +371,46 @@
             <!-- COLUMN 3: Photo & Skills -->
             <div class="glass-card p-6 md:p-8 h-full">
                 <div class="flex flex-col gap-4">
-                    <img src="1646722287185.jpg" alt="CA. Vaibhav Khanna Profile Picture" class="w-full h-48 md:h-64 object-cover object-top rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    
-                    <div class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider">Core Practice</h3>
+                    <img src="1646722287185.jpg" alt="CA. Vaibhav Khanna Profile Picture"
+                        class="w-full h-48 md:h-64 object-cover object-top rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+
+                    <div
+                        class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200 mb-2 uppercase tracking-wider">
+                            Core Practice</h3>
                         <div class="flex flex-wrap gap-2">
-                            <span class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">Statutory Audit</span>
-                            <span class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">Tax Advisory</span>
-                            <span class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">ERP Implementation</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">Statutory
+                                Audit</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">Tax
+                                Advisory</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-[10px] font-semibold">ERP
+                                Implementation</span>
                         </div>
                     </div>
-                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
-                        <h3 class="text-xs font-bold text-blue-800 dark:text-blue-300 mb-2 uppercase tracking-wider">Tech Stack</h3>
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                        <h3 class="text-xs font-bold text-blue-800 dark:text-blue-300 mb-2 uppercase tracking-wider">
+                            Tech Stack</h3>
                         <div class="flex flex-wrap gap-2">
-                            <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">Python</span>
-                            <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">VBA Macros</span>
-                            <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">n8n Automation</span>
-                            <span class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">AI Studio</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">Python</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">VBA
+                                Macros</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">n8n
+                                Automation</span>
+                            <span
+                                class="px-2 py-1 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300 rounded text-[10px] font-bold">AI
+                                Studio</span>
                         </div>
                     </div>
-                    
-                    <a href="#projects" class="btn-secondary w-full shadow-sm text-xs mt-2 text-center py-2 flex items-center justify-center">
+
+                    <a href="#projects"
+                        class="btn-secondary w-full shadow-sm text-xs mt-2 text-center py-2 flex items-center justify-center">
                         <i class="fas fa-project-diagram mr-2"></i> View Case Studies
                     </a>
                 </div>
@@ -223,9 +420,12 @@
 
     </main>
 
-    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300">
-        <div class="max-w-7xl mx-auto px-4 py-8 text-center flex flex-col md:flex-row justify-between items-center gap-4">
-            <p class="text-slate-500 dark:text-slate-400 text-sm">© 2026 Automation Hub | CA. Vaibhav Khanna. All rights reserved.</p>
+    <footer
+        class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300">
+        <div
+            class="max-w-7xl mx-auto px-4 py-8 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">© 2026 Automation Hub | CA. Vaibhav Khanna. All rights
+                reserved.</p>
             <div class="text-slate-400 text-sm flex gap-4">
                 <a href="cv.html" class="hover:text-blue-500 transition-colors">Resume</a>
                 <span>&bull;</span>
@@ -252,7 +452,7 @@
             { id: 'PDFKIT', title: 'PDF Kit', date: '2026-05-25T00:00:00+05:30', icon: 'fas fa-file-pdf', color: 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400', desc: 'A unified suite of essential PDF manipulation utilities engineered for secure, local processing.', videoLink: 'https://youtu.be/1B4rsPKWpAg?si=_wp6JtIBx2ILZLOS', linkedInLink: 'https://www.linkedin.com/posts/vaibhav14k_i-built-a-custom-automation-tool-for-cas-activity-7464680429334401025-ZETD?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAQL10wBnS43iKMhLOK7b3ZLCWXC8SLmHo4' },
             { id: 'EMBASSY', title: 'CA Report Generator', date: '2026-06-07T00:00:00+05:30', icon: 'fas fa-passport', color: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400', desc: 'Automates the generation of net worth and financial reports specifically formatted for Visa and Embassy submissions.', videoLink: '#', linkedInLink: 'https://www.linkedin.com/posts/vaibhav14k_visacompliance-networthcertificate-practiceautomation-activity-7469599096820125697-qYP_?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAQL10wBnS43iKMhLOK7b3ZLCWXC8SLmHo4' },
             { id: 'DEED', title: 'Partnership Deed Drafter', date: '2026-06-14T00:00:00+05:30', icon: 'fas fa-file-contract', color: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300', desc: 'Automates the drafting of legal partnership deeds with dynamic partner clauses, instant calculations, and legal formatting.', videoLink: '#', linkedInLink: '#https://www.linkedin.com/posts/vaibhav14k_practicemanagement-legaldrafting-cafirmautomation-activity-7472135804828532736-EsVk?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAQL10wBnS43iKMhLOK7b3ZLCWXC8SLmHo4' },
-            { id: 'ENGAGE', title: 'Engagement Letter Generator', date: '2026-06-21T00:00:00+05:30', icon: 'fas fa-file-signature', color: 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400', desc: 'Standardizes audit engagement letters for diverse firm structures with instant, clean PDF generation.', videoLink: '#', linkedInLink: '#' },
+            { id: 'ENGAGE', title: 'Engagement Letter Generator', date: '2026-06-21T00:00:00+05:30', icon: 'fas fa-file-signature', color: 'bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400', desc: 'Standardizes audit engagement letters for diverse firm structures with instant, clean PDF generation.', videoLink: '#', linkedInLink: 'https://www.linkedin.com/posts/vaibhav14k_peerreviewready-auditcompliance-practicemanagement-activity-7474672519539515393-o6Ff?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAQL10wBnS43iKMhLOK7b3ZLCWXC8SLmHo4' },
             { id: 'BOARD', title: 'Board Resolution Generator', date: '2026-06-28T00:00:00+05:30', icon: 'fas fa-gavel', color: 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400', desc: 'Instantly draft compliant Board Resolutions for corporate actions including banking limits and director changes.', videoLink: '#', linkedInLink: '#' },
             { id: 'DIR', title: 'Directors\' Report', date: '2026-07-05T00:00:00+05:30', icon: 'fas fa-users-cog', color: 'bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400', desc: 'Companies Act, 2013 compliant Directors\' Report Mail Merge Engine for private limited companies.', videoLink: '#', linkedInLink: '#' },
             { id: 'ESIC', title: 'ESIC Challan Extractor', date: '2026-07-12T00:00:00+05:30', icon: 'fas fa-file-invoice', color: 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400', desc: 'Batch extract structured monthly contribution data directly from ESIC PDF Challans into Excel.', videoLink: '#', linkedInLink: '#' },
@@ -271,7 +471,7 @@
 
             automationTools.forEach(tool => {
                 const releaseDate = new Date(tool.date);
-                
+
                 if (now >= releaseDate) {
                     // LIVE TOOL CARD
                     const videoBtnHTML = tool.videoLink && tool.videoLink !== '#' ? `
@@ -309,11 +509,11 @@
                         </div>
                     </div>`;
                     grid.insertAdjacentHTML('beforeend', cardHTML);
-                    
+
                 } else {
                     // LOCKED TOOL CARD (Future Release)
                     const dropDateStr = releaseDate.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
-                    
+
                     const lockedCardHTML = `
                     <div class="glass-card flex flex-col p-6 h-full relative overflow-hidden opacity-90 border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50">
                         
@@ -341,4 +541,5 @@
         });
     </script>
 </body>
+
 </html>
