@@ -58,9 +58,16 @@
         /* Base Settings & Theme */
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
         
-        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .glass-card { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
         .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        
+        /* Dark Mode Overrides */
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
+        .dark label { color: #94a3b8 !important; }
+        .dark h4 { color: #64748b !important; border-color: #334155 !important; }
+        .dark input, .dark select, .dark textarea { background-color: #1e293b !important; border-color: #334155 !important; color: #f8fafc !important; }
+        .dark input:focus, .dark select:focus, .dark textarea:focus { background-color: #0f172a !important; border-color: #3b82f6 !important; box-shadow: 0 0 0 1px #3b82f6 !important; }
 
         /* Input Styles */
         input, select, textarea {
@@ -100,10 +107,10 @@
         .resolution-title { font-weight: bold; text-decoration: underline; margin-top: 10px; margin-bottom: 10px; text-align: center; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen lg:h-screen flex flex-col lg:overflow-hidden">
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0">
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 flex-shrink-0">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -127,7 +134,7 @@
     <div class="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8">
         
         <!-- Left Column: Inputs -->
-        <div class="w-full lg:w-[40%] flex flex-col gap-6">
+        <div class="w-full lg:w-[40%] flex flex-col gap-6 min-h-0">
             
             <div class="mb-2">
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
@@ -137,15 +144,15 @@
             </div>
 
             <!-- Scrollable Input Form -->
-            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
-                <div class="p-5 border-b border-slate-100 bg-white">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Resolution Settings</h3>
+            <div class="glass-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex-1 overflow-hidden flex flex-col shadow-md">
+                <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-transparent">
+                    <h3 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Resolution Settings</h3>
                 </div>
                 
-                <div class="p-5 overflow-y-auto custom-scrollbar space-y-6 bg-white">
+                <div class="p-5 overflow-y-auto custom-scrollbar space-y-6 bg-transparent">
                     
                     <!-- Resolution Type -->
-                    <div class="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
                         <label for="templateSelect" class="block text-xs font-bold text-blue-800 uppercase tracking-wider mb-1">Resolution Type</label>
                         <select id="templateSelect" class="border-blue-200 focus:border-blue-500 focus:ring-blue-500">
                             <option value="">-- Select Resolution --</option>
@@ -212,7 +219,7 @@
                     <!-- Specific Fields Container -->
                     <div class="space-y-3">
                         <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest border-b pb-1">Resolution-Specific Variables</h4>
-                        <div id="specificFields" class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div id="specificFields" class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                             <span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>
                         </div>
                     </div>
@@ -220,31 +227,43 @@
                 </div>
 
                 <!-- Form Actions (Sticky Bottom) -->
-                <div class="flex gap-3 pt-4 mt-auto bg-white border-t border-slate-100 p-4 flex-shrink-0">
-                    <button class="flex-1 btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md" id="btnPdf">
-                        <i class="fas fa-file-pdf mr-2"></i> Export PDF
-                    </button>
-                    <button class="flex-1 btn-compact bg-slate-800 text-white hover:bg-slate-900 shadow-md" id="btnWord">
-                        <i class="fas fa-file-word mr-2"></i> Export DOC
-                    </button>
-                    <button class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" id="btnClear" title="Clear All">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                <div class="pt-4 mt-auto bg-transparent border-t border-slate-100 dark:border-slate-700 p-4 flex-shrink-0">
+                    <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                        <button type="button" id="copyToClipboardBtn" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none flex items-center" title="Copy to Clipboard">
+                            <i class="fas fa-copy mr-1 text-gray-600 dark:text-slate-400"></i>Copy
+                        </button>
+                        
+                        <button type="button" id="printBtn" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none flex items-center" title="Print">
+                            <i class="fas fa-print mr-1 text-gray-600 dark:text-slate-400"></i>Print
+                        </button>
+
+                        <button id="btnWord" type="button" class="h-8 px-3 border border-gray-300 dark:border-blue-800 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-800 focus:outline-none flex items-center" title="Export Word">
+                            <i class="fas fa-file-word mr-1 text-blue-600 dark:text-blue-400"></i>Word
+                        </button>
+                        
+                        <button id="btnPdf" type="button" class="h-8 px-3 border border-gray-300 dark:border-red-800 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-red-300 bg-red-50 dark:bg-red-900/50 hover:bg-red-100 dark:hover:bg-red-800 focus:outline-none flex items-center" title="Export PDF">
+                            <i class="fas fa-file-pdf mr-1 text-red-600 dark:text-red-400"></i>PDF
+                        </button>
+
+                        <button id="btnClear" type="button" class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 focus:outline-none flex items-center ml-auto" title="Clear All">
+                            <i class="fas fa-trash mr-1 text-gray-500 dark:text-slate-400"></i>Clear
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Right Column: Preview -->
         <div class="w-full lg:w-[60%] flex flex-col min-h-0">
-            <div class="glass-card p-4 mb-6 flex justify-between items-center flex-shrink-0 shadow-md">
-                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center">
+            <div class="glass-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 mb-6 flex justify-between items-center flex-shrink-0 shadow-md">
+                <h2 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center">
                     <i class="fas fa-eye mr-2 text-blue-600"></i> Live Document Preview
                 </h2>
-                <span class="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">Updates in real-time</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">Updates in real-time</span>
             </div>
 
             <!-- Preview Container -->
-            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-8 custom-scrollbar shadow-inner">
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 p-8 custom-scrollbar shadow-inner">
                 <div id="resolutionPreview">
                     <div class="letterhead">
                         <div class="company-name">[Company Name]</div>
@@ -1095,6 +1114,58 @@ RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby auth
             templateSelect.value = "";
             specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>';
             updatePreview();
+        });
+
+        document.getElementById('copyToClipboardBtn').addEventListener('click', async (e) => {
+            const previewText = document.getElementById('resolutionPreview').innerText;
+            try {
+                await navigator.clipboard.writeText(previewText);
+                const btn = e.currentTarget;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-1 text-green-600"></i>Copied';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        });
+
+        document.getElementById('printBtn').addEventListener('click', () => {
+            const previewHtml = document.getElementById('resolutionPreview').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Document</title>
+                    <style>
+                        @media print { 
+                            body { font-family: 'Times New Roman', serif; margin: 0.25in; } 
+                            .letterhead { text-align: center; margin-bottom: 8px; }
+                            .company-name { font-size: 22px; font-weight: bold; text-transform: uppercase; font-family: 'Garamond', 'Times New Roman', serif; }
+                            .line { font-size: 11px; }
+                            .separator { margin: 8px 0 16px; }
+                            .hr-thick { border: 0; border-top: 3px solid #000; margin: 0 0 2px; }
+                            .hr-thin { border: 0; border-top: 1px solid #000; margin: 0; }
+                            .text-center { text-align: center; }
+                            .text-right { text-align: right; }
+                            .mt-6 { margin-top: 24px; }
+                            .mt-4 { margin-top: 16px; }
+                            p { text-align: justify; font-size: 13.5px; line-height: 1.6; margin: 0 0 8px 0; }
+                            .resolution-title { font-weight: bold; text-decoration: underline; margin: 10px 0; text-align: center; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div id="resolutionPreview">
+                        ${previewHtml}
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.onload = () => {
+                printWindow.print();
+                setTimeout(() => printWindow.close(), 500);
+            };
         });
 
         // Initial render
