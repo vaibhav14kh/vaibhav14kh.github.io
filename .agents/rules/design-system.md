@@ -28,3 +28,7 @@ Schema B (Blue Tint / Accent):
 - Container: `bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800`
 - Dividers: `border-blue-100 dark:border-blue-800`
 - Pills/Badges: `bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300`
+
+4. FORM FIELDS & INPUTS:
+- Light Mode: `bg-white border-slate-300 text-slate-900 focus:border-blue-600 focus:ring-blue-600`
+- Dark Mode: Inputs MUST use a solid dark background for readability. Use `bg-[#0f172a]`, `border-[#334155]`, and text color `#f8fafc`. On focus, use `border-[#38bdf8]` and a box-shadow ring of `#0c4a6e`. Do not use semi-transparent `rgba` backgrounds for inputs in dark mode.

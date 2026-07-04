@@ -32,12 +32,13 @@ When generating documents (frontend or backend), these constraints strictly appl
 
 ### 2.2 Functional implementation rules (client-side)
 All client-side exports must implement these javascript behaviors consistently:
-- **Copy:** Use `navigator.clipboard.writeText`. Aggregate table headers and rows using tab-separated joins (`\t`) for cells and newline joins (`\n`) for rows. **UI Feedback:** Temporarily swap the button's inner HTML to `<i class="fas fa-check mr-1 text-green-600"></i>Copied` for 2000ms upon success.
-- **Print:** Open a new window (`window.open('', '_blank')`), inject a standard `<table border="1">` string, and apply `@media print { body { font-family: 'Times New Roman', serif; margin: 0.25in; } }`. Trigger `window.print()` on load, followed by a 500ms timeout to `window.close()`.
-- **PDF (.pdf):** Use `window.jspdf.jsPDF` alongside the `autoTable` plugin. 
-  - **Headers/Subheaders:** Inject centered titles at dynamic Y-axis coordinates (e.g., `Y: 0.4`, `Y: 0.6`). Include active page filters (e.g., Client name, Status) in the subheader.
-  - **Table Styling:** Use `theme: 'grid'`, with `{ fontSize: 8, cellPadding: 0.05, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.001 }`.
-  - **Header Styling:** `{ fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, fontStyle: 'bold', halign: 'center' }`.
+- **Copy:** Use `navigator.clipboard.writeText`. For data tables, aggregate headers and rows using tab-separated joins (`\t`) and newline joins (`\n`). For live document previews (e.g. `docWrap`), copy the `.innerText` of the live-merged container. **UI Feedback:** Temporarily swap the button's inner HTML to `<i class="fas fa-check mr-1 text-green-600"></i>Copied` for 2000ms upon success.
+- **Print:** Open a new window (`window.open('', '_blank')`), inject the target HTML (data table or `docWrap.innerHTML`), and apply `@media print { body { font-family: 'Times New Roman', serif; margin: 0.25in; } .hidden { display: none !important; } }`. Trigger `window.print()` on load, followed by a 500ms timeout to `window.close()`.
+- **PDF (.pdf):** 
+  - **For Data Grids:** Use `window.jspdf.jsPDF` alongside the `autoTable` plugin (`theme: 'grid'`, `{ fontSize: 8, cellPadding: 0.05 }`).
+  - **For Document Previews (A4):** Use `html2pdf.js` targeting a cloned `docWrap` element. Settings: `{ margin: 0.5, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, html2canvas: { scale: 2 } }`.
+- **Excel (.xlsx):**
+  - **Client-Side Generation:** Use `ExcelJS` (via CDN) to build and export workbooks containing properly formatted headers (bold, pattern fills) and auto-fitted columns.
 
 ### 2.3 Export button UI standard
 Every view with export capabilities **must** use this **Unified Export Toolbar** wrapper (`flex items-center space-x-2`) for consistent styling and behavior. Buttons must utilize `h-8`, `px-3`, `shadow-sm`, and `rounded-md`.

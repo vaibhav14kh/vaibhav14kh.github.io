@@ -6,6 +6,7 @@
     
     <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
     <script>
+        /* TEMPORARILY DISABLED FOR ANALYSIS
         (function() {
             // 1. Check if the user is arriving directly from the email link
             const urlParams = new URLSearchParams(window.location.search);
@@ -30,6 +31,7 @@
                 }
             }
         })();
+        */
     </script>
 
     <title>Directors' Report Generator | Automation Hub</title>
@@ -51,6 +53,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
     <style>
         /* Base Settings & Theme */
@@ -62,13 +65,15 @@
         .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
 
         /* Input Styles */
-        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+        input, select, textarea {
             padding-top: 0.5rem; padding-bottom: 0.5rem; padding-left: 0.75rem; font-size: 0.875rem; line-height: 1.25rem;
             border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; width: 100%; transition: all 0.2s;
-            background-color: #f8fafc; color: #334155; font-weight: 500;
+            background-color: #f8fafc; color: #334155; font-weight: 500; margin-top: 0.25rem;
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
-        input:disabled { opacity: 0.6; cursor: not-allowed; }
+        input:disabled, select:disabled, textarea:disabled { opacity: 0.6; cursor: not-allowed; }
+        .dark input, .dark select, .dark textarea { background-color: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
+        .dark input:focus, .dark select:focus, .dark textarea:focus { border-color: #38bdf8 !important; box-shadow: 0 0 0 2px #0c4a6e !important; background-color: #0f172a !important; }
 
         /* Compact Buttons */
         .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; cursor: pointer; border: none; }
@@ -76,7 +81,7 @@
 
         /* Document Preview (A4 Sim) */
         .a4-paper {
-            width: 210mm; min-height: 297mm; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 210mm; max-width: 100%; min-height: 297mm; background: white; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             padding: 25mm; margin: 0 auto; color: #000; font-family: "Times New Roman", Times, serif;
             font-size: 11pt; line-height: 1.5; overflow-wrap: break-word; text-align: justify;
         }
@@ -115,7 +120,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen lg:h-screen flex flex-col lg:overflow-hidden">
 
     <!-- Theme Synced Navigation -->
     <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0 hide-on-print dark:bg-slate-900/80 dark:border-slate-700">
@@ -139,53 +144,25 @@
     </nav>
 
     <!-- Main Content Grid -->
-    <div class="max-w-full w-full mx-auto flex flex-col lg:flex-row gap-6 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8 print-full-width">
+    <div class="max-w-7xl w-full mx-auto flex flex-col lg:flex-row gap-8 flex-1 min-h-0 py-6 px-4 sm:px-6 lg:px-8 print-full-width">
         
         <!-- Left Column: Inputs -->
-        <div class="w-full lg:w-[40%] xl:w-[35%] flex flex-col gap-4 hide-on-print">
+        <div class="w-full lg:w-[40%] flex flex-col gap-6 hide-on-print min-h-0">
             
-            <div class="mb-1">
+            <div class="mb-2">
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1 dark:text-white">
                     <span class="gradient-text">Directors' Report</span>
                 </h1>
                 <p class="text-slate-600 text-xs font-medium dark:text-slate-400">Companies Act, 2013 Mail Merge Engine.</p>
             </div>
 
-            <!-- Action Toolbar (Top) -->
-            <div class="glass-card p-4 flex flex-col gap-3 flex-shrink-0 bg-blue-50/50 border-blue-100">
-                <div class="flex flex-wrap gap-2">
-                    <button class="btn-compact bg-green-600 text-white hover:bg-green-700 shadow-md flex-1" id="btnMerge">
-                        <i class="fas fa-play mr-2"></i> Merge Now
-                    </button>
-                    <button class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md flex-1" id="btnDownloadWord" disabled>
-                        <i class="fas fa-file-word mr-2"></i> DOC
-                    </button>
-                    <button class="btn-compact bg-red-600 text-white hover:bg-red-700 shadow-md flex-1" id="btnPrintPDF" disabled>
-                        <i class="fas fa-file-pdf mr-2"></i> PDF
-                    </button>
-                </div>
-                <div class="flex flex-wrap gap-2 border-t border-blue-200 pt-3">
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnImportData">
-                        <i class="fas fa-file-import mr-1"></i> Import Excel
-                    </button>
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnExportData">
-                        <i class="fas fa-file-export mr-1"></i> Export Data
-                    </button>
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnDownloadCSV" title="Download Excel Template">
-                        <i class="fas fa-download mr-1"></i> Template
-                    </button>
-                </div>
-                <input type="file" id="importCSV" accept=".csv" class="hidden">
-                <div class="text-[10px] text-center text-slate-500 font-medium dark:text-slate-400">Export Filename: <strong id="fileHint" class="text-blue-700">Company_Year</strong></div>
-            </div>
-
             <!-- Scrollable Input Form -->
-            <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
-                <div class="p-4 border-b border-slate-100 bg-white dark:bg-slate-800 dark:border-slate-700">
+            <div class="glass-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex-1 overflow-hidden flex flex-col shadow-md">
+                <div class="p-5 border-b border-slate-100 dark:border-slate-700 bg-transparent">
                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest dark:text-slate-200"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Merge Variables</h3>
                 </div>
                 
-                <div class="p-4 overflow-y-auto custom-scrollbar space-y-6 bg-white dark:bg-slate-800">
+                <div class="p-5 overflow-y-auto custom-scrollbar space-y-6 flex-1 bg-transparent">
                     
                     <!-- Basic Info -->
                     <div class="space-y-3">
@@ -377,7 +354,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Place</label>
-                                <input id="place" placeholder="e.g., Kolkata">
+                                <input id="place" placeholder="e.g., Amritsar">
                             </div>
                             <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 1 – Name</label><input id="d1"></div>
                             <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 1 – DIN</label><input id="d1din"></div>
@@ -387,13 +364,60 @@
                     </div>
 
                 </div>
+                
+                <!-- Form Actions (Sticky Bottom) -->
+                <div class="pt-4 mt-auto bg-transparent border-t border-slate-100 dark:border-slate-700 p-4 flex-shrink-0">
+                    <div class="flex items-center justify-between gap-y-2">
+                        <div class="flex items-center space-x-2 flex-wrap">
+                            <button class="h-8 px-3 border border-transparent shadow-sm text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none flex items-center" id="btnMerge">
+                                <i class="fas fa-play mr-1"></i> Merge
+                            </button>
+                            <button class="h-8 px-3 border border-blue-300 dark:border-blue-800 shadow-sm text-xs font-medium rounded-md text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/50 hover:bg-blue-100 dark:hover:bg-blue-800 focus:outline-none flex items-center disabled:opacity-50 disabled:cursor-not-allowed" id="btnDownloadWord" disabled>
+                                <i class="fas fa-file-word mr-1 text-blue-600 dark:text-blue-400"></i> DOC
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-2 flex-wrap">
+                            <button class="h-8 px-3 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none flex items-center" id="btnImportData">
+                                <i class="fas fa-file-import mr-1 text-gray-600 dark:text-slate-400"></i> Import
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="importCSV" accept=".csv,.xlsx" class="hidden">
+                    <div class="mt-3 text-[10px] text-center text-slate-500 font-medium dark:text-slate-400">Export Filename: <strong id="fileHint" class="text-blue-700 dark:text-blue-400">Company_Year</strong></div>
+                </div>
             </div>
         </div>
 
-        <!-- Right Column: Preview & Output -->
-        <div class="w-full lg:w-[60%] xl:w-[65%] flex flex-col min-h-0 print-full-width">
-            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-4 sm:p-8 custom-scrollbar shadow-inner print-full-width dark:border-slate-600">
-                
+        <!-- Right Column: Preview -->
+        <div class="w-full lg:w-[60%] flex flex-col min-h-0 print-full-width">
+            <div class="glass-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 mb-6 flex flex-col sm:flex-row justify-between items-center flex-shrink-0 shadow-md hide-on-print gap-3">
+                <!-- Left: Universal Export -->
+                <div class="flex items-center space-x-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <button type="button" id="copyToClipboardBtn" class="h-8 px-3 flex-shrink-0 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none flex items-center" title="Copy to Clipboard">
+                        <i class="fas fa-copy sm:mr-1 text-gray-600 dark:text-slate-400"></i><span class="hidden sm:inline">Copy</span>
+                    </button>
+                    <button type="button" id="printBtn" class="h-8 px-3 flex-shrink-0 border border-gray-300 dark:border-slate-600 shadow-sm text-xs font-medium rounded-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 focus:outline-none flex items-center" title="Print">
+                        <i class="fas fa-print sm:mr-1 text-gray-600 dark:text-slate-400"></i><span class="hidden sm:inline">Print</span>
+                    </button>
+                    <button type="button" id="btnExportData" class="h-8 px-3 flex-shrink-0 border border-green-300 dark:border-green-800 shadow-sm text-xs font-medium rounded-md text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/40 hover:bg-green-100 dark:hover:bg-green-800 focus:outline-none flex items-center" title="Export Excel">
+                        <i class="fas fa-file-excel sm:mr-1 text-green-600 dark:text-green-400"></i><span class="hidden sm:inline">Excel</span>
+                    </button>
+                    <button type="button" id="btnPrintPDF" class="h-8 px-3 flex-shrink-0 border border-red-300 dark:border-red-800 shadow-sm text-xs font-medium rounded-md text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/40 hover:bg-red-100 dark:hover:bg-red-800 focus:outline-none flex items-center disabled:opacity-50 disabled:cursor-not-allowed" title="Export PDF" disabled>
+                        <i class="fas fa-file-pdf sm:mr-1 text-red-600 dark:text-red-400"></i><span class="hidden sm:inline">PDF</span>
+                    </button>
+                    <button type="button" id="btnDownloadCSV" class="h-8 px-3 flex-shrink-0 border border-blue-300 dark:border-blue-800 shadow-sm text-xs font-medium rounded-md text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/40 hover:bg-blue-100 dark:hover:bg-blue-800 focus:outline-none flex items-center" title="Download Template">
+                        <i class="fas fa-download sm:mr-1 text-blue-600 dark:text-blue-400"></i><span class="hidden sm:inline">Template</span>
+                    </button>
+                </div>
+                <!-- Right: Title -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <h2 class="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center">
+                        <span class="hidden lg:inline"><i class="fas fa-eye mr-2 text-blue-600"></i>Live Document </span>Preview
+                    </h2>
+                </div>
+            </div>
+            
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-700 p-4 sm:p-8 custom-scrollbar shadow-inner print-full-width">
                 <!-- The A4 Document -->
                 <div id="docWrap" class="a4-paper doc">
                     <div id="letterhead" class="letterhead hidden">
@@ -963,11 +987,42 @@
             ];
 
             const rows = [headers, values];
-            const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
-            const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+            generateExcel(rows, 'Directors_Report_Data.xlsx');
+        }
+
+        async function generateExcel(dataRows, filename) {
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet('Data');
+
+            // Add Header Row
+            const headerRow = sheet.addRow(dataRows[0]);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+            
+            // Add Data
+            for(let i = 1; i < dataRows.length; i++) {
+                const row = sheet.addRow(dataRows[i]);
+                if(i % 2 === 0) row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+            }
+
+            // Auto-fit columns
+            sheet.columns.forEach(col => {
+                let maxLength = 15;
+                col.eachCell({ includeEmpty: true }, cell => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) maxLength = columnLength;
+                });
+                col.width = maxLength < 50 ? maxLength + 2 : 50;
+            });
+            
+            // Setup Filter
+            sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: dataRows.length, column: dataRows[0].length } };
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'Directors_Report_Data.csv';
+            a.download = filename;
             a.click();
             URL.revokeObjectURL(a.href);
         }
@@ -976,23 +1031,39 @@
             el('importCSV').click();
         }
 
-        el('importCSV')?.addEventListener('change', e => {
+        el('importCSV')?.addEventListener('change', async e => {
             const file = e.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const csv = ev.target.result;
-                const lines = csv.split('\n').filter(l => l.trim()).map(l => {
+            
+            let obj = {};
+            
+            if (file.name.endsWith('.xlsx')) {
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(file);
+                const worksheet = workbook.worksheets[0];
+                const rows = [];
+                worksheet.eachRow((row, rowNumber) => {
+                    const rowValues = [];
+                    row.eachCell({ includeEmpty: true }, cell => rowValues.push(cell.value));
+                    rows.push(rowValues);
+                });
+                if (rows.length < 2) return;
+                const header = rows[0];
+                const data = rows[1];
+                header.forEach((h, i) => { obj[h ? h.toString().trim() : ''] = data[i] || ''; });
+            } else {
+                const text = await file.text();
+                const lines = text.split('\n').filter(l => l.trim()).map(l => {
                     const parts = l.split(',').map(p => p.replace(/"/g, ''));
                     return parts.length > 1 ? parts : [l];
                 });
                 if (lines.length < 2) return;
                 const header = lines[0];
                 const data = lines[1].map(d => d.replace(/"/g, ''));
-                const obj = {};
                 header.forEach((h, i) => { obj[h.trim()] = data[i] || ''; });
+            }
 
-                // Set fields
+            // Set fields
                 el('companyName').value = obj['Company Name'] || '';
                 el('addr').value = obj['Address'] || '';
                 el('cin').value = obj['CIN'] || '';
@@ -1055,16 +1126,103 @@
                 el('chText').value = obj['If Changes – enter brief description'] || ''; // Assume header
 
                 merge(); // Update preview
-            };
-            reader.readAsText(file);
         });
 
-        document.getElementById('btnMerge').addEventListener('click', merge);
-        document.getElementById('btnDownloadWord').addEventListener('click', exportWord);
-        document.getElementById('btnPrintPDF').addEventListener('click', ()=>{ window.print(); });
-        document.getElementById('btnExportData').addEventListener('click', exportCSV);
-        document.getElementById('btnImportData').addEventListener('click', importCSV);
-        document.getElementById('btnDownloadCSV').addEventListener('click', () => {
+        // Auto-update preview on any input change (Live Document feature)
+        document.querySelectorAll("input, textarea, select").forEach(elem => {
+            elem.addEventListener("input", merge);
+            elem.addEventListener("change", merge);
+        });
+
+        document.getElementById('btnDownloadWord')?.addEventListener('click', exportWord);
+        document.getElementById('btnExportData')?.addEventListener('click', exportCSV);
+        document.getElementById('btnImportData')?.addEventListener('click', importCSV);
+        
+        // Print Logic (matches Board Resolution Generator)
+        document.getElementById('printBtn')?.addEventListener('click', () => {
+            const previewHtml = document.getElementById('docWrap').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Document</title>
+                    <style>
+                        @media print { 
+                            body { font-family: 'Times New Roman', Times, serif; margin: 0.25in; }
+                            .letterhead { border-bottom: 2px solid #111; text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
+                            .lh-title { font-weight: 700; text-transform: uppercase; font-size: 18pt; font-family: "Garamond", serif; }
+                            .lh-line { font-size: 11pt; line-height: 1.2; margin-top: 4px; }
+                            .muted { color: #4b5563; }
+                            .hidden, .hide-on-print { display: none !important; }
+                            h2, h3 { font-family: 'Times New Roman', Times, serif; color: #000; margin-top: 1.5em; margin-bottom: 0.5em; text-align: left; }
+                            h2 { font-size: 14pt; text-align: center; text-decoration: underline; font-weight: bold; }
+                            h3 { font-size: 12pt; font-weight: bold; }
+                            p { margin-bottom: 1em; text-align: justify; font-size: 11pt; line-height: 1.5; }
+                            ol { margin-left: 2em; margin-bottom: 1em; }
+                            ol li { margin-bottom: 0.5em; text-align: justify; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 10pt; }
+                            th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
+                            th { background: #f3f4f6; font-weight: bold; text-align: center; }
+                            .center { text-align: center; }
+                            .right { text-align: right; }
+                            .mt-6 { margin-top: 24px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div id="docWrap">
+                        ${previewHtml}
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.onload = () => {
+                printWindow.print();
+                setTimeout(() => printWindow.close(), 500);
+            };
+        });
+
+        // PDF Export Logic using html2pdf
+        document.getElementById('btnPrintPDF')?.addEventListener('click', () => {
+            const element = document.getElementById('docWrap');
+            const opt = {
+                margin:       0.5,
+                filename:     (document.getElementById('fileHint').textContent || 'Directors_Report') + '.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Create a wrapper to apply specific print styles for PDF if needed
+            const clonedElement = element.cloneNode(true);
+            clonedElement.style.padding = '0';
+            clonedElement.style.boxShadow = 'none';
+            clonedElement.style.margin = '0';
+            clonedElement.style.width = '100%';
+            
+            // Clean up UI helpers in the clone before generating PDF
+            const helperText = clonedElement.querySelector('.border-dashed');
+            if (helperText) helperText.remove();
+            
+            html2pdf().set(opt).from(clonedElement).save();
+        });
+
+        // Copy Logic
+        document.getElementById('copyToClipboardBtn')?.addEventListener('click', async (e) => {
+            const previewText = document.getElementById('docWrap').innerText;
+            try {
+                await navigator.clipboard.writeText(previewText);
+                const btn = e.currentTarget;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check sm:mr-1 text-green-600"></i><span class="hidden sm:inline">Copied</span>';
+                setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        });
+
+        document.getElementById('btnDownloadCSV')?.addEventListener('click', () => {
             const headers = [
                 'Company Name','Address','CIN','Telephone','Email','Website','Financial Year End (YYYY-MM-DD)','Annual Report No.','Business Activity',
                 'Auditor Firm','FRN','AGM No.','AGM Date (YYYY-MM-DD)','Auditor Tenure (years)',
@@ -1080,8 +1238,8 @@
                 'BM5 Date','BM5 Total Directors','BM5 Attended'
             ];
             const example = [
-                'XYZ Private Limited','1, Park Street, Kolkata – 700016','U12345WB2013PTC000000','033-12345678','info@xyz.com','www.xyz.com','2025-03-31','4','software development services',
-                'M/s. ABC & Co.','012345W','1','2022-09-30','5','2025-03-31','Kolkata','Rahul Sen','01234567','Anita Das','07654321','25',
+                'XYZ Private Limited','1, Park Street, Amritsar – 143001','U12345PB2013PTC000000','0183-1234567','info@xyz.com','www.xyz.com','2025-03-31','4','software development services',
+                'M/s. ABC & Co.','012345W','1','2022-09-30','5','2025-03-31','Amritsar','Rahul Sen','01234567','Anita Das','07654321','25',
                 '100000','90000','50000','40000','10000','8000','2000','1000','3000','2000','5000','4000','20000','15000','30000','25000',
                 '3',
                 '2024-05-15','5','5',
@@ -1090,14 +1248,7 @@
                 '','','',
                 '','',''
             ];
-            const rows = [headers, example];
-            const csv = rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
-            const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Directors_Report_Template.csv';
-            a.click();
-            URL.revokeObjectURL(a.href);
+            generateExcel([headers, example], 'Directors_Report_Template.xlsx');
         });
     </script>
     <script>
