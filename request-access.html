@@ -344,7 +344,7 @@
                     btn.classList.replace('bg-blue-600', 'bg-green-600');
                     btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
 
-                    status.textContent = "Check your email for the secure access link.";
+                    status.innerHTML = "Check your email for the secure access link.<br><span class='text-xs opacity-90 mt-1 block font-bold'>Don't forget to check your Spam Inbox.</span><span class='text-xs opacity-80 block mt-1'>Please mark it as 'Not Spam' or add our email to your contacts to ensure future emails reach your inbox.</span>";
                     status.className = "text-sm text-center bg-green-100 text-green-700 rounded p-3 mt-4 block font-medium";
 
                     document.getElementById('leadForm').reset();
