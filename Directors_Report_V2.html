@@ -118,7 +118,7 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col overflow-hidden">
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0 hide-on-print">
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 flex-shrink-0 hide-on-print dark:bg-slate-900/80 dark:border-slate-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -126,7 +126,7 @@
                     <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
@@ -145,10 +145,10 @@
         <div class="w-full lg:w-[40%] xl:w-[35%] flex flex-col gap-4 hide-on-print">
             
             <div class="mb-1">
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1 dark:text-white">
                     <span class="gradient-text">Directors' Report</span>
                 </h1>
-                <p class="text-slate-600 text-xs font-medium">Companies Act, 2013 Mail Merge Engine.</p>
+                <p class="text-slate-600 text-xs font-medium dark:text-slate-400">Companies Act, 2013 Mail Merge Engine.</p>
             </div>
 
             <!-- Action Toolbar (Top) -->
@@ -165,46 +165,46 @@
                     </button>
                 </div>
                 <div class="flex flex-wrap gap-2 border-t border-blue-200 pt-3">
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnImportData">
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnImportData">
                         <i class="fas fa-file-import mr-1"></i> Import Excel
                     </button>
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnExportData">
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnExportData">
                         <i class="fas fa-file-export mr-1"></i> Export Data
                     </button>
-                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1" id="btnDownloadCSV" title="Download Excel Template">
+                    <button class="btn-compact bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 text-xs flex-1 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" id="btnDownloadCSV" title="Download Excel Template">
                         <i class="fas fa-download mr-1"></i> Template
                     </button>
                 </div>
                 <input type="file" id="importCSV" accept=".csv" class="hidden">
-                <div class="text-[10px] text-center text-slate-500 font-medium">Export Filename: <strong id="fileHint" class="text-blue-700">Company_Year</strong></div>
+                <div class="text-[10px] text-center text-slate-500 font-medium dark:text-slate-400">Export Filename: <strong id="fileHint" class="text-blue-700">Company_Year</strong></div>
             </div>
 
             <!-- Scrollable Input Form -->
             <div class="glass-card flex-1 overflow-hidden flex flex-col shadow-md">
-                <div class="p-4 border-b border-slate-100 bg-white">
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Merge Variables</h3>
+                <div class="p-4 border-b border-slate-100 bg-white dark:bg-slate-800 dark:border-slate-700">
+                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest dark:text-slate-200"><i class="fas fa-sliders-h mr-2 text-blue-500"></i>Merge Variables</h3>
                 </div>
                 
-                <div class="p-4 overflow-y-auto custom-scrollbar space-y-6 bg-white">
+                <div class="p-4 overflow-y-auto custom-scrollbar space-y-6 bg-white dark:bg-slate-800">
                     
                     <!-- Basic Info -->
                     <div class="space-y-3">
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Basic Information</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Company Name</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Company Name</label>
                                 <input id="companyName" placeholder="e.g., XYZ Private Limited">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Financial Year End</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Financial Year End</label>
                                 <input id="fyEnd" type="date">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Annual Report No.</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Annual Report No.</label>
                                 <input id="annualNo" placeholder="e.g., 4">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Business Activity (Short)</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Business Activity (Short)</label>
                                 <input id="bizActivity" placeholder="e.g., providing software development services">
                             </div>
                         </div>
@@ -223,17 +223,17 @@
                             </select>
                         </div>
                         
-                        <div class="overflow-x-auto rounded-lg border border-slate-200">
+                        <div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
                             <table class="w-full text-xs text-left">
-                                <thead class="bg-slate-50 border-b border-slate-200">
+                                <thead class="bg-slate-50 border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700">
                                     <tr>
-                                        <th class="p-2 font-bold text-slate-600">Particulars</th>
-                                        <th class="p-2 font-bold text-slate-600 w-16">Op.</th>
-                                        <th class="p-2 font-bold text-slate-600 text-center">Current</th>
-                                        <th class="p-2 font-bold text-slate-600 text-center">Previous</th>
+                                        <th class="p-2 font-bold text-slate-600 dark:text-slate-400">Particulars</th>
+                                        <th class="p-2 font-bold text-slate-600 w-16 dark:text-slate-400">Op.</th>
+                                        <th class="p-2 font-bold text-slate-600 text-center dark:text-slate-400">Current</th>
+                                        <th class="p-2 font-bold text-slate-600 text-center dark:text-slate-400">Previous</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-100">
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
                                     <tr><td class="p-2 font-medium">Turnover</td><td class="p-1"></td><td class="p-1"><input id="turnCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="turnPrev" type="number" step="0.01" class="text-right h-7 px-1"></td></tr>
                                     <tr><td class="p-2 font-medium">Profit before Tax</td><td class="p-1"></td><td class="p-1"><input id="pbtCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="pbtPrev" type="number" step="0.01" class="text-right h-7 px-1"></td></tr>
                                     <tr>
@@ -262,7 +262,7 @@
                                         <td class="p-1"><select id="opBrought" class="h-7 px-1 py-0 text-[10px]"><option value="Add" selected>Add</option><option value="Less">Less</option></select></td>
                                         <td class="p-1"><input id="broughtCurr" type="number" step="0.01" class="text-right h-7 px-1"></td><td class="p-1"><input id="broughtPrev" type="number" step="0.01" class="text-right h-7 px-1"></td>
                                     </tr>
-                                    <tr class="bg-slate-100"><td class="p-2 font-bold text-slate-800" colspan="2">Closing Balance</td><td class="p-2 text-right font-bold text-slate-900" id="closingCurr">0.00</td><td class="p-2 text-right font-bold text-slate-900" id="closingPrev">0.00</td></tr>
+                                    <tr class="bg-slate-100 dark:bg-slate-800"><td class="p-2 font-bold text-slate-800 dark:text-slate-200" colspan="2">Closing Balance</td><td class="p-2 text-right font-bold text-slate-900 dark:text-white" id="closingCurr">0.00</td><td class="p-2 text-right font-bold text-slate-900 dark:text-white" id="closingPrev">0.00</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -273,23 +273,23 @@
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Auditor Details</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Auditor Firm Name</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Auditor Firm Name</label>
                                 <input id="auditorName" placeholder="M/s. ABC & Co.">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">FRN Number</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">FRN Number</label>
                                 <input id="frn" placeholder="e.g., 012345W">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">AGM Number</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">AGM Number</label>
                                 <input id="agmNo" placeholder="e.g., 1">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">AGM Date</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">AGM Date</label>
                                 <input id="agmDate" type="date">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Auditor Tenure (yrs)</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Auditor Tenure (yrs)</label>
                                 <input id="audTenure" type="number" min="1" placeholder="e.g., 5">
                             </div>
                         </div>
@@ -299,30 +299,30 @@
                     <div class="space-y-3">
                         <div class="flex justify-between items-center border-b border-blue-100 pb-1">
                             <h4 class="text-xs font-bold text-blue-600 uppercase">Letterhead (Optional)</h4>
-                            <select id="showLH" class="w-auto py-1 px-2 text-xs h-auto bg-blue-50 text-blue-700 border-blue-200">
+                            <select id="showLH" class="w-auto py-1 px-2 text-xs h-auto bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20">
                                 <option value="no">Hide</option>
                                 <option value="yes">Show</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Registered Address</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Registered Address</label>
                                 <input id="addr" placeholder="Line 1, City, State, PIN">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">CIN</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">CIN</label>
                                 <input id="cin" placeholder="e.g., U12345WB2013PLC000000">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Telephone</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Telephone</label>
                                 <input id="tel" placeholder="e.g., +91-33-1234">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Email</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Email</label>
                                 <input id="email" placeholder="info@company.com">
                             </div>
                             <div class="md:col-span-2">
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Website</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Website</label>
                                 <input id="web" placeholder="www.company.com">
                             </div>
                         </div>
@@ -333,15 +333,15 @@
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Board Meetings</h4>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">No. of Meetings</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">No. of Meetings</label>
                                 <input id="bmCount" type="number" min="0" value="0">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-400 mb-1">Rows Active</label>
-                                <input id="bmRowsActive" disabled class="bg-slate-100 text-center font-bold">
+                                <input id="bmRowsActive" disabled class="bg-slate-100 text-center font-bold dark:bg-slate-800">
                             </div>
                         </div>
-                        <p class="text-[10px] text-slate-500 leading-tight">Fill rows below. % attendance = (Attended ÷ Total) × 100.</p>
+                        <p class="text-[10px] text-slate-500 leading-tight dark:text-slate-400">Fill rows below. % attendance = (Attended ÷ Total) × 100.</p>
                         <div id="bmRows" class="space-y-2"></div>
                     </div>
 
@@ -350,18 +350,18 @@
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Directorship & Disclosures</h4>
                         <div class="grid grid-cols-1 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Change in Directorship?</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Change in Directorship?</label>
                                 <select id="chChange">
                                     <option value="no">No change</option>
                                     <option value="yes">Changes occurred</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">If Changes – enter description</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">If Changes – enter description</label>
                                 <textarea id="chText" rows="2" placeholder="e.g., Mr. X appointed w.e.f. 01/08/2024..." disabled></textarea>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Related Party Note No.</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Related Party Note No.</label>
                                 <input id="relatedPartyNote" placeholder="e.g., 25">
                             </div>
                         </div>
@@ -372,17 +372,17 @@
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b border-blue-100 pb-1">Signatory Details</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Signing Date</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Signing Date</label>
                                 <input id="signDate" type="date">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Place</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Place</label>
                                 <input id="place" placeholder="e.g., Kolkata">
                             </div>
-                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 1 – Name</label><input id="d1"></div>
-                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 1 – DIN</label><input id="d1din"></div>
-                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 2 – Name</label><input id="d2"></div>
-                            <div><label class="block text-xs font-bold text-slate-700 mb-1">Director 2 – DIN</label><input id="d2din"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 1 – Name</label><input id="d1"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 1 – DIN</label><input id="d1din"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 2 – Name</label><input id="d2"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">Director 2 – DIN</label><input id="d2din"></div>
                         </div>
                     </div>
 
@@ -392,7 +392,7 @@
 
         <!-- Right Column: Preview & Output -->
         <div class="w-full lg:w-[60%] xl:w-[65%] flex flex-col min-h-0 print-full-width">
-            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-4 sm:p-8 custom-scrollbar shadow-inner print-full-width">
+            <div id="preview-container" class="flex-1 overflow-auto bg-slate-200 rounded-xl border border-slate-300 p-4 sm:p-8 custom-scrollbar shadow-inner print-full-width dark:border-slate-600">
                 
                 <!-- The A4 Document -->
                 <div id="docWrap" class="a4-paper doc">
@@ -530,7 +530,7 @@
 
                     </div>
 
-                    <div class="mt-8 border-t border-slate-300 border-dashed pt-4 text-slate-500 text-xs text-center hide-on-print">
+                    <div class="mt-8 border-t border-slate-300 border-dashed pt-4 text-slate-500 text-xs text-center hide-on-print dark:text-slate-400 dark:border-slate-600">
                         Template aligned to your uploaded prompt. Generated HTML exports to Word (.doc) and PDF via print. Replace dashes with actual figures as required.
                     </div>
                 </div>
@@ -674,9 +674,9 @@
                 row.className = 'grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-200';
                 row.style.marginBottom = '8px';
                 row.innerHTML = `
-                    <div><label class="block text-[10px] text-slate-500 mb-1">Date</label><input data-bm="date" type="date" class="h-7 px-1 text-xs"></div>
-                    <div><label class="block text-[10px] text-slate-500 mb-1">Total Directors</label><input data-bm="total" type="number" min="1" class="h-7 px-1 text-xs"></div>
-                    <div><label class="block text-[10px] text-slate-500 mb-1">Attended</label><input data-bm="att" type="number" min="0" class="h-7 px-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-500 mb-1 dark:text-slate-400">Date</label><input data-bm="date" type="date" class="h-7 px-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-500 mb-1 dark:text-slate-400">Total Directors</label><input data-bm="total" type="number" min="1" class="h-7 px-1 text-xs"></div>
+                    <div><label class="block text-[10px] text-slate-500 mb-1 dark:text-slate-400">Attended</label><input data-bm="att" type="number" min="0" class="h-7 px-1 text-xs"></div>
                 `;
                 cont.appendChild(row);
             }

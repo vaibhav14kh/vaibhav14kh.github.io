@@ -118,7 +118,7 @@
                     <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
@@ -137,10 +137,10 @@
         <div class="w-full lg:w-[40%] flex flex-col gap-6 min-h-0">
             
             <div class="mb-2">
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1">
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-1 dark:text-white">
                     <span class="gradient-text">Board Resolution Generator</span>
                 </h1>
-                <p class="text-slate-600 text-xs font-medium">Standardized corporate drafting (Companies Act, 2013).</p>
+                <p class="text-slate-600 text-xs font-medium dark:text-slate-400">Standardized corporate drafting (Companies Act, 2013).</p>
             </div>
 
             <!-- Scrollable Input Form -->
@@ -187,32 +187,32 @@
 
                     <!-- Letterhead Details -->
                     <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Letterhead Details</h4>
-                        <div><label class="block text-xs font-bold text-slate-700">Company Name</label><input id="companyName" placeholder="ABC PRIVATE LIMITED"></div>
-                        <div><label class="block text-xs font-bold text-slate-700">CIN</label><input id="cin" placeholder="L12345AB2020PLC012345"></div>
-                        <div><label class="block text-xs font-bold text-slate-700">Registered Office Address</label><textarea id="registeredOffice" placeholder="Full registered office address" rows="2"></textarea></div>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1 dark:text-slate-400">Letterhead Details</h4>
+                        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Company Name</label><input id="companyName" placeholder="ABC PRIVATE LIMITED"></div>
+                        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">CIN</label><input id="cin" placeholder="L12345AB2020PLC012345"></div>
+                        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Registered Office Address</label><textarea id="registeredOffice" placeholder="Full registered office address" rows="2"></textarea></div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-bold text-slate-700">Email</label><input id="email" placeholder="info@company.com"></div>
-                            <div><label class="block text-xs font-bold text-slate-700">Phone</label><input id="phone" placeholder="+91-xxxxxxxxxx"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Email</label><input id="email" placeholder="info@company.com"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Phone</label><input id="phone" placeholder="+91-xxxxxxxxxx"></div>
                         </div>
                     </div>
 
                     <!-- Meeting Details -->
                     <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Meeting Details</h4>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1 dark:text-slate-400">Meeting Details</h4>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-bold text-slate-700">Meeting Date</label><input id="meetingDate" type="date"></div>
-                            <div><label class="block text-xs font-bold text-slate-700">Board Meeting No.</label><input id="meetingNumber" placeholder="e.g. 1/2025-26"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Meeting Date</label><input id="meetingDate" type="date"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Board Meeting No.</label><input id="meetingNumber" placeholder="e.g. 1/2025-26"></div>
                         </div>
-                        <div><label class="block text-xs font-bold text-slate-700">Place of Meeting</label><input id="meetingPlace" placeholder="City / Registered Office"></div>
+                        <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Place of Meeting</label><input id="meetingPlace" placeholder="City / Registered Office"></div>
                     </div>
 
                     <!-- Signatory Details -->
                     <div class="space-y-3">
-                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1">Signatory Details</h4>
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest border-b pb-1 dark:text-slate-400">Signatory Details</h4>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-bold text-slate-700">Name of Director</label><input id="signatoryName" placeholder="Name"></div>
-                            <div><label class="block text-xs font-bold text-slate-700">DIN</label><input id="signatoryDin" placeholder="DIN"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Name of Director</label><input id="signatoryName" placeholder="Name"></div>
+                            <div><label class="block text-xs font-bold text-slate-700 dark:text-slate-300">DIN</label><input id="signatoryDin" placeholder="DIN"></div>
                         </div>
                     </div>
 
@@ -220,7 +220,7 @@
                     <div class="space-y-3">
                         <h4 class="text-xs font-bold text-blue-600 uppercase tracking-widest border-b pb-1">Resolution-Specific Variables</h4>
                         <div id="specificFields" class="bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
-                            <span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>
+                            <span class="text-xs text-slate-500 font-medium dark:text-slate-400">Select a resolution type above to populate relevant fields.</span>
                         </div>
                     </div>
 
@@ -748,7 +748,7 @@ RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby auth
             const key = templateSelect.value;
             specificFieldsDiv.innerHTML = "";
             if (!key || !templates[key]) {
-                specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>';
+                specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium dark:text-slate-400">Select a resolution type above to populate relevant fields.</span>';
                 return;
             }
 
@@ -1112,7 +1112,7 @@ RESOLVED FURTHER THAT any of the Directors of the Company be and are hereby auth
                 el.value = "";
             });
             templateSelect.value = "";
-            specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium">Select a resolution type above to populate relevant fields.</span>';
+            specificFieldsDiv.innerHTML = '<span class="text-xs text-slate-500 font-medium dark:text-slate-400">Select a resolution type above to populate relevant fields.</span>';
             updatePreview();
         });
 

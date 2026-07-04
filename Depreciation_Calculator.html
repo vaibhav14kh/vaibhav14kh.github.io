@@ -490,17 +490,17 @@
                             <!-- Unified Export Toolbar -->
                             <div class="flex items-center space-x-2 export-toolbar">
                                 <button type="button" id="copyToClipboardBtn"
-                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors"
+                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors dark:text-slate-300 dark:border-slate-600"
                                     title="Copy to Clipboard">
-                                    <i class="fas fa-copy mr-1 text-gray-600"></i><span id="copyText">Copy</span>
+                                    <i class="fas fa-copy mr-1 text-gray-600 dark:text-slate-400"></i><span id="copyText">Copy</span>
                                 </button>
                                 <button type="button" id="printBtn"
-                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors"
+                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors dark:text-slate-300 dark:border-slate-600"
                                     title="Print">
-                                    <i class="fas fa-print mr-1 text-gray-600"></i>Print
+                                    <i class="fas fa-print mr-1 text-gray-600 dark:text-slate-400"></i>Print
                                 </button>
                                 <button id="exportClientPdfBtn" type="button"
-                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center transition-colors"
+                                    class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center transition-colors dark:text-slate-300 dark:border-slate-600"
                                     title="Export PDF">
                                     <i class="fas fa-file-pdf mr-1 text-red-600"></i>PDF
                                 </button>
@@ -518,7 +518,7 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td colspan="3" class="text-center italic text-slate-500 py-4">Enter the asset
+                                        <td colspan="3" class="text-center italic text-slate-500 py-4 dark:text-slate-400">Enter the asset
                                             cost.</td>
                                     </tr>
                                 </tbody>
@@ -647,7 +647,7 @@
             document.getElementById('depOut').textContent = '₹' + fmt(firstDep);
             document.getElementById('depSub').textContent = method.toUpperCase() + ' · first year pro-rated ' + firstDays + '/365 days';
 
-            var tbodyHtml = (rows || '<tr><td colspan="3" class="text-center italic text-slate-500 py-4">Enter the asset cost.</td></tr>');
+            var tbodyHtml = (rows || '<tr><td colspan="3" class="text-center italic text-slate-500 py-4 dark:text-slate-400">Enter the asset cost.</td></tr>');
             document.getElementById('sch').innerHTML = '<thead><tr><th>Period</th><th class="r">Depreciation</th><th class="r">Closing WDV</th></tr></thead><tbody>' + tbodyHtml + '</tbody>';
 
             var noteHtml = method === 'wdv' ? '<div class="mt-3 p-3 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg text-xs font-medium">WDV rate derived: ' + ((1 - Math.pow((resid || 0.0001), 1 / life)) * 100).toFixed(2) + '% p.a.</div>' : '';

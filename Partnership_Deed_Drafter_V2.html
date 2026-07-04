@@ -96,7 +96,7 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8 dark:bg-slate-900/80 dark:border-slate-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -104,7 +104,7 @@
                     <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
@@ -121,10 +121,10 @@
         
         <!-- Page Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
                 <span class="gradient-text">Partnership Deed Drafter</span>
             </h1>
-            <p class="text-slate-600 text-sm font-medium">Automated legal drafting with dynamic partner clauses and formatting.</p>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Automated legal drafting with dynamic partner clauses and formatting.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -153,51 +153,51 @@
                 <form id="deed-form" class="space-y-8 overflow-y-auto pr-4 custom-scrollbar flex-grow">
                     
                     <!-- General Details -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5 dark:text-slate-200 dark:border-slate-700">
                             <i class="fas fa-building mr-2 text-blue-500"></i>General Details
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Firm Name (M/s)</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Firm Name (M/s)</label>
                                 <input type="text" id="firm_name" placeholder="e.g., Acme Enterprises">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Place of Execution</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Place of Execution</label>
                                 <input type="text" id="execution_place" placeholder="e.g., Mumbai">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Deed Date</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Deed Date</label>
                                 <input type="date" id="deed_date">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Commencement Date</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Commencement Date</label>
                                 <input type="date" id="date_of_commencement">
                             </div>
                         </div>
                     </div>
 
                     <!-- Business Details -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5 dark:text-slate-200 dark:border-slate-700">
                             <i class="fas fa-briefcase mr-2 text-purple-500"></i>Business Details
                         </h3>
                         <div class="space-y-5">
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Business Description</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Business Description</label>
                                 <textarea id="business_description" rows="2" placeholder="Nature of business..."></textarea>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1.5">Principal Address</label>
+                                <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Principal Address</label>
                                 <textarea id="principal_place_address" rows="2" placeholder="Full address..."></textarea>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div class="md:col-span-2">
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Object Clause (a)</label>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Object Clause (a)</label>
                                     <input type="text" id="object_clause_a" placeholder="Primary object...">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-slate-700 mb-1.5">Total Capital (Words)</label>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1.5 dark:text-slate-300">Total Capital (Words)</label>
                                     <input type="text" id="total_capital" placeholder="e.g. One Lakh">
                                 </div>
                             </div>
@@ -205,8 +205,8 @@
                     </div>
 
                     <!-- Partner 1 -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5 dark:text-slate-200 dark:border-slate-700">
                             <i class="fas fa-user mr-2 text-green-500"></i>Partner 1 (First Party)
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -220,8 +220,8 @@
                     </div>
 
                     <!-- Partner 2 -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-100 pb-3 mb-5 dark:text-slate-200 dark:border-slate-700">
                             <i class="fas fa-user mr-2 text-green-500"></i>Partner 2 (Second Party)
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -241,7 +241,7 @@
                         </h3>
                         <div class="space-y-6">
                             <!-- Partner 3 -->
-                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm">
+                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm dark:bg-slate-800">
                                 <h4 class="text-xs font-black text-orange-700 uppercase tracking-wider mb-4">Partner 3</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input type="text" id="partner3_name" placeholder="Full Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
@@ -253,7 +253,7 @@
                                 </div>
                             </div>
                             <!-- Partner 4 -->
-                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm">
+                            <div class="bg-white p-5 rounded-lg border border-orange-200 shadow-sm dark:bg-slate-800">
                                 <h4 class="text-xs font-black text-orange-700 uppercase tracking-wider mb-4">Partner 4</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input type="text" id="partner4_name" placeholder="Full Name" class="border-orange-200 focus:border-orange-400 focus:ring-orange-400">
@@ -268,9 +268,9 @@
                     </div>
 
                     <!-- Witnesses -->
-                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-3 mb-5">
-                            <i class="fas fa-pen-nib mr-2 text-slate-500"></i>Witnesses
+                    <div class="bg-slate-50 p-5 rounded-xl border border-slate-200 shadow-sm dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest border-b border-slate-200 pb-3 mb-5 dark:text-slate-200 dark:border-slate-700">
+                            <i class="fas fa-pen-nib mr-2 text-slate-500 dark:text-slate-400"></i>Witnesses
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <input type="text" id="witness1_name" placeholder="Witness 1 Name">
@@ -281,11 +281,11 @@
                 </form>
 
                 <!-- Form Actions (Sticky Bottom) -->
-                <div class="flex gap-4 pt-5 mt-auto bg-white border-t border-slate-100 flex-shrink-0">
+                <div class="flex gap-4 pt-5 mt-auto bg-white border-t border-slate-100 flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
                     <button type="button" id="generate-button" class="flex-1 btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-lg py-3 text-base">
                         <i class="fas fa-magic mr-2"></i> Generate Deed
                     </button>
-                    <button type="reset" id="reset-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm py-3" onclick="document.getElementById('deed-form').reset();">
+                    <button type="reset" id="reset-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm py-3 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" onclick="document.getElementById('deed-form').reset();">
                         Reset
                     </button>
                 </div>
@@ -293,14 +293,14 @@
 
         <!-- Right Column: Preview & Export -->
         <div class="glass-card flex flex-col h-[750px] overflow-hidden">
-            <div class="p-5 bg-white border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 flex-shrink-0">
-                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest"><i class="fas fa-file-contract mr-2 text-blue-600"></i>Deed Preview</h2>
+            <div class="p-5 bg-white border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 flex-shrink-0 dark:bg-slate-800 dark:border-slate-700">
+                <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest dark:text-slate-200"><i class="fas fa-file-contract mr-2 text-blue-600"></i>Deed Preview</h2>
                 
                 <div class="flex flex-wrap justify-center gap-3 hidden" id="action-buttons">
-                    <button id="copy-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" title="Copy Text">
+                    <button id="copy-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" title="Copy Text">
                         <i class="fas fa-copy"></i>
                     </button>
-                    <button id="print-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm" title="Print">
+                    <button id="print-button" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600" title="Print">
                         <i class="fas fa-print"></i>
                     </button>
                     <button id="download-word-button" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-sm" title="Download Word">

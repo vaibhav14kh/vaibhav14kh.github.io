@@ -1225,11 +1225,11 @@
                 <div class="flex items-center gap-3">
                                 <!-- Template Export/Import Buttons -->
             <button @click="exportTemplate()"
-                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition">
+                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition dark:bg-slate-800">
                 <i class="fas fa-download"></i> Export Template
             </button>
             <button @click="importTemplate()"
-                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition">
+                class="flex items-center gap-2 px-3 py-1 bg-white border border-purple-600 text-purple-600 rounded hover:bg-purple-50 text-xs font-semibold transition dark:bg-slate-800">
                 <i class="fas fa-upload"></i> Import Template
             </button>
 
@@ -1254,20 +1254,20 @@
 
         <!-- ================= LEFT PANEL: INPUT FORM ================= -->
         <div id="input-panel"
-            class="w-1/2 bg-gray-50 flex flex-col border-r border-gray-300 transition-all duration-300 shadow-lg overflow-y-auto">
+            class="w-1/2 bg-gray-50 flex flex-col border-r border-gray-300 transition-all duration-300 shadow-lg overflow-y-auto dark:bg-slate-800 dark:border-slate-600">
             <!-- TABS -->
-            <div class="flex bg-white border-b border-gray-200 sticky top-0 z-10">
+            <div class="flex bg-white border-b border-gray-200 sticky top-0 z-10 dark:bg-slate-800 dark:border-slate-700">
                 <button @click="activeTab = 'firm'"
                     :class="{'border-b-2 border-blue-600 text-blue-600 bg-blue-50': activeTab==='firm'}"
-                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors">1.
+                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors dark:text-slate-400">1.
                     Firm Config</button>
                 <button @click="activeTab = 'client'"
                     :class="{'border-b-2 border-blue-600 text-blue-600 bg-blue-50': activeTab==='client'}"
-                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors">2.
+                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors dark:text-slate-400">2.
                     Client Info</button>
                 <button @click="activeTab = 'financials'"
                     :class="{'border-b-2 border-blue-600 text-blue-600 bg-blue-50': activeTab==='financials'}"
-                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors">3.
+                    class="flex-1 py-3 text-xs font-bold text-gray-600 uppercase hover:bg-gray-50 transition-colors dark:text-slate-400">3.
                     Financials</button>
             </div>
 
@@ -1275,67 +1275,67 @@
 
                 <!-- TAB 1: FIRM CONFIG -->
                 <div x-show="activeTab === 'firm'" class="space-y-4" x-transition>
-                    <div class="bg-white p-4 rounded border shadow-sm space-y-3">
+                    <div class="bg-white p-4 rounded border shadow-sm space-y-3 dark:bg-slate-800">
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-bold text-gray-500">Firm Type</label><select
+                            <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Firm Type</label><select
                                     x-model="firm.type" class="form-select-sm border px-2">
                                     <option>Proprietorship</option>
                                     <option>Partnership</option>
                                     <option>LLP</option>
                                 </select></div>
-                            <div><label class="block text-xs font-bold text-gray-500">Est. Since</label><input
+                            <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Est. Since</label><input
                                     type="text" x-model="firm.est" class="form-input-sm border px-2"
                                     placeholder="Optional"></div>
                         </div>
-                        <div><label class="block text-xs font-bold text-gray-500">Firm Name <span
+                        <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Firm Name <span
                                     class="req-star">*</span></label><input type="text" x-model="firm.name"
                                 class="form-input-sm border px-2 font-bold"></div>
-                        <div><label class="block text-xs font-bold text-gray-500">Slogan</label><input type="text"
+                        <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Slogan</label><input type="text"
                                 x-model="firm.slogan" class="form-input-sm border px-2" placeholder="Optional"></div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-xs font-bold text-gray-500">Website</label><input type="text"
+                            <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Website</label><input type="text"
                                     x-model="firm.web" class="form-input-sm border px-2" placeholder="Optional"></div>
-                            <div><label class="block text-xs font-bold text-gray-500">Phone No <span
+                            <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Phone No <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.phone"
                                     class="form-input-sm border px-2"></div>
                         </div>
-                        <div><label class="block text-xs font-bold text-gray-500">Email Add <span
+                        <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Email Add <span
                                     class="req-star">*</span></label><input type="text" x-model="firm.email"
                                 class="form-input-sm border px-2"></div>
-                        <div><label class="block text-xs font-bold text-gray-500">Address <span
+                        <div><label class="block text-xs font-bold text-gray-500 dark:text-slate-400">Address <span
                                     class="req-star">*</span></label><textarea x-model="firm.address" rows="2"
                                 class="w-full text-xs border rounded p-2"></textarea></div>
                         <div class="grid grid-cols-2 gap-3 mt-2 border-t pt-2">
-                            <div><label class="block text-[10px] font-bold text-gray-500">PAN <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">PAN <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.pan"
                                     class="form-input-sm border px-2 uppercase"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">GSTN</label><input type="text"
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">GSTN</label><input type="text"
                                     x-model="firm.gstn" class="form-input-sm border px-2" placeholder="Optional"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">FRN No <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">FRN No <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.frn"
                                     class="form-input-sm border px-2"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">MSME No.</label><input
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">MSME No.</label><input
                                     type="text" x-model="firm.msme" class="form-input-sm border px-2"
                                     placeholder="Optional"></div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded border shadow-sm space-y-3">
+                    <div class="bg-white p-4 rounded border shadow-sm space-y-3 dark:bg-slate-800">
                         <h4 class="text-xs font-bold text-blue-600 uppercase border-b pb-1">Signatory Details</h4>
                         <div class="grid grid-cols-2 gap-3">
-                            <div><label class="block text-[10px] font-bold text-gray-500">Partner/Prop Name <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">Partner/Prop Name <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.partner"
                                     class="form-input-sm border px-2"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">MRN No <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">MRN No <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.mno"
                                     class="form-input-sm border px-2"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">UDIN <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">UDIN <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.udin"
                                     class="form-input-sm border px-2 bg-yellow-50"></div>
-                            <div><label class="block text-[10px] font-bold text-gray-500">Date <span
+                            <div><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">Date <span
                                         class="req-star">*</span></label><input type="date" x-model="firm.date"
                                     class="form-input-sm border px-2"></div>
-                            <div class="col-span-2"><label class="block text-[10px] font-bold text-gray-500">Place <span
+                            <div class="col-span-2"><label class="block text-[10px] font-bold text-gray-500 dark:text-slate-400">Place <span
                                         class="req-star">*</span></label><input type="text" x-model="firm.place"
                                     class="form-input-sm border px-2"></div>
                         </div>
@@ -1344,10 +1344,10 @@
 
                 <!-- TAB 2: CLIENT INFO -->
                 <div x-show="activeTab === 'client'" class="space-y-4" x-transition>
-                    <div class="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-100">
+                    <div class="flex items-center gap-2 bg-blue-50 p-2 rounded border border-blue-100 dark:bg-blue-900/20">
                         <span class="text-xs font-bold text-blue-800">Applicants:</span>
                         <select x-model.number="clientCount"
-                            class="form-select-sm w-auto pl-2 pr-8 border-blue-200 text-blue-800 font-bold bg-white">
+                            class="form-select-sm w-auto pl-2 pr-8 border-blue-200 text-blue-800 font-bold bg-white dark:bg-slate-800">
                             <option value="1">1 Person</option>
                             <option value="2">2 People</option>
                             <option value="3">3 People</option>
@@ -1355,9 +1355,9 @@
                         </select>
                     </div>
                     <template x-for="i in clientCount" :key="i">
-                        <div class="p-3 border rounded shadow-sm bg-white relative">
+                        <div class="p-3 border rounded shadow-sm bg-white relative dark:bg-slate-800">
                             <div
-                                class="absolute top-0 right-0 bg-gray-200 px-2 py-0.5 text-[9px] font-bold text-gray-600 rounded-bl">
+                                class="absolute top-0 right-0 bg-gray-200 px-2 py-0.5 text-[9px] font-bold text-gray-600 rounded-bl dark:text-slate-400">
                                 APP <span x-text="i"></span></div>
                             <label class="block text-[10px] font-bold text-gray-400 mb-1">NAME <span
                                     class="req-star">*</span></label>
@@ -1387,8 +1387,8 @@
                             </div>
                         </div>
                     </template>
-                    <div class="bg-white p-3 border rounded shadow-sm"><label
-                            class="block text-xs font-bold text-gray-500 mb-1">Address <span
+                    <div class="bg-white p-3 border rounded shadow-sm dark:bg-slate-800"><label
+                            class="block text-xs font-bold text-gray-500 mb-1 dark:text-slate-400">Address <span
                                 class="req-star">*</span></label><textarea x-model="commonAddress" rows="2"
                             class="w-full text-xs border rounded p-2"></textarea></div>
                 </div>
@@ -1406,7 +1406,7 @@
                                 <div class="grid grid-cols-3 gap-2">
                                     <template x-for="(y, i) in financials.years" :key="i">
                                         <input type="text" x-model="financials.years[i]"
-                                            class="form-input-sm border px-1 text-center font-bold bg-white text-gray-700">
+                                            class="form-input-sm border px-1 text-center font-bold bg-white text-gray-700 dark:bg-slate-800 dark:text-slate-300">
                                     </template>
                                 </div>
                             </div>
@@ -1422,7 +1422,7 @@
                                 <label
                                     class="block text-[9px] font-bold text-indigo-600 uppercase tracking-wide">Currency</label>
                                 <select x-model="financials.forex.code" @change="updateForexDetails()"
-                                    class="form-select-sm border-indigo-200 font-bold text-indigo-900 bg-white">
+                                    class="form-select-sm border-indigo-200 font-bold text-indigo-900 bg-white dark:bg-slate-800">
                                     <template x-for="code in financials.currencyList" :key="code">
                                         <option :value="code" x-text="financials.currencyMeta[code].label"></option>
                                     </template>
@@ -1431,20 +1431,20 @@
                             <div class="w-1/4"><label
                                     class="block text-[9px] font-bold text-indigo-600 uppercase tracking-wide">Exact
                                     Rate</label><input type="number" x-model="financials.forex.rate"
-                                    class="form-input-sm border-indigo-200 font-bold text-indigo-900 bg-white"></div>
+                                    class="form-input-sm border-indigo-200 font-bold text-indigo-900 bg-white dark:bg-slate-800"></div>
                             <div class="w-1/4"><label
                                     class="block text-[9px] font-bold text-red-600 uppercase tracking-wide">Calc
                                     Rate</label><input type="number" x-model="financials.forex.calcRate"
                                     @input="updateCalcRate"
-                                    class="form-input-sm border-red-200 font-bold text-red-900 bg-white"></div>
+                                    class="form-input-sm border-red-200 font-bold text-red-900 bg-white dark:bg-slate-800"></div>
                             <button @click="fetchRate"
                                 class="btn-sm bg-green-600 text-white h-8 mb-0.5 whitespace-nowrap">Fetch Rate</button>
                         </div>
                     </div>
 
                     <!-- SECTION 2: STATEMENT OF INCOME -->
-                    <div class="bg-white border rounded shadow-sm overflow-hidden">
-                        <div class="bg-gray-100 px-3 py-2 border-b border-gray-200">
+                    <div class="bg-white border rounded shadow-sm overflow-hidden dark:bg-slate-800">
+                        <div class="bg-gray-100 px-3 py-2 border-b border-gray-200 dark:border-slate-700">
                             <h4 class="sec-title">Section 2 - Statement Of Income</h4>
                         </div>
                         <template x-for="(client, cIdx) in clients.slice(0, clientCount)" :key="cIdx">
@@ -1456,15 +1456,15 @@
                                         <tr>
                                             <th rowspan="2" class="w-32 text-left pl-2 align-middle border-b">
                                                 Particulars</th>
-                                            <th colspan="3" class="border-b bg-gray-50">INR</th>
-                                            <th colspan="3" class="border-b bg-blue-50"
+                                            <th colspan="3" class="border-b bg-gray-50 dark:bg-slate-800">INR</th>
+                                            <th colspan="3" class="border-b bg-blue-50 dark:bg-blue-900/20"
                                                 x-text="financials.forex.currency">
                                             </th>
                                         </tr>
                                         <tr><template x-for="year in financials.years">
                                                 <th class="w-24 border" x-text="year"></th>
                                             </template><template x-for="year in financials.years">
-                                                <th class="w-24 border text-blue-600 bg-blue-50" x-text="year"></th>
+                                                <th class="w-24 border text-blue-600 bg-blue-50 dark:bg-blue-900/20" x-text="year"></th>
                                             </template></tr>
                                     </thead>
                                     <tbody>
@@ -1478,7 +1478,7 @@
                                                             class="w-full text-right px-1 text-xs h-6 border-0 bg-transparent"
                                                             placeholder="0"></td>
                                                 </template><template x-for="(year, yIdx) in financials.years">
-                                                    <td class="p-0.5 border bg-blue-50 text-right text-xs text-blue-800 font-medium"
+                                                    <td class="p-0.5 border bg-blue-50 text-right text-xs text-blue-800 font-medium dark:bg-blue-900/20"
                                                         x-text="calcFX(financials.income[cIdx][yIdx][key])"></td>
                                                 </template>
                                             </tr>
@@ -1491,19 +1491,19 @@
                                                 <td class="text-right text-xs px-1 border"
                                                     x-text="formatVal(calculateGrossTotal(cIdx, yIdx))"></td>
                                             </template><template x-for="(year, yIdx) in financials.years">
-                                                <td class="text-right text-xs px-1 border bg-blue-50 text-blue-800"
+                                                <td class="text-right text-xs px-1 border bg-blue-50 text-blue-800 dark:bg-blue-900/20"
                                                     x-text="calcFX(calculateGrossTotal(cIdx, yIdx))"></td>
                                             </template>
                                         </tr>
 
                                         <!-- Less Agri (Display) -->
                                         <tr>
-                                            <td class="input-grid-label text-gray-500 italic">Less: Agri Inc.</td>
+                                            <td class="input-grid-label text-gray-500 italic dark:text-slate-400">Less: Agri Inc.</td>
                                             <template x-for="(year, yIdx) in financials.years">
-                                                <td class="text-right text-xs px-1 border text-gray-500"
+                                                <td class="text-right text-xs px-1 border text-gray-500 dark:text-slate-400"
                                                     x-text="formatVal(financials.income[cIdx][yIdx].agri)"></td>
                                             </template><template x-for="(year, yIdx) in financials.years">
-                                                <td class="text-right text-xs px-1 border bg-blue-50 text-gray-500"
+                                                <td class="text-right text-xs px-1 border bg-blue-50 text-gray-500 dark:bg-blue-900/20 dark:text-slate-400"
                                                     x-text="calcFX(financials.income[cIdx][yIdx].agri)"></td>
                                             </template>
                                         </tr>
@@ -1517,7 +1517,7 @@
                                                         class="w-full text-right px-1 text-xs h-6 border border-red-100 bg-red-50 text-red-700 font-bold"
                                                         placeholder="0"></td>
                                             </template><template x-for="(year, yIdx) in financials.years">
-                                                <td class="text-right text-xs px-1 border bg-blue-50 text-red-700"
+                                                <td class="text-right text-xs px-1 border bg-blue-50 text-red-700 dark:bg-blue-900/20"
                                                     x-text="calcFX(financials.income[cIdx][yIdx].deduction)"></td>
                                             </template>
                                         </tr>
@@ -1542,18 +1542,18 @@
                     <!-- SECTION 3: ASSETS & LIABILITIES -->
                     <div class="space-y-4">
                         <div
-                            class="bg-gray-200 px-3 py-2 rounded-t border border-gray-300 font-bold text-xs text-gray-800 uppercase">
+                            class="bg-gray-200 px-3 py-2 rounded-t border border-gray-300 font-bold text-xs text-gray-800 uppercase dark:text-slate-200 dark:border-slate-600">
                             Section 3 - Assets & Liabilities</div>
 
                         <!-- 3A -->
                         <div class="border-l-4 border-blue-500 pl-2 ml-1">
-                            <h5 class="text-sm font-bold text-gray-800">3A. Movable Assets</h5>
+                            <h5 class="text-sm font-bold text-gray-800 dark:text-slate-200">3A. Movable Assets</h5>
                             <div class="mt-2 pl-2">
-                                <h6 class="text-xs font-bold text-blue-700 bg-blue-50 p-1">3A1. Acceptable Assets</h6>
+                                <h6 class="text-xs font-bold text-blue-700 bg-blue-50 p-1 dark:bg-blue-900/20">3A1. Acceptable Assets</h6>
 
                                 <!-- 3A1.a Banks -->
                                 <div class="sec-subtitle">3A1.a - Bank Balances</div>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
                                             <tr>
@@ -1564,7 +1564,7 @@
                                                 <th>ACC/ISIN</th>
                                                 <th>DATE</th>
                                                 <th>BALANCE (INR)</th>
-                                                <th class="bg-blue-50 text-blue-800" x-text="financials.forex.currency">
+                                                <th class="bg-blue-50 text-blue-800 dark:bg-blue-900/20" x-text="financials.forex.currency">
                                                 </th>
                                                 <th class="w-6"></th>
                                             </tr>
@@ -1590,7 +1590,7 @@
                                                             class="w-full text-xs h-6 px-1"></td>
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold"></td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button
                                                             @click="removeItem('acceptable', 'banks', i)"
@@ -1599,7 +1599,7 @@
                                             </template></tbody>
                                     </table>
                                     <button @click="addItem('acceptable', 'banks')"
-                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100">+ Add
+                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100 dark:bg-slate-800">+ Add
                                         Row</button>
                                 </div>
                                 <div class="sub-table-total bg-blue-100 text-blue-800 mb-2"><span>Total
@@ -1611,7 +1611,7 @@
 
                                 <!-- 3A1.b Current Inv -->
                                 <div class="sec-subtitle">3A1.b - Current Investments</div>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
                                             <tr>
@@ -1622,7 +1622,7 @@
                                                 <th>ACC/ISIN</th>
                                                 <th>DATE</th>
                                                 <th>BALANCE (INR)</th>
-                                                <th class="bg-blue-50 text-blue-800" x-text="financials.forex.currency">
+                                                <th class="bg-blue-50 text-blue-800 dark:bg-blue-900/20" x-text="financials.forex.currency">
                                                 </th>
                                                 <th class="w-6"></th>
                                             </tr>
@@ -1648,7 +1648,7 @@
                                                             class="w-full text-xs h-6 px-1"></td>
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold"></td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button
                                                             @click="removeItem('acceptable', 'currentInv', i)"
@@ -1657,7 +1657,7 @@
                                             </template></tbody>
                                     </table>
                                     <button @click="addItem('acceptable', 'currentInv')"
-                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100">+ Add
+                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100 dark:bg-slate-800">+ Add
                                         Row</button>
                                 </div>
                                 <div class="sub-table-total bg-blue-100 text-blue-800"><span>Total Current
@@ -1674,7 +1674,7 @@
 
                                 <!-- 3A2.a Non Current -->
                                 <div class="sec-subtitle">3A2.a - Non-Current Investments</div>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
                                             <tr>
@@ -1684,7 +1684,7 @@
                                                 <th>DETAILS</th>
                                                 <th>DATE</th>
                                                 <th>BALANCE (INR)</th>
-                                                <th class="bg-blue-50 text-blue-800" x-text="financials.forex.currency">
+                                                <th class="bg-blue-50 text-blue-800 dark:bg-blue-900/20" x-text="financials.forex.currency">
                                                 </th>
                                                 <th class="w-6"></th>
                                             </tr>
@@ -1709,7 +1709,7 @@
                                                             class="w-full text-xs h-6 px-1"></td>
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold"></td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button
                                                             @click="removeItem('nonAcceptable', 'nonCurrentInv', i)"
@@ -1718,7 +1718,7 @@
                                             </template></tbody>
                                     </table>
                                     <button @click="addItem('nonAcceptable', 'nonCurrentInv')"
-                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100">+ Add
+                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100 dark:bg-slate-800">+ Add
                                         Row</button>
                                 </div>
                                 <div class="sub-table-total bg-red-100 text-red-800 mb-2"><span>Total
@@ -1730,7 +1730,7 @@
 
                                 <!-- 3A2.b Other -->
                                 <div class="sec-subtitle">3A2.b - Other Investments</div>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
                                             <tr>
@@ -1740,7 +1740,7 @@
                                                 <th>DETAILS</th>
                                                 <th>DATE</th>
                                                 <th>BALANCE (INR)</th>
-                                                <th class="bg-blue-50 text-blue-800" x-text="financials.forex.currency">
+                                                <th class="bg-blue-50 text-blue-800 dark:bg-blue-900/20" x-text="financials.forex.currency">
                                                 </th>
                                                 <th class="w-6"></th>
                                             </tr>
@@ -1764,7 +1764,7 @@
                                                             class="w-full text-xs h-6 px-1"></td>
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold"></td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button
                                                             @click="removeItem('nonAcceptable', 'otherInv', i)"
@@ -1773,7 +1773,7 @@
                                             </template></tbody>
                                     </table>
                                     <button @click="addItem('nonAcceptable', 'otherInv')"
-                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100">+ Add
+                                        class="btn-sm bg-gray-50 mt-1 w-full text-center hover:bg-gray-100 dark:bg-slate-800">+ Add
                                         Row</button>
                                 </div>
                                 <div class="sub-table-total bg-red-100 text-red-800"><span>Total Other
@@ -1787,8 +1787,8 @@
 
                         <!-- 3B -->
                         <div class="border-l-4 border-green-500 pl-2 ml-1 mt-4">
-                            <h5 class="text-sm font-bold text-gray-800">3B. Immovable Assets</h5>
-                            <div class="bg-white border rounded p-2 mt-2 mb-0">
+                            <h5 class="text-sm font-bold text-gray-800 dark:text-slate-200">3B. Immovable Assets</h5>
+                            <div class="bg-white border rounded p-2 mt-2 mb-0 dark:bg-slate-800">
                                 <table class="input-grid-table">
                                     <thead>
                                         <tr>
@@ -1798,10 +1798,10 @@
                                             <th>Owner</th>
                                             <th>Share%</th>
                                             <th>Valuer</th>
-                                            <th class="bg-gray-50 border-l border-r">Book Val</th>
-                                            <th class="bg-gray-50 border-r">Mkt Val</th>
+                                            <th class="bg-gray-50 border-l border-r dark:bg-slate-800">Book Val</th>
+                                            <th class="bg-gray-50 border-r dark:bg-slate-800">Mkt Val</th>
                                             <th class="bg-green-50 text-green-900">Final (INR)</th>
-                                            <th class="bg-blue-50 text-blue-800" x-text="financials.forex.currency">
+                                            <th class="bg-blue-50 text-blue-800 dark:bg-blue-900/20" x-text="financials.forex.currency">
                                             </th>
                                             <th></th>
                                         </tr>
@@ -1810,7 +1810,7 @@
                                         <template x-for="(item, i) in financials.immovable" :key="i">
                                             <tr>
                                                 <td class="p-0.5"><select x-model="item.type"
-                                                        class="w-24 text-xs h-8 border border-gray-200">
+                                                        class="w-24 text-xs h-8 border border-gray-200 dark:border-slate-700">
                                                         <option>Residential House</option>
                                                         <option>Residential Land</option>
                                                         <option>Agricultural Land</option>
@@ -1818,33 +1818,33 @@
                                                         <option>Commercial Land</option>
                                                     </select></td>
                                                 <td class="p-0.5"><textarea x-model="item.address" rows="1"
-                                                        class="w-full text-xs border border-gray-200 p-1"></textarea>
+                                                        class="w-full text-xs border border-gray-200 p-1 dark:border-slate-700"></textarea>
                                                 </td>
                                                 <td class="p-0.5"><input type="text" x-model="item.area"
-                                                        class="w-16 text-xs h-8 px-1 border border-gray-200"></td>
+                                                        class="w-16 text-xs h-8 px-1 border border-gray-200 dark:border-slate-700"></td>
                                                 <td class="p-0.5"><select x-model="item.owner"
-                                                        class="w-20 text-xs h-8 border border-gray-200">
+                                                        class="w-20 text-xs h-8 border border-gray-200 dark:border-slate-700">
                                                         <option value="">Select</option><template
                                                             x-for="c in clients.slice(0,clientCount)">
                                                             <option :value="c.name" x-text="c.name"></option>
                                                         </template>
                                                     </select></td>
                                                 <td class="p-0.5"><input type="number" x-model="item.share"
-                                                        class="w-12 text-center text-xs h-8 border border-gray-200"
+                                                        class="w-12 text-center text-xs h-8 border border-gray-200 dark:border-slate-700"
                                                         placeholder="100"></td>
                                                 <td class="p-0.5"><input type="text" x-model="item.valuer"
-                                                        class="w-20 text-xs h-8 px-1 border border-gray-200"></td>
-                                                <td class="p-0.5 bg-gray-50 border-l border-r"><input type="number"
+                                                        class="w-20 text-xs h-8 px-1 border border-gray-200 dark:border-slate-700"></td>
+                                                <td class="p-0.5 bg-gray-50 border-l border-r dark:bg-slate-800"><input type="number"
                                                         x-model="item.bookVal"
-                                                        class="w-20 text-right text-xs h-8 bg-white border border-gray-300"
+                                                        class="w-20 text-right text-xs h-8 bg-white border border-gray-300 dark:bg-slate-800 dark:border-slate-600"
                                                         placeholder="Book"></td>
-                                                <td class="p-0.5 bg-gray-50 border-r"><input type="number"
+                                                <td class="p-0.5 bg-gray-50 border-r dark:bg-slate-800"><input type="number"
                                                         x-model="item.marketVal"
-                                                        class="w-20 text-right text-xs h-8 bg-white border border-gray-300"
+                                                        class="w-20 text-right text-xs h-8 bg-white border border-gray-300 dark:bg-slate-800 dark:border-slate-600"
                                                         placeholder="Market"></td>
                                                 <td class="p-0.5 bg-green-50 text-right text-xs font-bold text-green-800"
                                                     x-text="formatVal(calcPropVal(item))"></td>
-                                                <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800"
+                                                <td class="p-0.5 bg-blue-50 text-right text-xs font-medium text-blue-800 dark:bg-blue-900/20"
                                                     x-text="calcFX(calcPropVal(item))"></td>
                                                 <td class="text-center"><button @click="removeImmovable(i)"
                                                         class="text-red-500 hover:text-red-700">×</button></td>
@@ -1863,13 +1863,13 @@
 
                         <!-- 3D -->
                         <div class="border-l-4 border-red-500 pl-2 ml-1 mt-4">
-                            <h5 class="text-sm font-bold text-gray-800">3D. Loans & Liabilities</h5>
+                            <h5 class="text-sm font-bold text-gray-800 dark:text-slate-200">3D. Loans & Liabilities</h5>
                             <div class="mt-2 pl-2">
                                 <h6 class="text-xs font-bold text-red-700 bg-red-50 p-1">3D1. Secured Loans</h6>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
-                                            <tr class="text-[9px] text-gray-500 text-left">
+                                            <tr class="text-[9px] text-gray-500 text-left dark:text-slate-400">
                                                 <th class="w-6 text-center">#</th>
                                                 <th>Type</th>
                                                 <th>Owner</th>
@@ -1903,7 +1903,7 @@
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold text-red-700">
                                                     </td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button @click="removeLoan('secured', i)"
                                                             class="text-red-500">×</button></td>
@@ -1919,10 +1919,10 @@
                             </div>
                             <div class="mt-2 pl-2">
                                 <h6 class="text-xs font-bold text-red-700 bg-red-50 p-1">3D2. Unsecured Loans</h6>
-                                <div class="bg-white border rounded p-2 mb-0">
+                                <div class="bg-white border rounded p-2 mb-0 dark:bg-slate-800">
                                     <table class="input-grid-table">
                                         <thead>
-                                            <tr class="text-[9px] text-gray-500 text-left">
+                                            <tr class="text-[9px] text-gray-500 text-left dark:text-slate-400">
                                                 <th class="w-6 text-center">#</th>
                                                 <th>Type</th>
                                                 <th>Owner</th>
@@ -1955,7 +1955,7 @@
                                                     <td class="p-0.5"><input type="number" x-model="item.amt"
                                                             class="w-full text-right text-xs h-6 px-1 font-bold text-red-700">
                                                     </td>
-                                                    <td class="p-0.5 bg-blue-50 text-right text-xs text-blue-800"
+                                                    <td class="p-0.5 bg-blue-50 text-right text-xs text-blue-800 dark:bg-blue-900/20"
                                                         x-text="calcFX(item.amt)"></td>
                                                     <td class="text-center"><button @click="removeLoan('unsecured', i)"
                                                             class="text-red-500">×</button></td>
@@ -1984,10 +1984,10 @@
                 <div class="flex justify-between items-start mb-2">
                     <div class="w-32"><img src="CALOGO V1.jpg" alt="LOGO" class="w-full h-auto object-contain"></div>
                     <div class="text-right">
-                        <h1 class="text-2xl font-bold text-gray-900 leading-none mb-1" x-text="firm.name"></h1>
-                        <p class="doc-text-12 font-bold text-gray-800 leading-tight">Chartered Accountants</p>
-                        <p class="doc-text-12 font-bold text-gray-800 leading-tight" x-text="firm.est"></p>
-                        <p class="text-xs font-bold text-gray-600 mt-1" x-text="firm.slogan"></p>
+                        <h1 class="text-2xl font-bold text-gray-900 leading-none mb-1 dark:text-white" x-text="firm.name"></h1>
+                        <p class="doc-text-12 font-bold text-gray-800 leading-tight dark:text-slate-200">Chartered Accountants</p>
+                        <p class="doc-text-12 font-bold text-gray-800 leading-tight dark:text-slate-200" x-text="firm.est"></p>
+                        <p class="text-xs font-bold text-gray-600 mt-1 dark:text-slate-400" x-text="firm.slogan"></p>
                     </div>
                 </div>
                 <div class="doc-header-line"></div>
@@ -2003,7 +2003,7 @@
                         <div class="text-right w-1/3"><span x-text="firm.address"></span></div>
                     </div>
                     <div
-                        class="text-[10px] text-center border border-gray-400 p-0.5 bg-gray-100 text-gray-800 font-bold uppercase tracking-wide">
+                        class="text-[10px] text-center border border-gray-400 p-0.5 bg-gray-100 text-gray-800 font-bold uppercase tracking-wide dark:text-slate-200">
                         <span x-show="firm.pan">PAN : <span x-text="firm.pan"></span> | </span><span
                             x-show="firm.gstn">GSTN :
                             <span x-text="firm.gstn"></span> | </span><span x-show="firm.frn">FRN : <span
@@ -2137,7 +2137,7 @@
                                             </template>
                                         </tr>
                                     </template>
-                                    <tr class="font-bold bg-gray-50">
+                                    <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                         <td class="text-black">GROSS TOTAL INCOME</td>
                                         <template x-for="(year, yIdx) in financials.years">
                                             <td class="text-right text-black"
@@ -2216,10 +2216,10 @@
                             </template>
                             <template x-if="financials.movable.acceptable.banks.length === 0">
                                 <tr>
-                                    <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                 </tr>
                             </template>
-                            <tr class="font-bold bg-gray-50">
+                            <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                 <td colspan="5" class="text-right">Total</td>
                                 <td class="text-right"
                                     x-text="formatVal(sumArray(financials.movable.acceptable.banks))"></td>
@@ -2262,10 +2262,10 @@
                             </template>
                             <template x-if="financials.movable.acceptable.currentInv.length === 0">
                                 <tr>
-                                    <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                 </tr>
                             </template>
-                            <tr class="font-bold bg-gray-50">
+                            <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                 <td colspan="5" class="text-right">Total</td>
                                 <td class="text-right"
                                     x-text="formatVal(sumArray(financials.movable.acceptable.currentInv))">
@@ -2322,10 +2322,10 @@
                                 </template>
                                 <template x-if="financials.movable.nonAcceptable.nonCurrentInv.length === 0">
                                     <tr>
-                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                        <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                     </tr>
                                 </template>
-                                <tr class="font-bold bg-gray-50">
+                                <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                     <td colspan="5" class="text-right">Total</td>
                                     <td class="text-right"
                                         x-text="formatVal(sumArray(financials.movable.nonAcceptable.nonCurrentInv))">
@@ -2369,10 +2369,10 @@
                                 </template>
                                 <template x-if="financials.movable.nonAcceptable.otherInv.length === 0">
                                     <tr>
-                                        <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                        <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                     </tr>
                                 </template>
-                                <tr class="font-bold bg-gray-50">
+                                <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                     <td colspan="5" class="text-right">Total</td>
                                     <td class="text-right"
                                         x-text="formatVal(sumArray(financials.movable.nonAcceptable.otherInv))"></td>
@@ -2422,7 +2422,7 @@
                                     <td class="text-left align-top">
                                         <div class="font-bold text-sm mb-1" x-text="item.type"></div>
                                         <div class="mb-1" x-text="item.address"></div>
-                                        <div class="text-[10px] text-gray-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                                        <div class="text-[10px] text-gray-600 grid grid-cols-2 gap-x-4 gap-y-1 dark:text-slate-400">
                                             <span>Area: <span class="font-bold text-black"
                                                     x-text="item.area"></span></span>
                                             <span>Valuer: <span class="font-bold text-black"
@@ -2439,11 +2439,11 @@
                             </template>
                             <template x-if="financials.immovable.length === 0">
                                 <tr>
-                                    <td colspan="6" class="text-center italic text-gray-500">No Immovable Properties
+                                    <td colspan="6" class="text-center italic text-gray-500 dark:text-slate-400">No Immovable Properties
                                         Added</td>
                                 </tr>
                             </template>
-                            <tr class="font-bold bg-gray-50">
+                            <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                 <td colspan="2" class="text-right">Total Immovable Assets</td>
                                 <td class="text-right" x-text="formatVal(sumImmovable())"></td>
                                 <td class="text-right" x-text="calcFX(sumImmovable())"></td>
@@ -2458,7 +2458,7 @@
                         <span>3C. GRAND TOTAL ASSETS (3A + 3B)</span>
                         <div class="text-right">
                             <div>INR <span x-text="formatVal(sumAssets())"></span></div>
-                            <div class="text-xs text-gray-600"><span x-text="financials.forex.currency"></span> <span
+                            <div class="text-xs text-gray-600 dark:text-slate-400"><span x-text="financials.forex.currency"></span> <span
                                     x-text="calcFX(sumAssets())"></span></div>
                         </div>
                     </div>
@@ -2499,10 +2499,10 @@
                             </template>
                             <template x-if="financials.liabilities.secured.length === 0">
                                 <tr>
-                                    <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                 </tr>
                             </template>
-                            <tr class="font-bold bg-gray-50">
+                            <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                 <td colspan="5" class="text-right">Total</td>
                                 <td class="text-right" x-text="formatVal(sumSecured())"></td>
                                 <td class="text-right" x-text="calcFX(sumSecured())"></td>
@@ -2542,10 +2542,10 @@
                             </template>
                             <template x-if="financials.liabilities.unsecured.length === 0">
                                 <tr>
-                                    <td colspan="7" class="text-center italic text-gray-500">No Records</td>
+                                    <td colspan="7" class="text-center italic text-gray-500 dark:text-slate-400">No Records</td>
                                 </tr>
                             </template>
-                            <tr class="font-bold bg-gray-50">
+                            <tr class="font-bold bg-gray-50 dark:bg-slate-800">
                                 <td colspan="5" class="text-right">Total</td>
                                 <td class="text-right" x-text="formatVal(sumUnsecured())"></td>
                                 <td class="text-right" x-text="calcFX(sumUnsecured())"></td>
@@ -2566,12 +2566,12 @@
                 <!-- NET WEALTH - Final Section (Force Break?) -->
                 <!-- Ideally this should flow, but if it doesn't fit, pagination handles it. -->
                 <div class="mt-4 mb-6">
-                    <div class="border border-black bg-white p-2 flex justify-between items-center text-sm font-bold">
+                    <div class="border border-black bg-white p-2 flex justify-between items-center text-sm font-bold dark:bg-slate-800">
                         <span class="w-3/4">Net Wealth (Grand Total of Moveable & Immoveable Assets Net of Loans)
                             -</span>
                         <div class="text-right w-1/4">
                             <div class="text-black">INR <span x-text="formatVal(netWorth())"></span></div>
-                            <div class="text-gray-600 text-xs"><span x-text="financials.forex.symbol"></span> <span
+                            <div class="text-gray-600 text-xs dark:text-slate-400"><span x-text="financials.forex.symbol"></span> <span
                                     x-text="calcFX(netWorth())"></span></div>
                         </div>
                     </div>
@@ -2712,7 +2712,7 @@
 
 			// Add continuation indicator if not first chunk
 			if (!isFirstChunk) {
-				chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1">...Continued from previous page</td></tr>`;
+				chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1 dark:text-slate-400">...Continued from previous page</td></tr>`;
 			}
 
 			// Add rows
@@ -2725,7 +2725,7 @@
 			// Add continuation indicator if more rows remain
 			const hasMoreRows = (currentRowIndex + rowsToInclude) < rows.length;
 			if (hasMoreRows) {
-				chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1">Continued on next page...</td></tr>`;
+				chunkHtml += `<tr class="bg-yellow-50"><td colspan="8" class="text-xs italic text-gray-600 text-center py-1 dark:text-slate-400">Continued on next page...</td></tr>`;
 			}
 
 			// Add total row only on LAST chunk
@@ -2965,7 +2965,7 @@
 		});
 
 		// Gross Total
-		html += '<tr class="font-bold bg-gray-50"><td class="text-black">GROSS TOTAL INCOME</td>';
+		html += '<tr class="font-bold bg-gray-50 dark:bg-slate-800"><td class="text-black">GROSS TOTAL INCOME</td>';
 		years.forEach((_, yIdx) => {
 			const gross = calculateGrossTotal(data, cIdx, yIdx);
 			html += `<td class="text-right text-black">${formatVal(gross)}</td>`;
@@ -3040,32 +3040,32 @@
 			addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-sm">3A. Movable Assets</div>', 25);
 
 			if (hasAcceptableAssets) {
-				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A1. Acceptable Assets</div>', 20);
+				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 dark:bg-slate-800 dark:border-slate-600">3A1. Acceptable Assets</div>', 20);
 
 				if (banks.length > 0) {
-					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A1.a Bank Balances</div>', 20);
+					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 dark:bg-slate-800 dark:border-slate-600">3A1.a Bank Balances</div>', 20);
 					const bankTableHeight = 80 + (banks.length * 30);
 					addContent(buildBankTable(data), bankTableHeight, true);
 				}
 
 				if (currentInv.length > 0) {
-					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A1.b Current Investments</div>', 25);
+					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4 dark:bg-slate-800 dark:border-slate-600">3A1.b Current Investments</div>', 25);
 					const currentInvHeight = 80 + (currentInv.length * 30);
 					addContent(buildCurrentInvestmentsTable(data), currentInvHeight, true);
 				}
 			}
 
 			if (hasNonAcceptableAssets) {
-				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A2. Non-Acceptable Assets</div>', 25);
+				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4 dark:bg-slate-800 dark:border-slate-600">3A2. Non-Acceptable Assets</div>', 25);
 
 				if (nonCurrentInv.length > 0) {
-					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3A2.a Non-Current Investments</div>', 20);
+					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 dark:bg-slate-800 dark:border-slate-600">3A2.a Non-Current Investments</div>', 20);
 					const nonCurrentHeight = 80 + (nonCurrentInv.length * 30);
 					addContent(buildNonCurrentInvestmentsTable(data), nonCurrentHeight, true);
 				}
 
 				if (otherInv.length > 0) {
-					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3A2.b Other Investments</div>', 25);
+					addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4 dark:bg-slate-800 dark:border-slate-600">3A2.b Other Investments</div>', 25);
 					const otherHeight = 80 + (otherInv.length * 30);
 					addContent(buildOtherInvestmentsTable(data), otherHeight, true);
 				}
@@ -3096,13 +3096,13 @@
 			addContent('<div class="bg-gray-100 border border-gray-400 p-2 font-bold text-sm mt-6">3D. Loans & Liabilities</div>', 35);
 
 			if (securedLoans.length > 0) {
-				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3">3D1. Secured Loans</div>', 20);
+				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 dark:bg-slate-800 dark:border-slate-600">3D1. Secured Loans</div>', 20);
 				const securedHeight = 80 + (securedLoans.length * 30);
 				addContent(buildSecuredLoansTable(data), securedHeight, true);
 			}
 
 			if (unsecuredLoans.length > 0) {
-				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4">3D2. Unsecured Loans</div>', 25);
+				addContent('<div class="bg-gray-50 border border-gray-300 p-1 font-semibold text-xs pl-3 mt-4 dark:bg-slate-800 dark:border-slate-600">3D2. Unsecured Loans</div>', 25);
 				const unsecuredHeight = 80 + (unsecuredLoans.length * 30);
 				addContent(buildUnsecuredLoansTable(data), unsecuredHeight, true);
 			}
@@ -3137,7 +3137,7 @@
 		html += '</tr></thead><tbody>';
 
 		if (banks.length === 0) {
-			html += '<tr><td colspan="8" class="text-center text-gray-500">No Records</td></tr>';
+			html += '<tr><td colspan="8" class="text-center text-gray-500 dark:text-slate-400">No Records</td></tr>';
 		} else {
 			banks.forEach((bank, idx) => {
 				const client = data.clients[bank.cIdx] || {};
@@ -3312,7 +3312,7 @@
 		html += '</tr></thead><tbody>';
 
 		if (properties.length === 0) {
-			html += '<tr><td colspan="9" class="text-center text-gray-500">No Records</td></tr>';
+			html += '<tr><td colspan="9" class="text-center text-gray-500 dark:text-slate-400">No Records</td></tr>';
 		} else {
 			properties.forEach((prop, idx) => {
 				html += `<tr>
@@ -3370,7 +3370,7 @@
 		html += '</tr></thead><tbody>';
 
 		if (loans.length === 0) {
-			html += '<tr><td colspan="8" class="text-center text-gray-500">No Records</td></tr>';
+			html += '<tr><td colspan="8" class="text-center text-gray-500 dark:text-slate-400">No Records</td></tr>';
 		} else {
 			loans.forEach((loan, idx) => {
 				html += `<tr>
@@ -3410,7 +3410,7 @@
 		html += '</tr></thead><tbody>';
 
 		if (loans.length === 0) {
-			html += '<tr><td colspan="8" class="text-center text-gray-500">No Records</td></tr>';
+			html += '<tr><td colspan="8" class="text-center text-gray-500 dark:text-slate-400">No Records</td></tr>';
 		} else {
 			loans.forEach((loan, idx) => {
 				html += `<tr>

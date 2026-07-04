@@ -101,7 +101,7 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8 dark:bg-slate-900/80 dark:border-slate-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -109,7 +109,7 @@
                     <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
@@ -126,10 +126,10 @@
         
         <!-- Page Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
                 <span class="gradient-text">Tally Cashbook Dashboard</span>
             </h1>
-            <p class="text-slate-600 text-sm font-medium">Turn raw Tally exports into interactive visual analytics instantly.</p>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Turn raw Tally exports into interactive visual analytics instantly.</p>
         </div>
 
         <div class="space-y-6">
@@ -137,17 +137,17 @@
             <!-- Upload Section -->
             <div class="glass-card p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-excel mr-2 text-green-600"></i>Data Source</h2>
-                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">Supports .xlsx exports from Tally</span>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-file-excel mr-2 text-green-600"></i>Data Source</h2>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">Supports .xlsx exports from Tally</span>
                 </div>
 
                 <!-- Drop Zone -->
-                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm" onclick="document.getElementById('fileInput').click()">
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm dark:border-slate-600" onclick="document.getElementById('fileInput').click()">
                     <div class="space-y-4">
                         <i class="fas fa-cloud-upload-alt text-5xl text-slate-400"></i>
                         <div>
-                            <p class="text-base font-bold text-slate-700">Click to upload Excel Daybook</p>
-                            <p class="text-sm text-slate-500 mt-1" id="fileStatus">No file selected</p>
+                            <p class="text-base font-bold text-slate-700 dark:text-slate-300">Click to upload Excel Daybook</p>
+                            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400" id="fileStatus">No file selected</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
@@ -161,41 +161,41 @@
                 <div class="glass-card p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">From Date</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">From Date</label>
                             <input type="date" id="dateFrom" class="form-input-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">To Date</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">To Date</label>
                             <input type="date" id="dateTo" class="form-input-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Month</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">Month</label>
                             <select id="monthFilter" class="form-select-sm"></select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Year</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">Year</label>
                             <select id="yearFilter" class="form-select-sm"></select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Voucher Type</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">Voucher Type</label>
                             <select id="vchTypeFilter" class="form-select-sm"></select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Account</label>
+                            <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider dark:text-slate-400">Account</label>
                             <select id="accountFilter" class="form-select-sm"></select>
                         </div>
                     </div>
                     
-                    <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4">
-                        <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
-                            <span class="text-sm font-bold text-slate-600"><i class="fas fa-chart-pie mr-2 text-blue-500"></i>Charts</span>
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4 dark:border-slate-700">
+                        <div class="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                            <span class="text-sm font-bold text-slate-600 dark:text-slate-400"><i class="fas fa-chart-pie mr-2 text-blue-500"></i>Charts</span>
                             <div class="relative inline-block w-11 align-middle select-none transition duration-200 ease-in">
-                                <input type="checkbox" name="toggle" id="visualToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                <input type="checkbox" name="toggle" id="visualToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer dark:bg-slate-800" checked/>
                                 <label for="visualToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer"></label>
                             </div>
-                            <span class="text-sm font-bold text-slate-600"><i class="fas fa-table mr-2 text-green-500"></i>Reports</span>
+                            <span class="text-sm font-bold text-slate-600 dark:text-slate-400"><i class="fas fa-table mr-2 text-green-500"></i>Reports</span>
                         </div>
-                        <button onclick="location.reload()" class="text-sm text-slate-500 hover:text-slate-800 font-bold bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-colors">
+                        <button onclick="location.reload()" class="text-sm text-slate-500 hover:text-slate-800 font-bold bg-white border border-slate-200 px-4 py-2 rounded-lg shadow-sm transition-colors dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">
                             <i class="fas fa-sync-alt mr-2"></i> Reset Dashboard
                         </button>
                     </div>
@@ -209,27 +209,27 @@
                 <!-- Charts Section -->
                 <div id="chartsSection" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Transaction Distribution</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Transaction Distribution</h3>
                         <div class="chart-wrapper"><canvas id="transactionTypesChart"></canvas></div>
                     </div>
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Monthly Trends</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Monthly Trends</h3>
                         <div class="chart-wrapper"><canvas id="monthlyTrendsChart"></canvas></div>
                     </div>
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Top Accounts</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Top Accounts</h3>
                         <div class="chart-wrapper"><canvas id="topAccountsChart"></canvas></div>
                     </div>
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Cash vs Bank Flow</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Cash vs Bank Flow</h3>
                         <div class="chart-wrapper"><canvas id="cashBankFlowChart"></canvas></div>
                     </div>
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Daily Volume</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Daily Volume</h3>
                         <div class="chart-wrapper"><canvas id="dailyVolumeChart"></canvas></div>
                     </div>
                     <div class="glass-card p-5">
-                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Party Analysis</h3>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2 dark:text-slate-200 dark:border-slate-700">Party Analysis</h3>
                         <div class="chart-wrapper"><canvas id="customerSupplierChart"></canvas></div>
                     </div>
                 </div>
@@ -403,8 +403,8 @@
                 <div class="stat-card border-b-4 border-${color}-500">
                     <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-100 text-${color}-600 text-xl shadow-sm"><i class="fas fa-chart-line"></i></div>
                     <div>
-                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">${title}</p>
-                        <p class="text-xl font-black text-slate-800 ${val < 0 ? 'text-red-600' : ''}">${fmt(val)}</p>
+                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">${title}</p>
+                        <p class="text-xl font-black text-slate-800 ${val < 0 ? 'text-red-600' : ''} dark:text-slate-200">${fmt(val)}</p>
                         <p class="text-xs font-medium text-slate-400 mt-0.5">${sub}</p>
                     </div>
                 </div>`;
@@ -531,24 +531,24 @@
             const div = document.getElementById('reportsContent');
             const createTable = (title, cols, rows) => `
                 <div class="glass-card overflow-hidden mb-6">
-                    <div class="p-4 bg-white border-b border-slate-200"><h3 class="text-base font-black text-slate-800 tracking-wide">${title}</h3></div>
+                    <div class="p-4 bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700"><h3 class="text-base font-black text-slate-800 tracking-wide dark:text-slate-200">${title}</h3></div>
                     <div class="table-container">
-                        <table class="min-w-full divide-y divide-slate-200">
-                            <thead class="bg-slate-50"><tr>${cols.map(c => `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">${c}</th>`).join('')}</tr></thead>
-                            <tbody class="bg-white divide-y divide-slate-100">${rows}</tbody>
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead class="bg-slate-50 dark:bg-slate-800"><tr>${cols.map(c => `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">${c}</th>`).join('')}</tr></thead>
+                            <tbody class="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">${rows}</tbody>
                         </table>
                     </div>
                 </div>`;
 
             // Transaction Summary
             const txnRows = filteredData.slice(0, 100).map(r => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700">${r.Date.toLocaleDateString()}</td>
-                    <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate" title="${r.Particulars}">${r.Particulars}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold">${r.VchType}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-mono">${r.VchNo}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${r.DebitAmount ? r.DebitAmount.toLocaleString() : '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${r.CreditAmount ? r.CreditAmount.toLocaleString() : '-'}</td>
+                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">${r.Date.toLocaleDateString()}</td>
+                    <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate dark:text-slate-300" title="${r.Particulars}">${r.Particulars}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold dark:bg-slate-800 dark:text-slate-400">${r.VchType}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-mono dark:text-slate-300">${r.VchNo}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${r.DebitAmount ? r.DebitAmount.toLocaleString() : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${r.CreditAmount ? r.CreditAmount.toLocaleString() : '-'}</td>
                 </tr>
             `).join('');
             
@@ -559,11 +559,11 @@
                 accSum[r.Particulars].c++; accSum[r.Particulars].d += r.DebitAmount; accSum[r.Particulars].cr += r.CreditAmount;
             });
             const accRows = Object.entries(accSum).sort((a,b) => (b[1].d+b[1].cr)-(a[1].d+a[1].cr)).slice(0, 50).map(([k,v]) => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 text-sm text-slate-700 font-medium">${k}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">${v.c}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${v.d.toLocaleString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800">${v.cr.toLocaleString()}</td>
+                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700">
+                    <td class="px-6 py-4 text-sm text-slate-700 font-medium dark:text-slate-300">${k}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${v.c}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${v.d.toLocaleString()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${v.cr.toLocaleString()}</td>
                 </tr>
             `).join('');
 

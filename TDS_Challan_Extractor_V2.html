@@ -102,15 +102,15 @@
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200">
+        <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
             <div class="spinner mb-4 mx-auto"></div>
-            <h4 class="text-xl font-bold text-slate-800">Processing TDS Challans</h4>
-            <p class="text-sm text-slate-500 mt-2">Extracting payment details locally...</p>
+            <h4 class="text-xl font-bold text-slate-800 dark:text-slate-200">Processing TDS Challans</h4>
+            <p class="text-sm text-slate-500 mt-2 dark:text-slate-400">Extracting payment details locally...</p>
         </div>
     </div>
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8">
+    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8 dark:bg-slate-900/80 dark:border-slate-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -118,7 +118,7 @@
                     <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
                 </a>
                 <div class="flex items-center gap-4">
-                    <div class="text-sm font-medium text-slate-500 hidden sm:block">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
@@ -135,10 +135,10 @@
         
         <!-- Page Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
                 <span class="gradient-text">TDS Challan Extractor</span>
             </h1>
-            <p class="text-slate-600 text-sm font-medium">Local PDF processing for Form 281. Zero data leaves your browser.</p>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing for Form 281. Zero data leaves your browser.</p>
         </div>
 
         <div class="space-y-6">
@@ -146,17 +146,17 @@
             <!-- Upload Section -->
             <div class="glass-card p-6 md:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-slate-800"><i class="fas fa-file-invoice-dollar mr-2 text-blue-600"></i>Upload Files</h2>
-                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">TDS Payment Challans (PDF)</span>
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-file-invoice-dollar mr-2 text-blue-600"></i>Upload Files</h2>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">TDS Payment Challans (PDF)</span>
                 </div>
 
                 <!-- Drop Zone -->
-                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm" onclick="document.getElementById('fileInput').click()">
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm dark:border-slate-600" onclick="document.getElementById('fileInput').click()">
                     <div class="space-y-4">
                         <i class="fas fa-cloud-upload-alt text-5xl text-blue-400"></i>
                         <div>
-                            <p class="text-base font-bold text-slate-700">Drop TDS Challan PDFs here or click to browse</p>
-                            <p class="text-sm text-slate-500 mt-1">Supports batch processing of multiple files</p>
+                            <p class="text-base font-bold text-slate-700 dark:text-slate-300">Drop TDS Challan PDFs here or click to browse</p>
+                            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Supports batch processing of multiple files</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
@@ -167,7 +167,7 @@
                     <button onclick="processFiles()" id="processButton" disabled class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2">
                         <i class="fas fa-cogs mr-2"></i> Process Files
                     </button>
-                    <button onclick="clearAll()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm px-6 py-2">
+                    <button onclick="clearAll()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm px-6 py-2 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
                         <i class="fas fa-trash mr-2"></i> Clear
                     </button>
                 </div>
@@ -187,46 +187,46 @@
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="stat-card">
-                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 text-xl shadow-sm"><i class="fas fa-file-alt"></i></div>
+                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 text-xl shadow-sm dark:bg-slate-800 dark:text-slate-400"><i class="fas fa-file-alt"></i></div>
                         <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Challans</p>
-                            <p id="totalChallans" class="text-xl font-black text-slate-800">0</p>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
+                            <p id="totalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
                         <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Amount</p>
-                            <p id="totalAmount" class="text-xl font-black text-slate-800">₹0</p>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
+                            <p id="totalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl shadow-sm"><i class="fas fa-percentage"></i></div>
                         <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Tax</p>
-                            <p id="totalTax" class="text-xl font-black text-slate-800">₹0</p>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Tax</p>
+                            <p id="totalTax" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
                         </div>
                     </div>
                     <div class="stat-card">
                         <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-xl shadow-sm"><i class="fas fa-check-double"></i></div>
                         <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider">Success</p>
-                            <p id="successCount" class="text-xl font-black text-slate-800">0</p>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Success</p>
+                            <p id="successCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Data Table -->
                 <div class="glass-card overflow-hidden">
-                    <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center">
-                        <h3 class="text-base font-bold text-slate-800"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
+                    <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
                         <div class="flex gap-3">
-                            <button onclick="exportToCSV()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm"><i class="fas fa-file-csv mr-2 text-blue-600"></i>CSV</button>
-                            <button onclick="exportToExcel()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm"><i class="fas fa-file-excel mr-2 text-green-600"></i>Excel</button>
+                            <button onclick="exportToCSV()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600"><i class="fas fa-file-csv mr-2 text-blue-600"></i>CSV</button>
+                            <button onclick="exportToExcel()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600"><i class="fas fa-file-excel mr-2 text-green-600"></i>Excel</button>
                         </div>
                     </div>
                     <div class="table-container">
-                        <table class="min-w-full divide-y divide-slate-200">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                             <thead>
                                 <tr>
                                     <th>Sr. No.</th>
@@ -244,7 +244,7 @@
                                     <th>AY</th>
                                 </tr>
                             </thead>
-                            <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm">
+                            <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm dark:bg-slate-800 dark:divide-slate-700">
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
@@ -291,7 +291,7 @@
                     const div = document.createElement('div');
                     div.className = 'flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200';
                     div.innerHTML = `
-                        <span class="text-slate-700 truncate"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
+                        <span class="text-slate-700 truncate dark:text-slate-300"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
                         <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 ml-2 font-bold">
                             <i class="fas fa-times"></i>
                         </button>
@@ -460,10 +460,10 @@
                     <td>${index + 1}</td>
                     <td>${data.dateOfDeposit || '-'}</td>
                     <td class="font-bold">${data.bsrCode || '-'}</td>
-                    <td class="font-mono text-slate-500">${data.challanNo || '-'}</td>
-                    <td><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs">${data.natureOfPayment || '-'}</span></td>
-                    <td class="font-bold text-slate-800">${parseFloat(data.amount || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
-                    <td class="font-bold text-slate-800">${parseFloat(data.tax || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
+                    <td class="font-mono text-slate-500 dark:text-slate-400">${data.challanNo || '-'}</td>
+                    <td><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs dark:bg-blue-900/20">${data.natureOfPayment || '-'}</span></td>
+                    <td class="font-bold text-slate-800 dark:text-slate-200">${parseFloat(data.amount || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
+                    <td class="font-bold text-slate-800 dark:text-slate-200">${parseFloat(data.tax || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
                     <td>${data.surcharge || '-'}</td>
                     <td>${data.cess || '-'}</td>
                     <td>${data.interest || '-'}</td>
