@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    window.location.href = 'request-access.html?tool=DEP';
+                }
+            }
+        })();
+    </script>
+
+    <title>Depreciation Calculator | AI Automation Hub</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- jsPDF libraries for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
+        
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 1rem; transition: all 0.3s ease; }
+        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        
+        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 24px 24px; }
+
+        .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        .font-playfair { font-family: 'Playfair Display', Georgia, serif; }
+
+        /* Input Styles */
+        .inp, select.inp {
+            padding: 0.5rem 0.75rem; font-size: 0.875rem; border-radius: 0.5rem; border-width: 1px; border-color: #cbd5e1; 
+            width: 100%; transition: all 0.2s; background-color: #f8fafc; color: #334155; font-weight: 500;
+        }
+        .dark .inp, .dark select.inp { background-color: #1e293b; color: #f8fafc; border-color: #475569; }
+        .inp:focus, select.inp:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+        .dark .inp:focus, .dark select.inp:focus { border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; background-color: #0f172a; }
+
+        .rupee { position: relative; }
+        .rupee > .inp { padding-left: 1.75rem; }
+        .rupee::before { content: "₹"; position: absolute; left: 0.7rem; top: 0.5rem; color: #94a3b8; font-size: 0.875rem; pointer-events: none; }
+
+        /* Tab Segment Buttons */
+        .seg-btn {
+            flex: 1; padding: 0.6rem; font-size: 0.875rem; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.2s;
+            border: 1px solid #cbd5e1; background-color: #f8fafc; color: #64748b;
+        }
+        .dark .seg-btn { border-color: #475569; background-color: #1e293b; color: #94a3b8; }
+        .seg-btn.on { background-color: #2563eb; color: #ffffff; border-color: #2563eb; }
+        .dark .seg-btn.on { background-color: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+        .seg-btn:first-child { border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem; border-right: none; }
+        .seg-btn:last-child { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-left: none; }
+        
+        .method-btn {
+            flex: 1; padding: 0.4rem; font-size: 0.8rem; font-weight: 600; text-align: center; cursor: pointer; transition: all 0.2s;
+            border: 1px solid #cbd5e1; background-color: #f8fafc; color: #64748b;
+        }
+        .dark .method-btn { border-color: #475569; background-color: #1e293b; color: #94a3b8; }
+        .method-btn.on { background-color: #2563eb; color: #ffffff; border-color: #2563eb; }
+        .dark .method-btn.on { background-color: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+        .method-btn:first-child { border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem; border-right: none; }
+        .method-btn:last-child { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; border-left: none; }
+
+        /* Table */
+        .tbl { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .tbl th { text-align: left; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #64748b; padding: 0.75rem; border-bottom: 2px solid #e2e8f0; }
+        .dark .tbl th { color: #94a3b8; border-bottom-color: #334155; }
+        .tbl th.r, .tbl td.r { text-align: right; font-variant-numeric: tabular-nums; }
+        .tbl td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; color: #475569; }
+        .dark .tbl td { border-bottom-color: #1e293b; color: #cbd5e1; }
+        .tbl td.lbl { color: #0f172a; font-weight: 500; }
+        .dark .tbl td.lbl { color: #f8fafc; }
+        .tbl tr.tot td { font-weight: 700; color: #0f172a; border-top: 2px solid #e2e8f0; border-bottom: none; padding-top: 1rem; font-family: 'Sora', sans-serif;}
+        .dark .tbl tr.tot td { color: #f8fafc; border-top-color: #334155; }
+
+        /* Print formatting */
+        @media print {
+            body { background: white; color: black; }
+            nav, .glass-card, .no-print, .export-toolbar, #themeToggle, footer { display: none !important; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
+
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation <span class="text-blue-600 dark:text-blue-400">Hub</span></span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <a href="index.html" class="text-sm font-semibold hover:text-blue-600 transition-colors hidden sm:block">← Back to Hub</a>
+                    <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="glass-card p-6 md:p-8 h-full">
+            <div class="text-left border-b border-slate-200 dark:border-slate-700 pb-4 mb-8">
+                <div class="text-xs font-bold tracking-widest uppercase text-blue-600 mb-1">CA / CMA · Professional Utility</div>
+                <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2 font-playfair">Depreciation Calculator</h1>
+                <p class="text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">Companies Act Schedule II (useful-life based, SLM or WDV) with a year-wise schedule, and the Income-tax block-of-assets method with the half-rate rule for assets used under 180 days.</p>
+            </div>
+
+            <!-- Tab Toggles -->
+            <div class="flex max-w-lg mx-auto mb-8" id="tabs">
+                <button data-t="co" class="seg-btn on">Companies Act (Schedule II)</button>
+                <button data-t="it" class="seg-btn">Income Tax (block)</button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                
+                <!-- COLUMN 1: Inputs (Schema A - Slate) -->
+                <div class="lg:col-span-1 bg-slate-100 dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col gap-4">
+                    <div class="flex items-center gap-2 mb-2 border-b border-slate-200 dark:border-slate-700 pb-2">
+                        <div class="w-8 h-8 bg-slate-900 dark:bg-slate-700 text-white dark:text-slate-200 rounded-lg flex items-center justify-center text-sm"><i class="fas fa-th-large"></i></div>
+                        <h2 class="text-base font-semibold text-slate-900 dark:text-white" id="inHead">Asset Details</h2>
+                    </div>
+
+                    <!-- Companies Act Inputs -->
+                    <div id="coIn" class="space-y-4" style="display: block;">
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Cost of asset (₹)</label>
+                            <div class="rupee"><input type="text" class="inp num" id="cost" inputmode="numeric"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Useful life (years)</label>
+                                <input type="number" class="inp" id="life" value="10">
+                            </div>
+                            <div>
+                                <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Residual value %</label>
+                                <input type="number" step="0.1" class="inp" id="resid" value="5">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Method</label>
+                            <div class="flex" id="methodSeg">
+                                <button data-v="slm" class="method-btn on">SLM</button>
+                                <button data-v="wdv" class="method-btn">WDV</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Date put to use</label>
+                            <input type="date" class="inp" id="putdate">
+                            <p class="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1">First-year depreciation is pro-rated from this date to the year-end (31 March).</p>
+                        </div>
+                    </div>
+
+                    <!-- Income Tax Inputs -->
+                    <div id="itIn" class="space-y-4" style="display: none;">
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Block rate</label>
+                            <select class="inp text-sm" id="blockRate">
+                                <option value="15">15% — Plant & machinery (general)</option>
+                                <option value="10">10% — Furniture & fittings / buildings</option>
+                                <option value="40">40% — Computers, software, certain assets</option>
+                                <option value="30">30% — Certain assets</option>
+                                <option value="5">5% — Residential buildings</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Opening WDV of block (₹)</label>
+                            <div class="rupee"><input type="text" class="inp num" id="owdv" inputmode="numeric"></div>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Additions used ≥ 180 days (₹)</label>
+                            <div class="rupee"><input type="text" class="inp num" id="add180" inputmode="numeric"></div>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Additions used < 180 days (₹)</label>
+                            <div class="rupee"><input type="text" class="inp num" id="addh" inputmode="numeric"></div>
+                            <p class="text-[11.5px] text-slate-500 dark:text-slate-400 mt-1">Eligible for half the normal rate this year.</p>
+                        </div>
+                        <div>
+                            <label class="block text-[12.5px] font-medium text-slate-600 dark:text-slate-300 mb-1">Sale proceeds during year (₹)</label>
+                            <div class="rupee"><input type="text" class="inp num" id="sale" inputmode="numeric"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2 & 3: Outputs (Schema B - Blue Tint) -->
+                <div class="lg:col-span-2 flex flex-col gap-5">
+                    
+                    <!-- Highlight Card -->
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-5 rounded-xl shadow-md border border-blue-500">
+                        <div class="text-[11px] font-bold tracking-[0.12em] uppercase opacity-85 mb-1" id="bL">First-year depreciation</div>
+                        <div class="text-[26px] font-bold mb-1 num font-sora" id="depOut">₹0</div>
+                        <div class="text-[12.5px] opacity-90" id="depSub">SLM · first year pro-rated 365/365 days</div>
+                    </div>
+                    
+                    <!-- Schedule / Computation -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 p-5 rounded-xl border border-blue-100 dark:border-blue-800 flex flex-col">
+                        <div class="flex justify-between items-center mb-4 border-b border-blue-100 dark:border-blue-800 pb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm"><i class="fas fa-list"></i></div>
+                                <h2 class="text-base font-semibold text-slate-900 dark:text-white" id="schHead">Year-wise schedule</h2>
+                            </div>
+                            
+                            <!-- Unified Export Toolbar -->
+                            <div class="flex items-center space-x-2 export-toolbar">
+                                <button type="button" id="copyToClipboardBtn" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors" title="Copy to Clipboard">
+                                    <i class="fas fa-copy mr-1 text-gray-600"></i><span id="copyText">Copy</span>
+                                </button>
+                                <button type="button" id="printBtn" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center transition-colors" title="Print">
+                                    <i class="fas fa-print mr-1 text-gray-600"></i>Print
+                                </button>
+                                <button id="exportClientPdfBtn" type="button" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center transition-colors" title="Export PDF">
+                                    <i class="fas fa-file-pdf mr-1 text-red-600"></i>PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="tbl" id="sch">
+                                <thead>
+                                    <tr>
+                                        <th>Period</th>
+                                        <th class="r">Depreciation</th>
+                                        <th class="r">Closing WDV</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="3" class="text-center italic text-slate-500 py-4">Enter the asset cost.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="note"></div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="mt-5 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 border-l-4 border-l-amber-500 rounded-lg text-[12.5px] text-slate-600 dark:text-slate-400">
+                <strong class="text-slate-800 dark:text-slate-200">Computation aid.</strong> Schedule II prescribes useful lives (residual usually 5%); rates here are derived from the life and residual you enter — confirm against the Schedule and the company's technical assessment. The Income-tax block method applies the half-rate rule to assets used under 180 days and adjusts the whole block, not individual assets. Review before finalising.
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">© 2026 AI Automation Hub | CA. Vaibhav Khanna. All rights reserved.</p>
+            <div class="text-slate-400 text-sm flex gap-4">
+                <a href="index.html" class="hover:text-blue-500 transition-colors">Automation Arsenal</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Logic
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+
+        // ------------------ LOGIC PORTED FROM ORIGINAL FILE ------------------
+        var tab='co', method='slm';
+        function gv(id){var v=document.getElementById(id).value.replace(/[^0-9.]/g,'');return v?parseFloat(v):0;}
+        function fmt(n){return new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(Math.round(n));}
+        
+        document.querySelectorAll('.num').forEach(el=>el.addEventListener('input',function(){
+            var r=this.value.replace(/[^0-9]/g,'');
+            this.value=r?new Intl.NumberFormat('en-IN').format(parseInt(r,10)):'';
+            render();
+        }));
+        
+        ['life','resid','putdate','blockRate'].forEach(id=>document.getElementById(id).addEventListener('input',render));
+        
+        document.getElementById('tabs').addEventListener('click',function(e){
+            if(e.target.tagName !== 'BUTTON')return;
+            tab=e.target.dataset.t;
+            this.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===e.target));
+            document.getElementById('coIn').style.display=tab==='co'?'block':'none';
+            document.getElementById('itIn').style.display=tab==='it'?'block':'none';
+            render();
+        });
+        
+        document.getElementById('methodSeg').addEventListener('click',function(e){
+            if(e.target.tagName !== 'BUTTON')return;
+            method=e.target.dataset.v;
+            this.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b===e.target));
+            render();
+        });
+        
+        function daysToYearEnd(v){
+            if(!v)return 365;
+            var d=new Date(v);
+            var ye=new Date(d.getFullYear()+(d.getMonth()>=3?1:0),2,31);
+            return Math.max(1,Math.round((ye-d)/864e5));
+        }
+        
+        function render(){
+            if(tab==='co') renderCo(); else renderIt();
+        }
+        
+        function renderCo(){
+            document.getElementById('bL').textContent='First-year depreciation';
+            document.getElementById('schHead').textContent='Year-wise schedule';
+            var cost=gv('cost'), life=Math.max(1,gv('life')), resid=gv('resid')/100, residVal=cost*resid;
+            var putdateStr = document.getElementById('putdate').value;
+            var firstDays=daysToYearEnd(putdateStr), frac=firstDays/365;
+            var rows='', wdv=cost, firstDep=0;
+            
+            var startYearEnd = 0;
+            if (putdateStr) {
+                var d = new Date(putdateStr);
+                startYearEnd = d.getFullYear() + (d.getMonth() >= 3 ? 1 : 0);
+            }
+            
+            if(method==='slm'){
+                var annual=(cost-residVal)/life;
+                for(var y=1;y<=Math.ceil(life)+1;y++){
+                    var dep=(y===1)?annual*frac:annual;
+                    if(wdv-dep<residVal)dep=Math.max(0,wdv-residVal);
+                    if(dep<=0)break;
+                    wdv-=dep; if(y===1)firstDep=dep;
+                    var periodStr = 'Year ' + y;
+                    if (startYearEnd > 0) periodStr += ' - 31.03.' + (startYearEnd + y - 1);
+                    rows+='<tr><td class="lbl">'+periodStr+'</td><td class="r">'+fmt(dep)+'</td><td class="r">'+fmt(wdv)+'</td></tr>';
+                }
+            } else {
+                var rate=1-Math.pow(resid||0.0001,1/life);
+                for(var y2=1;y2<=Math.ceil(life)+1;y2++){
+                    var dep2=wdv*rate; if(y2===1)dep2*=frac;
+                    if(wdv-dep2<residVal)dep2=Math.max(0,wdv-residVal);
+                    if(dep2<=0.5)break;
+                    wdv-=dep2; if(y2===1)firstDep=dep2;
+                    var periodStr = 'Year ' + y2;
+                    if (startYearEnd > 0) periodStr += ' - 31.03.' + (startYearEnd + y2 - 1);
+                    rows+='<tr><td class="lbl">'+periodStr+'</td><td class="r">'+fmt(dep2)+'</td><td class="r">'+fmt(wdv)+'</td></tr>';
+                }
+            }
+            
+            document.getElementById('depOut').textContent='₹'+fmt(firstDep);
+            document.getElementById('depSub').textContent=method.toUpperCase()+' · first year pro-rated '+firstDays+'/365 days';
+            
+            var tbodyHtml = (rows||'<tr><td colspan="3" class="text-center italic text-slate-500 py-4">Enter the asset cost.</td></tr>');
+            document.getElementById('sch').innerHTML='<thead><tr><th>Period</th><th class="r">Depreciation</th><th class="r">Closing WDV</th></tr></thead><tbody>'+tbodyHtml+'</tbody>';
+            
+            var noteHtml = method==='wdv' ? '<div class="mt-3 p-3 bg-teal-50 border border-teal-200 text-teal-800 rounded-lg text-xs font-medium">WDV rate derived: '+( (1-Math.pow((resid||0.0001),1/life))*100 ).toFixed(2)+'% p.a.</div>' : '';
+            document.getElementById('note').innerHTML=noteHtml;
+        }
+        
+        function renderIt(){
+            document.getElementById('bL').textContent='Depreciation for the year';
+            document.getElementById('schHead').textContent='Block computation';
+            var rate=gv('blockRate')/100, owdv=gv('owdv'), add180=gv('add180'), addh=gv('addh'), sale=gv('sale');
+            var block=owdv+add180+addh-sale;
+            var dep=0, note='';
+            
+            if(block<=0){
+                note='Block value is nil or negative — no depreciation; consider short-term capital gain/loss on the block.';
+            } else {
+                var normalBase=Math.max(0,block-addh);
+                dep=normalBase*rate+Math.min(addh,block)*rate/2;
+                if(dep>block)dep=block;
+            }
+            var closing=Math.max(0,block-dep);
+            
+            document.getElementById('depOut').textContent='₹'+fmt(dep);
+            document.getElementById('depSub').textContent='Block rate '+(rate*100)+'% · half rate on <180-day additions';
+            
+            document.getElementById('sch').innerHTML='<tbody>'+
+             r2('Opening WDV',owdv)+r2('Add: additions ≥180 days',add180)+r2('Add: additions <180 days',addh)+r2('Less: sale proceeds',-sale)+
+             '<tr class="tot"><td>Block value</td><td class="r">'+fmt(block)+'</td></tr>'+
+             r2('Depreciation',dep)+
+             '<tr class="tot"><td>Closing WDV</td><td class="r">'+fmt(closing)+'</td></tr></tbody>';
+             
+            document.getElementById('note').innerHTML=note?'<div class="mt-3 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs font-medium">'+note+'</div>':'';
+        }
+        
+        function r2(l,v){return '<tr><td class="lbl">'+l+'</td><td class="r">'+(v<0?'−':'')+'₹'+fmt(Math.abs(v))+'</td></tr>';}
+        
+        render(); // Initial call
+
+        // ------------------ UNIVERSAL EXPORT LOGIC ------------------
+
+        // Copy
+        document.getElementById('copyToClipboardBtn').addEventListener('click', function() {
+            const table = document.getElementById('sch');
+            let txt = '';
+            table.querySelectorAll('tr').forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('th, td').forEach(cell => rowData.push(cell.innerText.trim()));
+                txt += rowData.join('\t') + '\n';
+            });
+            navigator.clipboard.writeText(txt).then(() => {
+                const btn = document.getElementById('copyToClipboardBtn');
+                const oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-1 text-green-600"></i>Copied';
+                setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+            });
+        });
+
+        // Print
+        document.getElementById('printBtn').addEventListener('click', function() {
+            const printWindow = window.open('', '_blank');
+            const title = document.getElementById('schHead').innerText;
+            const subtitle = document.getElementById('depSub').innerText;
+            const tableHtml = document.getElementById('sch').outerHTML;
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print - Depreciation Calculator</title>
+                    <style>
+                        @media print { body { font-family: 'Times New Roman', serif; margin: 0.25in; } }
+                        body { font-family: sans-serif; }
+                        h2 { text-align: center; margin-bottom: 5px; }
+                        p { text-align: center; font-size: 12px; color: #555; margin-top: 0; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f3f4f6; }
+                        .r { text-align: right; }
+                        .tot { font-weight: bold; border-top: 2px solid #ccc; }
+                    </style>
+                </head>
+                <body>
+                    <h2>${title}</h2>
+                    <p>${subtitle}</p>
+                    ${tableHtml}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+                setTimeout(() => { printWindow.close(); }, 500);
+            }, 250);
+        });
+
+        // PDF
+        document.getElementById('exportClientPdfBtn').addEventListener('click', function() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF engine is still loading. Please try again in a moment.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: 'a4' });
+            
+            const title = document.getElementById('schHead').innerText;
+            const subtitle = document.getElementById('depSub').innerText;
+            
+            const pageWidth = doc.internal.pageSize.getWidth();
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(title, pageWidth / 2, 0.4, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(subtitle, pageWidth / 2, 0.6, { align: 'center' });
+
+            doc.autoTable({
+                html: '#sch',
+                startY: 0.8,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 0.05, valign: 'middle', lineColor: [200, 200, 200], lineWidth: 0.001 },
+                headStyles: { fillColor: [243, 244, 246], textColor: [55, 65, 81], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+                margin: { top: 0.25, right: 0.25, bottom: 0.25, left: 0.25 }
+            });
+            
+            doc.save('Depreciation_Schedule.pdf');
+        });
+    </script>
+</body>
+</html>
