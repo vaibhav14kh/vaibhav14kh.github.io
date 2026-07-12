@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- GATEKEEPER LOGIC: MUST BE FIRST IN HEAD -->
+    <script>
+        (function() {
+            // 1. Check if the user is arriving directly from the email link
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEmailAuth = urlParams.get('auth') === 'true';
+
+            if (isEmailAuth) {
+                // 2. Grant Access: Drop a token in their browser storage
+                const sessionData = { 
+                    user: "Verified Professional", 
+                    timestamp: new Date().getTime() 
+                };
+                localStorage.setItem('workshop_v2_access', JSON.stringify(sessionData));
+                
+                // Clean the URL so they cannot copy-paste the ?auth=true link
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // 3. Verify Access: Check if they already have a token
+                const access = localStorage.getItem('workshop_v2_access');
+                if (!access) {
+                    // Boot them back to the lead capture page with specific tool ID
+                    window.location.href = 'request-access.html?tool=PF';
+                }
+            }
+        })();
+    </script>
+
+    <title>PF Challan Extractor | Automation Hub</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js, SheetJS, jsPDF, and AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* Base Settings & Theme */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+            scroll-behavior: smooth;
+        }
+        
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px);
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            border-radius: 1rem; 
+            transition: all 0.3s ease; 
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .glass-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .glass-card:hover {
+            border-color: #475569;
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
+        }
+        .gradient-text { 
+            background: linear-gradient(to right, #2563eb, #4f46e5); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .dark .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-pattern { 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px); 
+            background-size: 24px 24px; 
+        }
+        .dark .hero-pattern {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        /* Upload Zone Styles */
+        .drop-zone { 
+            transition: all 0.3s ease; 
+            background-color: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(4px); 
+        }
+        .dark .drop-zone {
+            background-color: rgba(15, 23, 42, 0.6);
+            border-color: #475569;
+        }
+        .drop-zone.drag-over { 
+            background-color: #eff6ff; 
+            border-color: #3b82f6; 
+            transform: scale(1.005); 
+        }
+        .dark .drop-zone.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
+
+        /* Stat Cards following design system nested card schemas */
+        /* Schema A (Slate / Default) */
+        .stat-card-slate { 
+            background-color: #f1f5f9; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-slate {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        .stat-card-slate:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .stat-card-slate:hover {
+            border-color: #475569;
+        }
+
+        /* Schema B (Blue Tint / Accent) */
+        .stat-card-blue { 
+            background-color: #eff6ff; 
+            border: 1px solid #dbeafe; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-blue {
+            background-color: rgba(30, 41, 59, 0.5);
+            border-color: #1e3a8a;
+        }
+        .stat-card-blue:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #bfdbfe; 
+        }
+        .dark .stat-card-blue:hover {
+            border-color: #1d4ed8;
+        }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
+
+        /* Table Styles */
+        .table-container { overflow-x: auto; max-height: 60vh; }
+        table { min-width: 100%; }
+        thead th {
+            position: sticky; top: 0; z-index: 10; background-color: #f8fafc; font-size: 0.75rem;
+            text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem;
+            text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+        }
+        .dark thead th {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border-bottom-color: #334155;
+        }
+        tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
+        .dark tbody td {
+            color: #cbd5e1;
+            border-bottom-color: #334155;
+        }
+        tbody tr:hover { background-color: #f8fafc; }
+        .dark tbody tr:hover { background-color: rgba(30, 41, 59, 0.5); }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(4px);
+        }
+        .dark .loading-overlay {
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .spinner {
+            width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        .dark .spinner {
+            border-color: #334155;
+            border-top-color: #60a5fa;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 hero-pattern min-h-screen flex flex-col">
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+            <div class="spinner mb-4 mx-auto"></div>
+            <h4 class="text-xl font-bold text-slate-800 dark:text-slate-200">Processing PF Challans</h4>
+            <p class="text-sm text-slate-500 mt-2 dark:text-slate-400">Extracting contribution data locally...</p>
+        </div>
+    </div>
+
+    <!-- Theme Synced Navigation -->
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 mb-8 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-lg">VK</div>
+                    <span class="font-bold text-xl tracking-tight text-slate-800 dark:text-slate-200">Automation Hub</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-slate-500 hidden sm:block dark:text-slate-400">
+                        Vaibhav Khanna | Professional Automation
+                    </div>
+                    <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-grow mb-12">
+        
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
+                <span class="gradient-text">PF Challan Extractor</span>
+            </h1>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing for system-generated PF challans. Zero data leaves your browser.</p>
+        </div>
+
+        <div class="space-y-6">
+            
+            <!-- Upload Section -->
+            <div class="glass-card p-6 md:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-file-invoice mr-2 text-blue-600"></i>Upload Files</h2>
+                    <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700">PF Payment Challans (PDF)</span>
+                </div>
+
+                <!-- Drop Zone -->
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm dark:border-slate-600" onclick="document.getElementById('fileInput').click()">
+                    <div class="space-y-4">
+                        <i class="fas fa-cloud-upload-alt text-5xl text-blue-400"></i>
+                        <div>
+                            <p class="text-base font-bold text-slate-700 dark:text-slate-300">Drop PF Challan PDFs here or click to browse</p>
+                            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Supports batch processing of multiple files</p>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
+                </div>
+
+                <!-- Action Bar -->
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="processFiles()" id="processButton" disabled class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2">
+                        <i class="fas fa-cogs mr-2"></i> Process Files
+                    </button>
+                    <button onclick="clearAll()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm px-6 py-2 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
+                        <i class="fas fa-trash mr-2"></i> Clear
+                    </button>
+                </div>
+
+                <!-- File List Preview -->
+                <div id="fileList" class="mt-4 space-y-2 text-sm font-medium hidden"></div>
+                
+                <!-- Warnings / Error Displays -->
+                <div id="scanWarn" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold rounded-lg flex items-center shadow-sm dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
+                    <i class="fas fa-exclamation-triangle mr-3 text-lg"></i> <span id="scanWarnText"></span>
+                </div>
+                <div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-lg flex items-center shadow-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+                    <i class="fas fa-exclamation-circle mr-3 text-lg"></i> <span id="errorText"></span>
+                </div>
+            </div>
+
+            <!-- Results Dashboard -->
+            <div id="resultsSection" class="hidden space-y-6">
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-file-alt"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
+                            <p id="totalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
+                            <p id="totalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-calendar-times"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Paid Late</p>
+                            <p id="lateChallans" class="text-xl font-black text-red-600 dark:text-red-400">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Success Rate</p>
+                            <p id="successRate" class="text-xl font-black text-slate-800 dark:text-slate-200">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4 dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
+                        
+                        <!-- Unified Export Toolbar -->
+                        <div class="flex items-center space-x-2">
+                            <button type="button" id="copyToClipboardBtn" onclick="copyToClipboard()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600" title="Copy to Clipboard">
+                                <i class="fas fa-copy mr-1 text-gray-600 dark:text-gray-300"></i>Copy
+                            </button>
+                            
+                            <button type="button" id="printBtn" onclick="printResults()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600" title="Print">
+                                <i class="fas fa-print mr-1 text-gray-600 dark:text-gray-300"></i>Print
+                            </button>
+                            
+                            <button type="button" id="exportXlsxBtn" onclick="exportToExcel()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-green-50 hover:bg-green-100 focus:outline-none flex items-center dark:bg-green-900/30 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/50" title="Export Excel">
+                                <i class="fas fa-file-excel mr-1 text-green-600 dark:text-green-400"></i>Excel
+                            </button>
+                            
+                            <button type="button" id="exportClientPdfBtn" onclick="exportToPDF()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/50" title="Export PDF">
+                                <i class="fas fa-file-pdf mr-1 text-red-600 dark:text-red-400"></i>PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="resultsTable" class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead>
+                                <tr>
+                                    <th>File</th>
+                                    <th>TRRN No</th>
+                                    <th>Challan Status</th>
+                                    <th>Establishment ID</th>
+                                    <th>Establishment Name</th>
+                                    <th class="text-right">Total Amount (₹)</th>
+                                    <th class="text-right">Account-1 (₹)</th>
+                                    <th class="text-right">Account-2 (₹)</th>
+                                    <th class="text-right">Account-10 (₹)</th>
+                                    <th class="text-right">Account-21 (₹)</th>
+                                    <th class="text-right">Account-22 (₹)</th>
+                                    <th>CRN</th>
+                                    <th>Payment Date</th>
+                                    <th>Confirmation Date</th>
+                                    <th>Wage Month</th>
+                                    <th>After 15th?</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm dark:bg-slate-800 dark:divide-slate-700">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Debug Section -->
+                <details class="mt-4">
+                    <summary class="text-xs text-slate-500 cursor-pointer select-none outline-none hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"><i class="fas fa-bug mr-1"></i>Show debug logs</summary>
+                    <div id="debug" class="mt-2 text-xs font-mono text-amber-500 bg-slate-900 border border-slate-700 p-3 rounded max-h-40 overflow-y-auto"></div>
+                </details>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Setup PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        let selectedFiles = [];
+        let extractedData = [];
+        
+        const $ = (id) => document.getElementById(id);
+        const debugEl = $('debug');
+        
+        function log(msg) {
+            debugEl.textContent += msg + "\n";
+        }
+
+        // File Selection listeners
+        $('fileInput').addEventListener('change', function(e) {
+            selectedFiles = Array.from(e.target.files);
+            updateFileList();
+            $('processButton').disabled = selectedFiles.length === 0;
+        });
+        
+        // Drag and Drop handlers
+        const dropZone = document.querySelector('.drop-zone');
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) {
+                selectedFiles = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+                updateFileList();
+                $('processButton').disabled = selectedFiles.length === 0;
+            }
+        });
+
+        function updateFileList() {
+            const fileList = $('fileList');
+            fileList.innerHTML = '';
+            if (selectedFiles.length > 0) {
+                fileList.classList.remove('hidden');
+                selectedFiles.forEach((file, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200 dark:bg-slate-800 dark:border-slate-700';
+                    div.innerHTML = `
+                        <span class="text-slate-700 truncate dark:text-slate-300"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
+                        <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 ml-2 font-bold focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    fileList.appendChild(div);
+                });
+            } else {
+                fileList.classList.add('hidden');
+            }
+        }
+        
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            $('processButton').disabled = selectedFiles.length === 0;
+        }
+
+        function clearAll() {
+            selectedFiles = [];
+            extractedData = [];
+            updateFileList();
+            $('resultsSection').classList.add('hidden');
+            $('fileInput').value = '';
+            $('error').classList.add('hidden');
+            $('scanWarn').classList.add('hidden');
+            debugEl.textContent = '';
+        }
+
+        // ===== PF Parsing Logic =====
+        const MONTHS = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+        const RX = {
+            trrn: /TRRN\s*No\.?\s*:\s*([A-Z0-9-]+)/i,
+            status: /Challan\s*Status\s*:\s*([A-Za-z ]+)/i,
+            estId: /Establish(?:ment)?\s*ID\s*:\s*([A-Z0-9]+)/i,
+            estName: /Establish(?:ment)?\s*Name\s*:\s*([^\n:][^\n]+)/i,
+            wageMonth: /Wage\s*Month\s*:\s*([A-Z]{3}-\d{4})/i,
+            totalAmt: /Total\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a1: /Account-?1\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a2: /Account-?2\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a10:/Account-?10\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a21:/Account-?21\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a22:/Account-?22\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            crn: /\bCRN\s*:\s*([A-Z0-9]+)/i,
+            payDate: /Payment\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i,
+            confDate:/Payment\s*Confirmation\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i,
+        };
+        const tidy = (s) => (s || '').replace(/\s+/g, ' ').trim();
+        const amt = (s) => s ? parseFloat(s.replace(/,/g, '').trim()) : NaN;
+
+        function parseWage(mmmyyyy) {
+            const m = (mmmyyyy || '').toUpperCase().match(/([A-Z]{3})-(\d{4})/); 
+            if (!m) return null;
+            return { y: +m[2], m: MONTHS[m[1]] };
+        }
+
+        function parseDate(s) {
+            if (!s) return null;
+            const a = s.match(/(\d{2})-([A-Z]{3})-(\d{4})/i);
+            if (a) return new Date(Date.UTC(+a[3], (MONTHS[a[2].toUpperCase()] - 1), +a[1]));
+            const b = s.match(/(\d{2})-(\d{2})-(\d{4})/);
+            if (b) return new Date(Date.UTC(+b[3], +b[2] - 1, +b[1]));
+            return null;
+        }
+
+        function after15Following(wage, payStr) {
+            const wm = parseWage(wage), pd = parseDate(payStr); 
+            if (!wm || !pd) return false;
+            let m = wm.m + 1, y = wm.y; 
+            if (m > 12) { m = 1; y++ }
+            const cutoff = new Date(Date.UTC(y, m - 1, 15, 23, 59, 59));
+            // Retain original month & year strict matching constraint as approved by user
+            return pd.getTime() > cutoff.getTime() && (pd.getUTCFullYear() === y && (pd.getUTCMonth() + 1) === m);
+        }
+
+        async function openPDF(file) {
+            if (!window.pdfjsLib) throw new Error('pdfjsLib not loaded');
+            const data = await file.arrayBuffer();
+            try { 
+                return await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise; 
+            } catch (e) {
+                log(`[${file.name}] worker error → retry disableWorker (${e.message})`);
+                return await pdfjsLib.getDocument({ data, disableWorker: true, isEvalSupported: false }).promise;
+            }
+        }
+
+        async function extractText(pdf) {
+            let text = '', glyphs = 0;
+            for (let p = 1; p <= pdf.numPages; p++) {
+                const page = await pdf.getPage(p);
+                const content = await page.getTextContent({ normalizeWhitespace: true });
+                glyphs += content.items.length;
+                text += '\n' + content.items.map(i => i.str).join('\n');
+            }
+            return { text, glyphs };
+        }
+
+        async function extractOne(file) {
+            const pdf = await openPDF(file);
+            const { text, glyphs } = await extractText(pdf);
+            if (glyphs < 10 || tidy(text).length < 40) { 
+                return { file: file.name, _noText: true }; 
+            }
+            const flat = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n+/g, '\n');
+            const row = {
+                file: file.name,
+                trrn: tidy(flat.match(RX.trrn)?.[1]),
+                status: tidy(flat.match(RX.status)?.[1]),
+                estId: tidy(flat.match(RX.estId)?.[1]),
+                estName: tidy(flat.match(RX.estName)?.[1]),
+                wageMonth: tidy(flat.match(RX.wageMonth)?.[1]),
+                totalAmt: amt(flat.match(RX.totalAmt)?.[1]),
+                a1: amt(flat.match(RX.a1)?.[1]),
+                a2: amt(flat.match(RX.a2)?.[1]),
+                a10: amt(flat.match(RX.a10)?.[1]),
+                a21: amt(flat.match(RX.a21)?.[1]),
+                a22: amt(flat.match(RX.a22)?.[1]),
+                crn: tidy(flat.match(RX.crn)?.[1]),
+                payDate: tidy(flat.match(RX.payDate)?.[1]),
+                confDate: tidy(flat.match(RX.confDate)?.[1]),
+            };
+            row.after15 = after15Following(row.wageMonth, row.payDate);
+            return row;
+        }
+
+        async function processFiles() {
+            $('loadingOverlay').style.display = 'flex';
+            $('error').classList.add('hidden');
+            $('scanWarn').classList.add('hidden');
+            $('resultsSection').classList.add('hidden');
+            extractedData = [];
+            debugEl.textContent = '';
+            
+            try {
+                for (const file of selectedFiles) {
+                    try {
+                        const r = await extractOne(file);
+                        extractedData.push(r);
+                    } catch (err) {
+                        log(`[${file.name}] ${err.message}`);
+                        extractedData.push({ file: file.name, _error: true, _errorMsg: err.message });
+                    }
+                }
+                
+                if (extractedData.length > 0) {
+                    displayResults();
+                } else {
+                    throw new Error('No files selected or processed.');
+                }
+            } catch (error) {
+                $('error').classList.remove('hidden');
+                $('errorText').textContent = `Error: ${error.message}`;
+            } finally {
+                $('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        function displayResults() {
+            $('resultsSection').classList.remove('hidden');
+            const tbody = $('resultsBody');
+            tbody.innerHTML = '';
+            
+            let totalAmount = 0, lateCount = 0, successCount = 0;
+            const money = (n) => isFinite(n) ? n.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
+
+            extractedData.forEach((r) => {
+                const tr = document.createElement('tr');
+                if (r._noText) {
+                    tr.innerHTML = `
+                        <td class="font-semibold text-slate-700 dark:text-slate-300">${r.file}</td>
+                        <td colspan="15" class="text-slate-400 dark:text-slate-500 italic text-center">No selectable text found (likely scanned or image PDF).</td>
+                    `;
+                } else if (r._error) {
+                    tr.innerHTML = `
+                        <td class="font-semibold text-slate-700 dark:text-slate-300">${r.file}</td>
+                        <td colspan="15" class="text-red-500 dark:text-red-400 italic text-center">Error reading file: ${r._errorMsg}</td>
+                    `;
+                } else {
+                    const td = (v, cls) => {
+                        const x = document.createElement('td');
+                        x.textContent = v ?? '';
+                        if (cls) x.className = cls;
+                        return x;
+                    };
+                    
+                    tr.appendChild(td(r.file, 'font-semibold text-slate-700 dark:text-slate-300'));
+                    tr.appendChild(td(r.trrn, 'font-mono'));
+                    tr.appendChild(td(r.status));
+                    tr.appendChild(td(r.estId));
+                    tr.appendChild(td(r.estName));
+                    tr.appendChild(td(money(r.totalAmt), 'text-right font-bold text-slate-900 dark:text-slate-100'));
+                    tr.appendChild(td(money(r.a1), 'text-right text-slate-600 dark:text-slate-400'));
+                    tr.appendChild(td(money(r.a2), 'text-right text-slate-600 dark:text-slate-400'));
+                    tr.appendChild(td(money(r.a10), 'text-right text-slate-600 dark:text-slate-400'));
+                    tr.appendChild(td(money(r.a21), 'text-right text-slate-600 dark:text-slate-400'));
+                    tr.appendChild(td(money(r.a22), 'text-right text-slate-600 dark:text-slate-400'));
+                    tr.appendChild(td(r.crn));
+                    tr.appendChild(td(r.payDate));
+                    tr.appendChild(td(r.confDate));
+                    tr.appendChild(td(r.wageMonth));
+                    
+                    const tag = document.createElement('td');
+                    tag.className = 'text-center';
+                    const pill = document.createElement('span');
+                    pill.className = 'px-2 py-0.5 text-xs font-semibold rounded-full border ' + 
+                        (r.after15 ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400' : 'bg-green-50 border-green-200 text-green-600 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400');
+                    pill.textContent = r.after15 ? 'Yes' : 'No';
+                    tag.appendChild(pill);
+                    tr.appendChild(tag);
+                    
+                    if (isFinite(r.totalAmt)) totalAmount += r.totalAmt;
+                    if (r.after15) lateCount++;
+                    successCount++;
+                }
+                tbody.appendChild(tr);
+            });
+            
+            // Update KPIs
+            $('totalChallans').textContent = extractedData.length;
+            $('totalAmount').textContent = totalAmount.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+            $('lateChallans').textContent = lateCount;
+            
+            const rate = extractedData.length > 0 ? Math.round((successCount / extractedData.length) * 100) : 0;
+            $('successRate').textContent = `${rate}%`;
+
+            // Setup scan warning warning if there are unscannable PDFs
+            const noTextCount = extractedData.filter(r => r._noText).length;
+            if (noTextCount > 0) {
+                $('scanWarn').classList.remove('hidden');
+                $('scanWarnText').innerHTML = `<strong>Heads up:</strong> ${noTextCount} PDF(s) have <em>no selectable text</em>. Please upload original portal PDFs or OCR-scanned PDFs.`;
+            }
+        }
+
+        // ===== EXPORTS =====
+        
+        function copyToClipboard() {
+            if (extractedData.length === 0) return;
+            let text = "File\tTRRN No\tChallan Status\tEstablishment ID\tEstablishment Name\tTotal Amount\tAccount-1\tAccount-2\tAccount-10\tAccount-21\tAccount-22\tCRN\tPayment Date\tPayment Confirmation Date\tWage Month\tAfter 15th?\n";
+            
+            extractedData.forEach(r => {
+                if (r._noText) {
+                    text += `${r.file}\t(no text)\n`;
+                } else if (r._error) {
+                    text += `${r.file}\t(error reading PDF: ${r._errorMsg})\n`;
+                } else {
+                    text += `${r.file}\t${r.trrn || ''}\t${r.status || ''}\t${r.estId || ''}\t${r.estName || ''}\t${r.totalAmt || 0}\t${r.a1 || 0}\t${r.a2 || 0}\t${r.a10 || 0}\t${r.a21 || 0}\t${r.a22 || 0}\t${r.crn || ''}\t${r.payDate || ''}\t${r.confDate || ''}\t${r.wageMonth || ''}\t${r.after15 ? 'Yes' : 'No'}\n`;
+                }
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = $('copyToClipboardBtn');
+                const origHTML = btn.innerHTML;
+                btn.innerHTML = `<i class="fas fa-check mr-1 text-green-600"></i>Copied`;
+                setTimeout(() => { btn.innerHTML = origHTML; }, 2000);
+            }).catch(err => {
+                console.error("Copy failed", err);
+            });
+        }
+
+        function printResults() {
+            if (extractedData.length === 0) return;
+            const win = window.open('', '_blank');
+            let html = `
+            <html>
+            <head>
+                <title>PF Challan Extractor Report</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; margin: 0.25in; color: #000; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 9px; }
+                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+                    th { font-weight: bold; background-color: #f8fafc; color: #333; text-transform: uppercase; }
+                    .right { text-align: right; }
+                    .center { text-align: center; }
+                    h2, h4 { margin: 4px 0; text-align: center; }
+                    @media print {
+                        body { margin: 0.25in; }
+                        thead { display: table-header-group; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>PF Challan Extractor Report</h2>
+                <h4 style="color:#555;font-weight:normal;">CA. Vaibhav Khanna | Automation Hub</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>TRRN No</th>
+                            <th>Status</th>
+                            <th>Est ID</th>
+                            <th>Est Name</th>
+                            <th class="right">Total (₹)</th>
+                            <th class="right">A/c 1 (₹)</th>
+                            <th class="right">A/c 2 (₹)</th>
+                            <th class="right">A/c 10 (₹)</th>
+                            <th class="right">A/c 21 (₹)</th>
+                            <th class="right">A/c 22 (₹)</th>
+                            <th>CRN</th>
+                            <th>Pay Date</th>
+                            <th>Conf Date</th>
+                            <th>Wage Month</th>
+                            <th class="center">Late?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            extractedData.forEach(r => {
+                if (r._noText) {
+                    html += `<tr><td>${r.file}</td><td colspan="15" style="color: #888; font-style: italic;">No selectable text found.</td></tr>`;
+                } else if (r._error) {
+                    html += `<tr><td>${r.file}</td><td colspan="15" style="color: #ef4444; font-style: italic;">Error parsing PDF: ${r._errorMsg}</td></tr>`;
+                } else {
+                    html += `
+                        <tr>
+                            <td>${r.file}</td>
+                            <td>${r.trrn || '-'}</td>
+                            <td>${r.status || '-'}</td>
+                            <td>${r.estId || '-'}</td>
+                            <td>${r.estName || '-'}</td>
+                            <td class="right">${(r.totalAmt || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="right">${(r.a1 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="right">${(r.a2 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="right">${(r.a10 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="right">${(r.a21 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td class="right">${(r.a22 || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                            <td>${r.crn || '-'}</td>
+                            <td>${r.payDate || '-'}</td>
+                            <td>${r.confDate || '-'}</td>
+                            <td>${r.wageMonth || '-'}</td>
+                            <td class="center" style="font-weight:bold; color: ${r.after15 ? '#ef4444' : '#22c55e'}">${r.after15 ? 'Yes' : 'No'}</td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            </body>
+            </html>
+            `;
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => {
+                win.print();
+                win.close();
+            }, 500);
+        }
+
+        function exportToExcel() {
+            if (!window.XLSX) {
+                alert("Excel library is still loading. Please try again.");
+                return;
+            }
+            const headers = [
+                "File Name", "TRRN No", "Challan Status", "Establishment ID", "Establishment Name",
+                "Total Amount (Rs)", "Account-1 (Rs)", "Account-2 (Rs)", "Account-10 (Rs)", "Account-21 (Rs)", "Account-22 (Rs)",
+                "CRN", "Payment Date", "Payment Confirmation Date", "Wage Month", "Paid after 15th?"
+            ];
+            const rows = [headers];
+            
+            extractedData.forEach(r => {
+                if (r._noText) {
+                    rows.push([r.file, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "No selectable text"]);
+                } else if (r._error) {
+                    rows.push([r.file, "", "", "", "", "", "", "", "", "", "", "", "", "", "", `Error: ${r._errorMsg}`]);
+                } else {
+                    rows.push([
+                        r.file, r.trrn || '', r.status || '', r.estId || '', r.estName || '',
+                        parseFloat(r.totalAmt) || 0, parseFloat(r.a1) || 0, parseFloat(r.a2) || 0,
+                        parseFloat(r.a10) || 0, parseFloat(r.a21) || 0, parseFloat(r.a22) || 0,
+                        r.crn || '', r.payDate || '', r.confDate || '', r.wageMonth || '',
+                        r.after15 ? "Yes" : "No"
+                    ]);
+                }
+            });
+            
+            // Add Total Row
+            const validRows = extractedData.filter(r => !r._noText && !r._error);
+            const totalAmt = validRows.reduce((a, r) => a + (parseFloat(r.totalAmt) || 0), 0);
+            const totalA1 = validRows.reduce((a, r) => a + (parseFloat(r.a1) || 0), 0);
+            const totalA2 = validRows.reduce((a, r) => a + (parseFloat(r.a2) || 0), 0);
+            const totalA10 = validRows.reduce((a, r) => a + (parseFloat(r.a10) || 0), 0);
+            const totalA21 = validRows.reduce((a, r) => a + (parseFloat(r.a21) || 0), 0);
+            const totalA22 = validRows.reduce((a, r) => a + (parseFloat(r.a22) || 0), 0);
+
+            rows.push([]);
+            rows.push([
+                "TOTALS", "", "", "", "",
+                totalAmt, totalA1, totalA2, totalA10, totalA21, totalA22,
+                "", "", "", "", ""
+            ]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            
+            // Column Width Auto-Fitting
+            ws['!cols'] = headers.map((h, colIndex) => {
+                let max = h.length;
+                rows.forEach(r => {
+                    const cellVal = r[colIndex];
+                    if (cellVal !== null && cellVal !== undefined) {
+                        max = Math.max(max, String(cellVal).length);
+                    }
+                });
+                return { wch: max + 2 };
+            });
+
+            XLSX.utils.book_append_sheet(wb, ws, "PF Challans");
+            XLSX.writeFile(wb, "PF_Challans.xlsx");
+        }
+
+        // PDF Landscape A4 with autoTable matching guidelines
+        function exportToPDF() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF engine is still loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: 'a4' });
+            
+            const title = "PF Challan Extractor Report";
+            const subtitle = "CA. Vaibhav Khanna | Automation Hub";
+            const pageWidth = doc.internal.pageSize.getWidth();
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(title, pageWidth / 2, 0.4, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(subtitle, pageWidth / 2, 0.6, { align: 'center' });
+            
+            doc.autoTable({
+                html: '#resultsTable',
+                startY: 0.8,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 0.04, valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.001 },
+                headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontSize: 7, fontStyle: 'bold', halign: 'center' },
+                margin: { top: 0.25, right: 0.25, bottom: 0.25, left: 0.25 }
+            });
+            
+            doc.save('PF_Challan_Data.pdf');
+        }
+
+        // Theme Toggle Listener
+        $('themeToggle').addEventListener('click', () => {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                html.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+    </script>
+</body>
+</html>

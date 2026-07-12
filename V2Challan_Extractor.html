@@ -26,7 +26,7 @@
                 const access = localStorage.getItem('workshop_v2_access');
                 if (!access) {
                     // Boot them back to the lead capture page with specific tool ID
-                    window.location.href = 'request-access.html?tool=ChallanExtractor';
+                    window.location.href = 'request-access.html?tool=CHALLAN';
                 }
             }
         })();
@@ -50,47 +50,172 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- PDF.js and SheetJS -->
+    <!-- PDF.js, SheetJS, jsPDF, and AutoTable -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
         /* Base Settings & Theme */
-        body { font-family: 'Inter', sans-serif;   }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+            scroll-behavior: smooth;
+        }
         
-        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
-        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
-        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px);
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            border-radius: 1rem; 
+            transition: all 0.3s ease; 
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .glass-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .glass-card:hover {
+            border-color: #475569;
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
+        }
+        .gradient-text { 
+            background: linear-gradient(to right, #2563eb, #4f46e5); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .dark .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-pattern { 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px); 
+            background-size: 24px 24px; 
+        }
+        .dark .hero-pattern {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
 
         /* Upload Zone Styles */
-        .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
-        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+        .drop-zone { 
+            transition: all 0.3s ease; 
+            background-color: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(4px); 
+        }
+        .dark .drop-zone {
+            background-color: rgba(15, 23, 42, 0.6);
+            border-color: #475569;
+        }
+        .drop-zone.drag-over { 
+            background-color: #eff6ff; 
+            border-color: #3b82f6; 
+            transform: scale(1.005); 
+        }
+        .dark .drop-zone.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
 
-        /* Stat Cards */
-        .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+        /* Stat Cards following design system nested card schemas */
+        /* Schema A (Slate / Default) */
+        .stat-card-slate { 
+            background-color: #f1f5f9; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-slate {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        .stat-card-slate:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .stat-card-slate:hover {
+            border-color: #475569;
+        }
 
-        /* Compact Button Styles */
-        .btn-compact { display: inline-flex; align-items: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
+        /* Schema B (Blue Tint / Accent) */
+        .stat-card-blue { 
+            background-color: #eff6ff; 
+            border: 1px solid #dbeafe; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-blue {
+            background-color: rgba(30, 41, 59, 0.5);
+            border-color: #1e3a8a;
+        }
+        .stat-card-blue:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #bfdbfe; 
+        }
+        .dark .stat-card-blue:hover {
+            border-color: #1d4ed8;
+        }
+
+        /* Compact Buttons */
+        .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
 
         /* Table Styles */
         .table-container { overflow-x: auto; max-height: 60vh; }
-        thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; }
-        tbody tr:nth-child(even) { background-color: #f9fafb; }
-        tbody tr:hover { background-color: #eff6ff; }
+        table { min-width: 100%; }
+        thead th {
+            position: sticky; top: 0; z-index: 10; background-color: #f8fafc; font-size: 0.75rem;
+            text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem;
+            text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
+        }
+        .dark thead th {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border-bottom-color: #334155;
+        }
+        tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
+        .dark tbody td {
+            color: #cbd5e1;
+            border-bottom-color: #334155;
+        }
+        tbody tr:hover { background-color: #f8fafc; }
+        .dark tbody tr:hover { background-color: rgba(30, 41, 59, 0.5); }
 
         /* Loading Overlay */
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.9); display: none;
-            justify-content: center; align-items: center;
+            background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center;
             z-index: 9999; backdrop-filter: blur(4px);
         }
+        .dark .loading-overlay {
+            background: rgba(15, 23, 42, 0.95);
+        }
         .spinner {
-            width: 3rem; height: 3rem;
-            border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
+            width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
             border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        .dark .spinner {
+            border-color: #334155;
+            border-top-color: #60a5fa;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -102,12 +227,12 @@
         <div class="text-center bg-white p-8 rounded-2xl shadow-xl border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
             <div class="spinner mb-4 mx-auto"></div>
             <h4 class="text-xl font-bold text-slate-800 dark:text-slate-200">Processing Documents</h4>
-            <p class="text-sm text-slate-500 mt-2 dark:text-slate-400">Extracting data locally via PDF.js...</p>
+            <p class="text-sm text-slate-500 mt-2 dark:text-slate-400" id="loadingText">Extracting details locally...</p>
         </div>
     </div>
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8 dark:bg-slate-900/80 dark:border-slate-700">
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 mb-8 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -119,10 +244,10 @@
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
-                    <i class="fas fa-sun hidden dark:inline"></i>
-                    <i class="fas fa-moon inline dark:hidden"></i>
-                </button>
-            </div>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -135,7 +260,7 @@
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
                 <span class="gradient-text">Multi-Challan Data Extractor</span>
             </h1>
-            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing. Zero data leaves your browser.</p>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing for PF, ESIC, and TDS. Zero data leaves your browser.</p>
         </div>
 
         <div class="space-y-6">
@@ -145,12 +270,12 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-file-invoice mr-2 text-blue-600"></i>Upload PDFs</h2>
-                        <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Extracts structured data from PF, ESIC, and TDS challans automatically.</p>
+                        <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Upload multiple PDF files to categorize and parse them simultaneously.</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">PF / ECR</span>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20">ESIC</span>
-                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">TDS</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800">PF / ECR</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/20 dark:text-green-400 dark:border-green-800">ESIC</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/20 dark:text-green-400 dark:border-green-800">TDS (Form 281)</span>
                     </div>
                 </div>
 
@@ -166,168 +291,391 @@
                     <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
                 </div>
 
-                <!-- Stats Strip (Hidden initially) -->
-                <div id="uploadStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 hidden">
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 text-xl shadow-sm dark:bg-slate-800 dark:text-slate-400"><i class="fas fa-copy"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Files</p>
-                            <p id="totalFiles" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-sm"><i class="fas fa-check"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Success</p>
-                            <p id="successCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-red-600 text-xl shadow-sm"><i class="fas fa-exclamation-triangle"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Errors</p>
-                            <p id="errorCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl shadow-sm"><i class="fas fa-clock"></i></div>
-                        <div>
-                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Time</p>
-                            <p id="processingTime" class="text-xl font-black text-slate-800 dark:text-slate-200">0s</p>
-                        </div>
-                    </div>
+                <!-- File List Preview -->
+                <div id="fileList" class="mt-4 space-y-2 text-sm font-medium hidden"></div>
+
+                <!-- Warnings / Error Displays -->
+                <div id="scanWarn" class="hidden mt-4 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold rounded-lg flex items-center shadow-sm dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
+                    <i class="fas fa-exclamation-triangle mr-3 text-lg"></i> <span id="scanWarnText"></span>
+                </div>
+                <div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-lg flex items-center shadow-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+                    <i class="fas fa-exclamation-circle mr-3 text-lg"></i> <span id="errorText"></span>
                 </div>
 
-                <!-- Progress Bar -->
+                <!-- Action Bar -->
+                <div class="mt-6 flex justify-center gap-3">
+                    <button onclick="processFiles()" id="processButton" disabled class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2">
+                        <i class="fas fa-cogs mr-2"></i> Process Files
+                    </button>
+                    <button onclick="clearAll()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm px-6 py-2 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
+                        <i class="fas fa-trash mr-2"></i> Clear
+                    </button>
+                </div>
+
+                <!-- Upload Progress Strip -->
                 <div id="progressContainer" class="hidden mt-6">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Processing Status</span>
                         <span id="progressText" class="text-sm font-bold text-blue-600">0%</span>
                     </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2.5 shadow-inner">
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 shadow-inner dark:bg-slate-700">
                         <div id="progressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
-
-                <!-- Action Buttons -->
-                <div id="actionButtons" class="hidden mt-6 flex gap-3 border-t border-slate-100 pt-6 dark:border-slate-700">
-                    <button onclick="downloadExcel()" class="btn-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md">
-                        <i class="fas fa-file-excel mr-2"></i> Download Excel
-                    </button>
-                    <button onclick="clearResults()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
-                        <i class="fas fa-trash mr-2"></i> Clear Results
-                    </button>
-                </div>
             </div>
 
-            <!-- Results Table Section -->
-            <div id="resultsSection" class="glass-card hidden overflow-hidden">
-                <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center dark:bg-slate-800 dark:border-slate-700">
-                    <h3 class="text-base font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
-                </div>
+            <!-- Results Section -->
+            <div id="resultsSection" class="hidden space-y-6">
                 
-                <div class="table-container">
-                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700" id="resultsTable">
-                        <thead class="bg-slate-50 dark:bg-slate-800">
-                            <tr id="tableHeader">
-                                <!-- Dynamic Headers -->
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="bg-white divide-y divide-slate-100 text-sm font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:divide-slate-700">
-                            <!-- Dynamic Data -->
-                        </tbody>
-                    </table>
+                <!-- Tab Navigation Header -->
+                <div class="border-b border-slate-200 dark:border-slate-700 mb-6">
+                    <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="tabsList" role="tablist">
+                        <li class="mr-2" role="presentation">
+                            <button class="inline-flex items-center p-4 border-b-2 rounded-t-lg transition-colors focus:outline-none" id="pfTabBtn" onclick="switchTab('PF')" type="button" role="tab">
+                                <i class="fas fa-piggy-bank mr-2"></i>PF Data <span id="pfCountBadge" class="ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">0</span>
+                            </button>
+                        </li>
+                        <li class="mr-2" role="presentation">
+                            <button class="inline-flex items-center p-4 border-b-2 rounded-t-lg transition-colors focus:outline-none" id="esicTabBtn" onclick="switchTab('ESIC')" type="button" role="tab">
+                                <i class="fas fa-file-invoice mr-2"></i>ESIC Data <span id="esicCountBadge" class="ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">0</span>
+                            </button>
+                        </li>
+                        <li class="mr-2" role="presentation">
+                            <button class="inline-flex items-center p-4 border-b-2 rounded-t-lg transition-colors focus:outline-none" id="tdsTabBtn" onclick="switchTab('TDS')" type="button" role="tab">
+                                <i class="fas fa-file-invoice-dollar mr-2"></i>TDS Data <span id="tdsCountBadge" class="ml-1.5 px-2 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">0</span>
+                            </button>
+                        </li>
+                    </ul>
                 </div>
-            </div>
 
+                <!-- Stats KPI Grids (Toggled dynamically) -->
+                <!-- PF Stats -->
+                <div id="pfStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-file-alt"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
+                            <p id="pfTotalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
+                            <p id="pfTotalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-calendar-times"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Paid Late</p>
+                            <p id="pfLateChallans" class="text-xl font-black text-red-600 dark:text-red-400">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Success Rate</p>
+                            <p id="pfSuccessRate" class="text-xl font-black text-slate-800 dark:text-slate-200">0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ESIC Stats -->
+                <div id="esicStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-file-invoice"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
+                            <p id="esicTotalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
+                            <p id="esicTotalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Successful</p>
+                            <p id="esicSuccessCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Pending</p>
+                            <p id="esicPendingCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TDS Stats -->
+                <div id="tdsStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 hidden">
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
+                            <p id="tdsTotalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
+                            <p id="tdsTotalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-percentage"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Tax</p>
+                            <p id="tdsTotalTax" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-check-double"></i></div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Success</p>
+                            <p id="tdsSuccessCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table Card -->
+                <div class="glass-card overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 bg-white flex flex-col sm:flex-row justify-between items-center gap-4 dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
+                        
+                        <!-- Unified Export Toolbar -->
+                        <div class="flex items-center space-x-2">
+                            <button type="button" id="copyToClipboardBtn" onclick="copyToClipboard()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600" title="Copy to Clipboard">
+                                <i class="fas fa-copy mr-1 text-gray-600 dark:text-gray-300"></i>Copy
+                            </button>
+                            
+                            <button type="button" id="printBtn" onclick="printResults()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none flex items-center dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-600" title="Print">
+                                <i class="fas fa-print mr-1 text-gray-600 dark:text-gray-300"></i>Print
+                            </button>
+                            
+                            <button type="button" id="exportXlsxBtn" onclick="exportToExcel()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-green-50 hover:bg-green-100 focus:outline-none flex items-center dark:bg-green-900/30 dark:border-green-800 dark:text-green-300 dark:hover:bg-green-900/50" title="Export Excel">
+                                <i class="fas fa-file-excel mr-1 text-green-600 dark:text-green-400"></i>Excel
+                            </button>
+                            
+                            <button type="button" id="exportClientPdfBtn" onclick="exportToPDF()" class="h-8 px-3 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center dark:bg-red-900/30 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/50" title="Export PDF">
+                                <i class="fas fa-file-pdf mr-1 text-red-600 dark:text-red-400"></i>PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table id="resultsTable" class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead>
+                                <tr id="tableHeader">
+                                    <!-- Dynamically Toggled Headers -->
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="bg-white divide-y divide-slate-100 text-sm dark:bg-slate-800 dark:divide-slate-700">
+                                <!-- Dynamically Toggled Data -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Debug logs -->
+                <details class="mt-4">
+                    <summary class="text-xs text-slate-500 cursor-pointer select-none outline-none hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"><i class="fas fa-bug mr-1"></i>Show debug logs</summary>
+                    <div id="debug" class="mt-2 text-xs font-mono text-amber-500 bg-slate-900 border border-slate-700 p-3 rounded max-h-40 overflow-y-auto"></div>
+                </details>
+            </div>
         </div>
     </div>
 
-    <!-- JavaScript Logic (Preserved exactly as provided) -->
-    <script>
-        // Global variables
-        let extractedData = [];
-        let processingStartTime;
+    <!-- Footer component -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-8 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">© 2026 CA Firm Automation Hub | CA. Vaibhav Khanna. All rights reserved.</p>
+            <div class="text-slate-400 text-sm flex gap-4">
+                <a href="cv.html" class="hover:text-blue-500 transition-colors">Resume</a>
+                <span>&bull;</span>
+                <span>Amritsar, Punjab</span>
+            </div>
+        </div>
+    </footer>
 
-        // Initialize when page loads
+    <!-- Script Logic -->
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        let selectedFiles = [];
+        let extractedPF = [];
+        let extractedESIC = [];
+        let extractedTDS = [];
+        let activeTab = 'PF'; // Default tab
+
+        const debugEl = document.getElementById('debug');
+        function log(msg) {
+            debugEl.textContent += msg + "\n";
+            debugEl.parentElement.classList.remove('hidden');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            
             document.getElementById('fileInput').addEventListener('change', handleFiles);
             
-            const fileUpload = document.querySelector('.drop-zone');
-            fileUpload.addEventListener('dragover', (e) => { 
+            const dropZone = document.querySelector('.drop-zone');
+            dropZone.addEventListener('dragover', (e) => { 
                 e.preventDefault(); 
-                e.currentTarget.classList.add('drag-over');
+                dropZone.classList.add('drag-over');
             });
-            fileUpload.addEventListener('dragleave', (e) => { 
+            dropZone.addEventListener('dragleave', (e) => { 
                 e.preventDefault(); 
-                e.currentTarget.classList.remove('drag-over');
+                dropZone.classList.remove('drag-over');
             });
-            fileUpload.addEventListener('drop', handleDrop);
+            dropZone.addEventListener('drop', handleDrop);
         });
 
         function handleDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
             const files = Array.from(e.dataTransfer.files).filter(file => file.type === 'application/pdf');
-            if (files.length > 0) processFiles(files);
-            else alert('Please drop PDF files only.');
+            if (files.length > 0) {
+                selectedFiles = files;
+                updateFileList();
+                document.getElementById('processButton').disabled = false;
+            } else {
+                alert('Please drop PDF files only.');
+            }
         }
 
         function handleFiles(event) {
             const files = Array.from(event.target.files);
-            if (files.length > 0) processFiles(files);
+            if (files.length > 0) {
+                selectedFiles = files;
+                updateFileList();
+                document.getElementById('processButton').disabled = false;
+            }
         }
 
-        async function processFiles(files) {
-            processingStartTime = Date.now();
-            extractedData = [];
+        function updateFileList() {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            if (selectedFiles.length > 0) {
+                fileList.classList.remove('hidden');
+                selectedFiles.forEach((file, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700';
+                    div.innerHTML = `
+                        <span class="text-slate-700 truncate dark:text-slate-300"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
+                        <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 ml-2 font-bold focus:outline-none">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    fileList.appendChild(div);
+                });
+            } else {
+                fileList.classList.add('hidden');
+            }
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            document.getElementById('processButton').disabled = selectedFiles.length === 0;
+        }
+
+        function clearAll() {
+            selectedFiles = [];
+            extractedPF = [];
+            extractedESIC = [];
+            extractedTDS = [];
+            updateFileList();
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('scanWarn').classList.add('hidden');
+            document.getElementById('progressContainer').classList.add('hidden');
+            document.getElementById('processButton').disabled = true;
+            debugEl.textContent = '';
             
-            // Show UI elements
-            document.getElementById('uploadStats').classList.remove('hidden');
-            document.getElementById('uploadStats').classList.add('grid'); // Ensure grid display
-            document.getElementById('progressContainer').classList.remove('hidden');
+            document.getElementById('pfCountBadge').textContent = '0';
+            document.getElementById('esicCountBadge').textContent = '0';
+            document.getElementById('tdsCountBadge').textContent = '0';
+        }
+
+        async function processFiles() {
             document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('scanWarn').classList.add('hidden');
+            document.getElementById('progressContainer').classList.remove('hidden');
             
-            let successCount = 0, errorCount = 0;
-            document.getElementById('totalFiles').textContent = files.length;
+            extractedPF = [];
+            extractedESIC = [];
+            extractedTDS = [];
+            debugEl.textContent = '';
             
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const progress = ((i + 1) / files.length) * 100;
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const progress = ((i + 1) / selectedFiles.length) * 100;
                 document.getElementById('progressBar').style.width = progress + '%';
-                document.getElementById('progressText').textContent = `Processing ${file.name}... (${i + 1}/${files.length})`;
+                document.getElementById('progressText').textContent = `Processing ${file.name}... (${i + 1}/${selectedFiles.length})`;
                 
                 try {
-                    const data = await extractDataFromPDF(file);
-                    if (data && data.status === 'Success') {
-                        extractedData.push(data);
+                    const text = await extractTextFromPDF(file);
+                    const type = detectDocumentType(text, file.name);
+                    
+                    if (type === 'PF') {
+                        const parsed = parsePF(text, file.name);
+                        extractedPF.push(parsed);
+                        successCount++;
+                    } else if (type === 'ESIC') {
+                        const parsed = parseESIC(text, file.name);
+                        extractedESIC.push(parsed);
+                        successCount++;
+                    } else if (type === 'TDS') {
+                        const parsed = parseTDS(text, file.name);
+                        extractedTDS.push(parsed);
                         successCount++;
                     } else {
-                        throw new Error(data.status || 'Could not extract data');
+                        throw new Error('Unknown document type');
                     }
                 } catch (error) {
                     console.error(`Error processing ${file.name}:`, error);
-                    extractedData.push({ filename: file.name, type: 'Unknown', status: `Error: ${error.message}` });
                     errorCount++;
+                    
+                    const name = file.name.toUpperCase();
+                    if (name.includes('PF') || name.includes('PROVIDENT')) {
+                        extractedPF.push({ file: file.name, _error: true, _errorMsg: error.message });
+                    } else if (name.includes('ESIC') || name.includes('ESI')) {
+                        extractedESIC.push({ file: file.name, _error: true, _errorMsg: error.message });
+                    } else {
+                        extractedTDS.push({ file: file.name, _error: true, _errorMsg: error.message });
+                    }
                 }
-                
-                document.getElementById('successCount').textContent = successCount;
-                document.getElementById('errorCount').textContent = errorCount;
             }
             
             document.getElementById('loadingOverlay').style.display = 'none';
-            const processingTime = Math.round((Date.now() - processingStartTime) / 1000);
-            document.getElementById('processingTime').textContent = processingTime + 's';
+            document.getElementById('progressContainer').classList.add('hidden');
             
-            if (extractedData.length > 0) {
-                displayResults();
-                document.getElementById('actionButtons').classList.remove('hidden');
-            }
+            document.getElementById('pfCountBadge').textContent = extractedPF.length;
+            document.getElementById('esicCountBadge').textContent = extractedESIC.length;
+            document.getElementById('tdsCountBadge').textContent = extractedTDS.length;
+            
+            updateAllKPIs();
+            
+            if (extractedPF.length > 0) switchTab('PF');
+            else if (extractedESIC.length > 0) switchTab('ESIC');
+            else if (extractedTDS.length > 0) switchTab('TDS');
+            else switchTab('PF');
+            
+            document.getElementById('resultsSection').classList.remove('hidden');
         }
 
-        async function extractDataFromPDF(file) {
+        async function extractTextFromPDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
             
@@ -335,173 +683,716 @@
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ');
+                
+                let lines = [], currentLine = [], lastY = null;
+                textContent.items.forEach(item => {
+                    if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+                        lines.push(currentLine.join(' ')); currentLine = [];
+                    }
+                    currentLine.push(item.str); lastY = item.transform[5];
+                });
+                if (currentLine.length > 0) lines.push(currentLine.join(' '));
+                fullText += lines.join('\n') + '\n';
+                fullText += '\n' + textContent.items.map(item => item.str).join(' ') + '\n';
             }
-            
-            const documentType = detectDocumentType(fullText);
-            return extractDataByType(fullText, documentType, file.name);
+            return fullText;
         }
 
-        function detectDocumentType(text) {
+        function detectDocumentType(text, filename = '') {
             const t = text.toLowerCase();
-            if (t.includes('employee provident fund') || t.includes('trrn')) return 'PF';
+            if (t.includes('employee provident fund') || t.includes('trrn') || t.includes('establishment id')) return 'PF';
             if (t.includes('employees\' state insurance') || (t.includes('employer\'s code') && t.includes('challan number'))) return 'ESIC';
-            if (t.includes('tax deducted at source') || (t.includes('bsr code') && t.includes('challan no'))) return 'TDS';
+            if (t.includes('tax deducted at source') || (t.includes('bsr code') && t.includes('challan no')) || t.includes('form 281')) return 'TDS';
             
-            // Fallback detections
-            if (t.includes('gstr-3b') || t.includes('return of outward supplies')) return 'GSTR-3B';
-            if (t.includes('goods and services tax') && t.includes('cpin')) return 'GST';
-            if (t.includes('income tax') && t.includes('itns')) return 'Income Tax';
+            const f = filename.toLowerCase();
+            if (f.includes('pf') || f.includes('provident')) return 'PF';
+            if (f.includes('esic') || f.includes('esi')) return 'ESIC';
+            if (f.includes('tds') || f.includes('challan281')) return 'TDS';
             return 'Unknown';
         }
 
-        function extractDataByType(text, type, filename) {
-            const baseData = { filename, type, status: 'Success' };
-            try {
-                switch (type) {
-                    case 'PF': return { ...baseData, ...extractPFData(text) };
-                    case 'ESIC': return { ...baseData, ...extractESIData(text) };
-                    case 'TDS': return { ...baseData, ...extractTDSData(text) };
-                    case 'GST': return { ...baseData, ...extractGSTData(text) };
-                    case 'Income Tax': return { ...baseData, ...extractIncomeTaxData(text) };
-                    case 'GSTR-3B': return { ...baseData, ...extractGSTR3BData(text) };
-                    default: return { ...baseData, status: 'Error - Unknown document type' };
-                }
-            } catch(e) {
-                return { ...baseData, status: `Error - ${e.message}`};
+        // --- PARSING MODULES ---
+        const MONTHS = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+        const RX_PF = {
+            trrn: /TRRN\s*No\.?\s*:\s*([A-Z0-9-]+)/i,
+            status: /Challan\s*Status\s*:\s*([A-Za-z ]+)/i,
+            estId: /Establish(?:ment)?\s*ID\s*:\s*([A-Z0-9]+)/i,
+            estName: /Establish(?:ment)?\s*Name\s*:\s*([^\n:][^\n]+)/i,
+            wageMonth: /Wage\s*Month\s*:\s*([A-Z]{3}-\d{4})/i,
+            totalAmt: /Total\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a1: /Account-?1\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a2: /Account-?2\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a10:/Account-?10\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a21:/Account-?21\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            a22:/Account-?22\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i,
+            crn: /\bCRN\s*:\s*([A-Z0-9]+)/i,
+            payDate: /Payment\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i,
+            confDate:/Payment\s*Confirmation\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i,
+        };
+
+        function parsePF(text, filename) {
+            const tidy = (s) => (s || '').replace(/\s+/g, ' ').trim();
+            const amt = (s) => s ? parseFloat(s.replace(/,/g, '').trim()) : NaN;
+
+            if (tidy(text).length < 40) {
+                return { file: filename, _noText: true };
             }
+
+            const flat = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n+/g, '\n');
+            const row = {
+                file: filename,
+                trrn: tidy(flat.match(RX_PF.trrn)?.[1]),
+                status: tidy(flat.match(RX_PF.status)?.[1]),
+                estId: tidy(flat.match(RX_PF.estId)?.[1]),
+                estName: tidy(flat.match(RX_PF.estName)?.[1]),
+                wageMonth: tidy(flat.match(RX_PF.wageMonth)?.[1]),
+                totalAmt: amt(flat.match(RX_PF.totalAmt)?.[1]),
+                a1: amt(flat.match(RX_PF.a1)?.[1]),
+                a2: amt(flat.match(RX_PF.a2)?.[1]),
+                a10: amt(flat.match(RX_PF.a10)?.[1]),
+                a21: amt(flat.match(RX_PF.a21)?.[1]),
+                a22: amt(flat.match(RX_PF.a22)?.[1]),
+                crn: tidy(flat.match(RX_PF.crn)?.[1]),
+                payDate: tidy(flat.match(RX_PF.payDate)?.[1]),
+                confDate: tidy(flat.match(RX_PF.confDate)?.[1]),
+            };
+            row.after15 = after15Following(row.wageMonth, row.payDate);
+            return row;
         }
 
-        // --- EXTRACTION LOGIC ---
-        function extractPFData(text) {
-            const data = {};
-            const clean = (s) => (s || '').replace(/\s+/g,' ').trim();
-            const amt = (s) => s ? parseFloat(s.replace(/,/g,'').trim()) : null;
-
-            data.trrn = clean(text.match(/TRRN\s*No\.?\s*:\s*([A-Z0-9-]+)/i)?.[1]);
-            data.challanStatus = clean(text.match(/Challan\s*Status\s*:\s*([A-Za-z ]+)/i)?.[1]);
-            data.establishmentId = clean(text.match(/Establish(?:ment)?\s*ID\s*:\s*([A-Z0-9]+)/i)?.[1]);
-            data.establishmentName = clean(text.match(/Establish(?:ment)?\s*Name\s*:\s*([^\n:][^\n]+)/i)?.[1]);
-            data.wageMonth = clean(text.match(/Wage\s*Month\s*:\s*([A-Z]{3}-\d{4})/i)?.[1]);
-            data.totalAmount = amt(text.match(/Total\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.amount_Account1 = amt(text.match(/Account-?1\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.amount_Account2 = amt(text.match(/Account-?2\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.amount_Account10 = amt(text.match(/Account-?10\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.amount_Account21 = amt(text.match(/Account-?21\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.amount_Account22 = amt(text.match(/Account-?22\s*Amount\s*\(Rs\.?\)\s*:\s*([\d,]+(?:\.\d+)?)/i)?.[1]);
-            data.crn = clean(text.match(/\bCRN\s*:\s*([A-Z0-9]+)/i)?.[1]);
-            data.paymentDate = clean(text.match(/Payment\s*Date\s*:\s*(\d{2}-[A-Z]{3}-\d{4}|\d{2}-\d{2}-\d{4})/i)?.[1]);
-            return data;
+        function parseWage(mmmyyyy) {
+            const m = (mmmyyyy || '').toUpperCase().match(/([A-Z]{3})-(\d{4})/); 
+            if (!m) return null;
+            return { y: +m[2], m: MONTHS[m[1]] };
         }
 
-        function extractESIData(text) {
-            const data = {};
+        function parseDate(s) {
+            if (!s) return null;
+            const a = s.match(/(\d{2})-([A-Z]{3})-(\d{4})/i);
+            if (a) return new Date(Date.UTC(+a[3], (MONTHS[a[2].toUpperCase()] - 1), +a[1]));
+            const b = s.match(/(\d{2})-(\d{2})-(\d{4})/);
+            if (b) return new Date(Date.UTC(+b[3], +b[2] - 1, +b[1]));
+            return null;
+        }
+
+        function after15Following(wage, payStr) {
+            const wm = parseWage(wage), pd = parseDate(payStr); 
+            if (!wm || !pd) return false;
+            let m = wm.m + 1, y = wm.y; 
+            if (m > 12) { m = 1; y++ }
+            const cutoff = new Date(Date.UTC(y, m - 1, 15, 23, 59, 59));
+            return pd.getTime() > cutoff.getTime() && (pd.getUTCFullYear() === y && (pd.getUTCMonth() + 1) === m);
+        }
+
+        function parseESIC(text, filename) {
             const cleanText = text.replace(/\s+/g, ' ').trim();
-            data.transactionStatus = cleanText.match(/Transaction\s*status\s*[:]?\s*(\w+)/i)?.[1] || null;
-            data.employerCode = cleanText.match(/Employer['']?s\s*Code\s*No\s*[:]?\s*([A-Z0-9]+)/i)?.[1] || null;
-            data.employerName = cleanText.match(/Employer['']?s\s*Name\s*[:]?\s*([^:\n]+?)(?=\s*Challan|$)/i)?.[1].trim() || null;
-            data.challanPeriod = cleanText.match(/Challan\s*Period\s*[:]?\s*(\w{3}-\d{4})/i)?.[1] || null;
-            data.challanNumber = cleanText.match(/Challan\s*Number\s*[:]?\s*(\w+)/i)?.[1] || null;
-            data.amountPaid = cleanText.match(/Amount\s*Paid\s*[:]?\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i)?.[1].replace(/,/g, '') || null;
-            return data;
+            const textWithLines = text.replace(/\s\s+/g, '\n');
+            
+            const getMatch = (patterns) => {
+                for (let p of patterns) {
+                    const m = cleanText.match(p) || textWithLines.match(p);
+                    if (m) return m[1].trim();
+                }
+                return '';
+            };
+
+            const transactionStatus = getMatch([/Transaction\s*status\s*[:]\s*(\w+)/i, /Transaction\s*status\s+(\w+)/i]);
+            const employerCode = getMatch([/Employer['']?s\s*Code\s*No\s*[:]\s*([A-Z0-9]+)/i, /Employer['']?s\s*Code\s*[:]\s*([A-Z0-9]+)/i]);
+            const employerName = getMatch([/Employer['']?s\s*Name\s*[:]\s*([^:\n]+?)(?=\s*Challan|$)/i]);
+            const challanPeriod = getMatch([/Challan\s*Period\s*[:]\s*(\w{3}-\d{4})/i, /Challan\s*Period\s*[:]\s*([^:\n]+?)(?=\s*Challan|$)/i]);
+            const challanNumber = getMatch([/Challan\s*Number\s*[:]\s*(\w+)/i, /Challan\s*Number\s+(\w+)/i]);
+            const challanCreatedDate = getMatch([/Challan\s*Created\s*Date\s*[:]\s*([0-9X-]+)/i, /Challan\s*Created\s*Date\s+([0-9X-]+)/i]);
+            
+            let challanSubmittedDate = getMatch([
+                /Challan\s*Submitted\s*Date\s*[:]\s*(\d{2}-\d{2}-\d{4})/i,
+                /Challan\s*Submitted\s*Date\s+(\d{2}-\d{2}-\d{4})/i,
+                /Challan\s*Submitted\s*Date[^\d]*(\d{2}-\d{2}-\d{4})/i
+            ]);
+            
+            if (!challanSubmittedDate) {
+                const submittedIndex = cleanText.search(/Challan\s*Submitted\s*Date/i);
+                if (submittedIndex !== -1) {
+                    const afterText = cleanText.substring(submittedIndex + 20, submittedIndex + 150);
+                    const dateMatch = afterText.match(/(\d{2}-\d{2}-\d{4})/);
+                    if (dateMatch) challanSubmittedDate = dateMatch[1];
+                }
+            }
+            
+            if (!challanSubmittedDate) {
+                const slashMatch = getMatch([/Challan\s*Submitted\s*Date[^\d]*(\d{2}\/\d{2}\/\d{4})/i]);
+                if (slashMatch) challanSubmittedDate = slashMatch.replace(/\//g, '-');
+            }
+            
+            if (!challanSubmittedDate) {
+                const reverseMatch = cleanText.match(/(\d{2}-\d{2}-\d{4})[^]*Challan\s*Submitted\s*Date/i);
+                if (reverseMatch) {
+                    const datePos = cleanText.indexOf(reverseMatch[1]);
+                    const labelPos = cleanText.search(/Challan\s*Submitted\s*Date/i);
+                    if (Math.abs(labelPos - datePos) < 100) {
+                        challanSubmittedDate = reverseMatch[1];
+                    }
+                }
+            }
+            
+            const amtMatch = cleanText.match(/Amount\s*Paid\s*[:]\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i) || cleanText.match(/Amount\s*Paid\s+[₹]?\s*([\d,]+(?:\.\d{2})?)/i);
+            const amountPaid = amtMatch ? amtMatch[1].replace(/,/g, '') : '';
+            
+            const transactionNumber = getMatch([/Transaction\s*Number\s*[:]\s*(\w+)/i, /Transaction\s*Number\s+(\w+)/i]);
+
+            return {
+                file: filename,
+                transactionStatus,
+                employerCode,
+                employerName,
+                challanPeriod,
+                challanNumber,
+                challanCreatedDate,
+                challanSubmittedDate,
+                amountPaid,
+                transactionNumber
+            };
         }
 
-        function extractTDSData(text) {
-            const data = {};
+        function parseTDS(text, filename) {
             const cleanText = text.replace(/\s+/g, ' ').trim();
-            const amt = (s) => s ? s.replace(/,/g, '') : null;
-            data.dateOfDeposit = cleanText.match(/Date of Deposit\s*[:]?\s*(\d{2}-\w{3}-\d{4}|\d{2}\/\d{2}\/\d{4})/i)?.[1] || null;
-            data.bsrCode = cleanText.match(/BSR\s*code\s*[:]?\s*(\d{7})/i)?.[1] || null;
-            data.challanNo = cleanText.match(/Challan\s*No\s*[:]?\s*(\d+)/i)?.[1] || null;
-            data.tan = cleanText.match(/TAN\s*[:]?\s*([A-Z]{4}\d{5}[A-Z])/i)?.[1] || null;
-            data.assessmentYear = cleanText.match(/Assessment Year\s*[:]?\s*(\d{4}-\d{2})/i)?.[1] || null;
-            data.totalAmount = amt(cleanText.match(/Total\s*\(A\+B\+C\+D\+E\+F\)\s*[₹]?\s*([\d,]+)/i)?.[1] || cleanText.match(/Amount\s*\(in Rs\.\)\s*[:]?\s*[₹]?\s*([\d,]+)/i)?.[1]);
-            return data;
+            
+            const getMatch = (patterns) => {
+                for (let p of patterns) {
+                    const m = cleanText.match(p);
+                    if (m) return m[1].trim();
+                }
+                return '';
+            };
+
+            const dateOfDeposit = getMatch([
+                /Date of Deposit\s*[:]\s*(\d{2}-\w{3}-\d{4})/i,
+                /Date of Deposit\s*[:]\s*(\d{2}\/\d{2}\/\d{4})/i,
+                /Date of Deposit\s*[:]\s*(\d{2}-\w+-\d{4})/i,
+                /Date of Deposit\s+(\d{2}-\w{3}-\d{4})/i,
+                /Date of Deposit\s+(\d{2}\/\d{2}\/\d{4})/i,
+                /Date of Deposit[^0-9]*(\d{2}[-\/]\w{3,}[-\/]\d{4})/i
+            ]);
+
+            let finalDate = dateOfDeposit;
+            if (!finalDate) {
+                const depositIndex = cleanText.search(/Date of Deposit/i);
+                if (depositIndex !== -1) {
+                    const nearbyText = cleanText.substring(depositIndex, depositIndex + 100);
+                    const m = nearbyText.match(/(\d{2}-\w{3}-\d{4})/i) || nearbyText.match(/(\d{2}\/\d{2}\/\d{4})/i);
+                    if (m) finalDate = m[1];
+                }
+            }
+            if (!finalDate) {
+                const m = cleanText.match(/(\d{2}-\w{3}-\d{4})/);
+                if (m) {
+                    const datePos = cleanText.indexOf(m[1]);
+                    const labelPos = cleanText.search(/Date of Deposit/i);
+                    if (labelPos !== -1 && Math.abs(datePos - labelPos) < 100) finalDate = m[1];
+                }
+            }
+
+            const bsrCode = getMatch([/BSR\s*code\s*[:]\s*(\d{7})/i, /BSR\s*code\s*(\d{7})/i, /BSR\s*[:]\s*(\d{7})/i]);
+            const challanNo = getMatch([/Challan\s*No\s*[:]\s*(\d+)/i, /Challan\s*Number\s*[:]\s*(\d+)/i, /Challan\s*No\s*(\d+)/i]);
+            const natureOfPayment = getMatch([/Nature of Payment\s*[:]\s*(\d+[A-Z]*)/i, /Nature of Payment\s*[:]\s*([A-Z0-9]+)/i]);
+            
+            const amtMatch = getMatch([/Amount\s*\(in Rs\.\)\s*[:]\s*[₹]?\s*([\d,]+)/i, /Amount\s*[:]\s*[₹]?\s*([\d,]+)/i, /Total.*[₹]\s*([\d,]+)/i]);
+            const amount = amtMatch ? amtMatch.replace(/,/g, '') : '';
+
+            const taxMatch = getMatch([/[A]\s+Tax\s+[₹]?\s*([\d,]+)/i, /Tax\s+[₹]?\s*([\d,]+)/i, /A\s+[₹]?\s*([\d,]+)/i]);
+            const tax = taxMatch ? taxMatch.replace(/,/g, '') : '';
+
+            const surMatch = getMatch([/[B]\s+Surcharge\s+[₹]?\s*([\d,]+)/i, /Surcharge\s+[₹]?\s*([\d,]+)/i, /B\s+[₹]?\s*([\d,]+)/i]);
+            const surcharge = surMatch ? surMatch.replace(/,/g, '') : '';
+
+            const cessMatch = getMatch([/[C]\s+Cess\s+[₹]?\s*([\d,]+)/i, /Cess\s+[₹]?\s*([\d,]+)/i, /C\s+[₹]?\s*([\d,]+)/i]);
+            const cess = cessMatch ? cessMatch.replace(/,/g, '') : '';
+
+            const intMatch = getMatch([/[D]\s+Interest\s+[₹]?\s*([\d,]+)/i, /Interest\s+[₹]?\s*([\d,]+)/i, /D\s+[₹]?\s*([\d,]+)/i]);
+            const interest = intMatch ? intMatch.replace(/,/g, '') : '';
+
+            const penMatch = getMatch([/[E]\s+Penalty\s+[₹]?\s*([\d,]+)/i, /Penalty\s+[₹]?\s*([\d,]+)/i, /E\s+[₹]?\s*([\d,]+)/i]);
+            const penalty = penMatch ? penMatch.replace(/,/g, '') : '';
+
+            const feeMatch = getMatch([/[F]\s+Fee under section 234E\s+[₹]?\s*([\d,]+)/i, /Fee under section 234E\s+[₹]?\s*([\d,]+)/i, /F\s+[₹]?\s*([\d,]+)/i]);
+            const fee234E = feeMatch ? feeMatch.replace(/,/g, '') : '';
+
+            const tan = getMatch([/TAN\s*[:]\s*([A-Z]{4}\d{5}[A-Z])/i, /TAN\s+([A-Z]{4}\d{5}[A-Z])/i]);
+            const assessmentYear = getMatch([/Assessment Year\s*[:]\s*(\d{4}-\d{2})/i, /Assessment Year\s+(\d{4}-\d{2})/i]);
+
+            let finalAmount = amount;
+            if (!finalAmount) {
+                const total = getMatch([/Total\s*\(A\+B\+C\+D\+E\+F\)\s*[₹]?\s*([\d,]+)/i, /Total.*[₹]\s*([\d,]+)/i]);
+                if (total) finalAmount = total.replace(/,/g, '');
+            }
+
+            return {
+                file: filename,
+                dateOfDeposit: finalDate,
+                bsrCode,
+                challanNo,
+                natureOfPayment,
+                amount: finalAmount,
+                tax,
+                surcharge,
+                cess,
+                interest,
+                penalty,
+                fee234E,
+                tan,
+                assessmentYear
+            };
         }
 
-        function extractGSTData(text) { return { gstin: text.match(/GSTIN[\s:]*([A-Z0-9]{15})/i)?.[1] || 'N/A' }; }
-        function extractIncomeTaxData(text) { return { pan: text.match(/PAN[\s:]*([A-Z]{5}\d{4}[A-Z])/i)?.[1] || 'N/A' }; }
-        function extractGSTR3BData(text) { return { gstin: text.match(/GSTIN[\s:]*([A-Z0-9]{15})/i)?.[1] || 'N/A' }; }
-
-        // Display Logic
-        function displayResults() {
-            if (extractedData.length === 0) return;
-
-            const allKeys = new Set(['filename', 'type', 'status']);
-            extractedData.forEach(item => Object.keys(item).forEach(key => allKeys.add(key)));
-
-            const headers = Array.from(allKeys);
-            const headerRow = document.getElementById('tableHeader');
-            headerRow.innerHTML = '';
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.className = 'px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap';
-                th.textContent = header.charAt(0).toUpperCase() + header.slice(1).replace(/([A-Z])/g, ' $1').replace(/_/g, ' ');
-                headerRow.appendChild(th);
+        // --- UI & PRESENTATION ---
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            ['PF', 'ESIC', 'TDS'].forEach(t => {
+                const btn = document.getElementById(`${t.toLowerCase()}TabBtn`);
+                if (t === activeTab) {
+                    btn.className = "inline-flex items-center p-4 border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 font-bold focus:outline-none";
+                } else {
+                    btn.className = "inline-flex items-center p-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 font-medium focus:outline-none";
+                }
             });
+            
+            document.getElementById('pfStats').style.display = activeTab === 'PF' ? 'grid' : 'none';
+            document.getElementById('esicStats').style.display = activeTab === 'ESIC' ? 'grid' : 'none';
+            document.getElementById('tdsStats').style.display = activeTab === 'TDS' ? 'grid' : 'none';
+            
+            const scanWarn = document.getElementById('scanWarn');
+            if (activeTab === 'PF') {
+                const noTextCount = extractedPF.filter(r => r._noText).length;
+                if (noTextCount > 0) {
+                    scanWarn.classList.remove('hidden');
+                    document.getElementById('scanWarnText').innerHTML = `<strong>Heads up:</strong> ${noTextCount} PF PDF(s) have <em>no selectable text</em> (likely scanned/redacted). Put original portal PDFs or add OCR.`;
+                } else {
+                    scanWarn.classList.add('hidden');
+                }
+            } else {
+                scanWarn.classList.add('hidden');
+            }
+            
+            renderGrid();
+        }
 
+        function updateAllKPIs() {
+            // PF
+            const validPF = extractedPF.filter(r => !r._noText && !r._error);
+            const totalPFAmt = validPF.reduce((a, r) => a + (parseFloat(r.totalAmt) || 0), 0);
+            const latePFCount = validPF.filter(r => r.after15).length;
+            
+            document.getElementById('pfTotalChallans').textContent = extractedPF.length;
+            document.getElementById('pfTotalAmount').textContent = totalPFAmt.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            document.getElementById('pfLateChallans').textContent = latePFCount;
+            const pfRate = extractedPF.length > 0 ? Math.round((validPF.length / extractedPF.length) * 100) : 0;
+            document.getElementById('pfSuccessRate').textContent = `${pfRate}%`;
+            
+            // ESIC
+            const validESIC = extractedESIC.filter(r => !r._error);
+            const totalESICAmt = validESIC.reduce((a, r) => a + (parseFloat(r.amountPaid) || 0), 0);
+            const successESICCount = validESIC.filter(r => r.transactionStatus.toLowerCase() === 'success').length;
+            const pendingESICCount = validESIC.filter(r => r.transactionStatus.toLowerCase() === 'pending').length;
+            
+            document.getElementById('esicTotalChallans').textContent = extractedESIC.length;
+            document.getElementById('esicTotalAmount').textContent = totalESICAmt.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            document.getElementById('esicSuccessCount').textContent = successESICCount;
+            document.getElementById('esicPendingCount').textContent = pendingESICCount;
+            
+            // TDS
+            const validTDS = extractedTDS.filter(r => !r._error);
+            const totalTDSAmt = validTDS.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+            const totalTDSTax = validTDS.reduce((sum, r) => sum + (parseFloat(r.tax) || 0), 0);
+            
+            document.getElementById('tdsTotalChallans').textContent = extractedTDS.length;
+            document.getElementById('tdsTotalAmount').textContent = totalTDSAmt.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            document.getElementById('tdsTotalTax').textContent = totalTDSTax.toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
+            document.getElementById('tdsSuccessCount').textContent = validTDS.length;
+        }
+
+        function renderGrid() {
+            const headerRow = document.getElementById('tableHeader');
             const tbody = document.getElementById('tableBody');
+            headerRow.innerHTML = '';
             tbody.innerHTML = '';
             
-            extractedData.forEach(item => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-blue-50 transition-colors';
-                
-                headers.forEach(header => {
-                    const cell = document.createElement('td');
-                    cell.className = 'px-6 py-4 whitespace-nowrap text-sm text-slate-700';
-                    
-                    const value = item[header] !== undefined && item[header] !== null ? item[header] : 'N/A';
-                    
-                    if (header === 'status') {
-                        const span = document.createElement('span');
-                        span.textContent = value;
-                        if (value.startsWith('Error')) {
-                            span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200';
-                        } else {
-                            span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200';
-                        }
-                        cell.appendChild(span);
-                    } else if (header === 'type') {
-                        const span = document.createElement('span');
-                        span.textContent = value;
-                        span.className = 'px-2 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200';
-                        cell.appendChild(span);
-                    } else {
-                        cell.textContent = value;
-                    }
-                    row.appendChild(cell);
-                });
-                tbody.appendChild(row);
+            let currentData = [];
+            let headers = [];
+            
+            if (activeTab === 'PF') {
+                currentData = extractedPF;
+                headers = [
+                    "File Name", "TRRN No", "Challan Status", "Establishment ID", "Establishment Name",
+                    "Total Amount (₹)", "Account-1 (₹)", "Account-2 (₹)", "Account-10 (₹)", "Account-21 (₹)", "Account-22 (₹)",
+                    "CRN", "Payment Date", "Confirmation Date", "Wage Month", "After 15th?"
+                ];
+            } else if (activeTab === 'ESIC') {
+                currentData = extractedESIC;
+                headers = [
+                    "Sr. No.", "Status", "Employer Code", "Employer Name", "Period", "Challan No", 
+                    "Created Date", "Submitted Date", "Amount (₹)", "Transaction No"
+                ];
+            } else if (activeTab === 'TDS') {
+                currentData = extractedTDS;
+                headers = [
+                    "Sr. No.", "Date of Deposit", "BSR Code", "Challan No", "Section", "Amount (₹)", 
+                    "Tax (₹)", "Surcharge", "Cess", "Interest", "Penalty", "Fee 234E", "TAN", "AY"
+                ];
+            }
+            
+            headers.forEach(h => {
+                const th = document.createElement('th');
+                if (h.includes('₹') || h.includes('Amount') || h.includes('A/c') || h.includes('Account')) {
+                    th.className = 'px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap dark:text-slate-400';
+                } else {
+                    th.className = 'px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap dark:text-slate-400';
+                }
+                th.textContent = h;
+                headerRow.appendChild(th);
             });
-
-            document.getElementById('resultsSection').classList.remove('hidden');
-        }
-
-        function downloadExcel() {
-            if (extractedData.length === 0) {
-                alert('No data to download');
+            
+            if (currentData.length === 0) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = headers.length;
+                td.className = 'px-6 py-8 text-center text-sm text-slate-500 italic dark:text-slate-400';
+                td.textContent = 'No challans parsed for this compliance type.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
                 return;
             }
-            const ws = XLSX.utils.json_to_sheet(extractedData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Extracted Challan Data');
-            XLSX.writeFile(wb, `Challan_Extraction_${new Date().toISOString().slice(0, 10)}.xlsx`);
+            
+            const money = (n) => isFinite(n) ? n.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
+            
+            currentData.forEach((r, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-blue-50/50 dark:hover:bg-slate-800/40 transition-colors';
+                
+                const td = (v, cls) => {
+                    const x = document.createElement('td');
+                    x.textContent = v ?? '';
+                    if (cls) x.className = cls;
+                    return x;
+                };
+                
+                if (activeTab === 'PF') {
+                    if (r._noText) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">${r.file}</td>
+                            <td colspan="${headers.length - 1}" class="px-6 py-4 text-slate-400 dark:text-slate-500 italic text-center">No selectable text found (likely scanned or image PDF).</td>
+                        `;
+                    } else if (r._error) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">${r.file}</td>
+                            <td colspan="${headers.length - 1}" class="px-6 py-4 text-red-500 dark:text-red-400 italic text-center">Error reading PDF: ${r._errorMsg}</td>
+                        `;
+                    } else {
+                        tr.appendChild(td(r.file, 'px-6 py-4 font-semibold text-slate-700 dark:text-slate-300'));
+                        tr.appendChild(td(r.trrn, 'px-6 py-4 font-mono'));
+                        tr.appendChild(td(r.status, 'px-6 py-4'));
+                        tr.appendChild(td(r.estId, 'px-6 py-4'));
+                        tr.appendChild(td(r.estName, 'px-6 py-4 truncate max-w-xs'));
+                        tr.appendChild(td(money(r.totalAmt), 'px-6 py-4 text-right font-bold text-slate-900 dark:text-slate-100'));
+                        tr.appendChild(td(money(r.a1), 'px-6 py-4 text-right text-slate-600 dark:text-slate-400'));
+                        tr.appendChild(td(money(r.a2), 'px-6 py-4 text-right text-slate-600 dark:text-slate-400'));
+                        tr.appendChild(td(money(r.a10), 'px-6 py-4 text-right text-slate-600 dark:text-slate-400'));
+                        tr.appendChild(td(money(r.a21), 'px-6 py-4 text-right text-slate-600 dark:text-slate-400'));
+                        tr.appendChild(td(money(r.a22), 'px-6 py-4 text-right text-slate-600 dark:text-slate-400'));
+                        tr.appendChild(td(r.crn, 'px-6 py-4'));
+                        tr.appendChild(td(r.payDate, 'px-6 py-4'));
+                        tr.appendChild(td(r.confDate, 'px-6 py-4'));
+                        tr.appendChild(td(r.wageMonth, 'px-6 py-4'));
+                        
+                        const tag = document.createElement('td');
+                        tag.className = 'px-6 py-4 text-center';
+                        const pill = document.createElement('span');
+                        pill.className = 'px-2.5 py-0.5 text-xs font-semibold rounded-full border ' + 
+                            (r.after15 ? 'bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400' : 'bg-green-50 border-green-200 text-green-600 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400');
+                        pill.textContent = r.after15 ? 'Yes' : 'No';
+                        tag.appendChild(pill);
+                        tr.appendChild(tag);
+                    }
+                } else if (activeTab === 'ESIC') {
+                    if (r._error) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4">${idx + 1}</td>
+                            <td colspan="${headers.length - 1}" class="px-6 py-4 text-red-500 dark:text-red-400 italic text-center">Error reading PDF: ${r._errorMsg}</td>
+                        `;
+                    } else {
+                        let statusBadge = '';
+                        if (r.transactionStatus.toLowerCase() === 'success') {
+                            statusBadge = '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">Success</span>';
+                        } else if (r.transactionStatus.toLowerCase() === 'pending') {
+                            statusBadge = '<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800">Pending</span>';
+                        } else {
+                            statusBadge = `<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">${r.transactionStatus || 'N/A'}</span>`;
+                        }
+                        
+                        tr.appendChild(td(idx + 1, 'px-6 py-4'));
+                        const statusTd = document.createElement('td');
+                        statusTd.className = 'px-6 py-4';
+                        statusTd.innerHTML = statusBadge;
+                        tr.appendChild(statusTd);
+                        tr.appendChild(td(r.employerCode, 'px-6 py-4'));
+                        tr.appendChild(td(r.employerName, 'px-6 py-4 truncate max-w-xs'));
+                        tr.appendChild(td(r.challanPeriod, 'px-6 py-4'));
+                        tr.appendChild(td(r.challanNumber, 'px-6 py-4'));
+                        tr.appendChild(td(r.challanCreatedDate, 'px-6 py-4'));
+                        tr.appendChild(td(r.challanSubmittedDate, 'px-6 py-4'));
+                        tr.appendChild(td(parseFloat(r.amountPaid || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }), 'px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-200'));
+                        tr.appendChild(td(r.transactionNumber, 'px-6 py-4'));
+                    }
+                } else if (activeTab === 'TDS') {
+                    if (r._error) {
+                        tr.innerHTML = `
+                            <td class="px-6 py-4">${idx + 1}</td>
+                            <td colspan="${headers.length - 1}" class="px-6 py-4 text-red-500 dark:text-red-400 italic text-center">Error reading PDF: ${r._errorMsg}</td>
+                        `;
+                    } else {
+                        tr.appendChild(td(idx + 1, 'px-6 py-4'));
+                        tr.appendChild(td(r.dateOfDeposit, 'px-6 py-4'));
+                        tr.appendChild(td(r.bsrCode, 'px-6 py-4 font-bold'));
+                        tr.appendChild(td(r.challanNo, 'px-6 py-4 font-mono'));
+                        const secTd = document.createElement('td');
+                        secTd.className = 'px-6 py-4';
+                        secTd.innerHTML = `<span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold text-xs dark:bg-blue-900/20 dark:text-blue-300">${r.natureOfPayment || 'N/A'}</span>`;
+                        tr.appendChild(secTd);
+                        tr.appendChild(td(parseFloat(r.amount || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }), 'px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-200'));
+                        tr.appendChild(td(parseFloat(r.tax || 0).toLocaleString('en-IN', { style: 'currency', currency: 'INR' }), 'px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-200'));
+                        tr.appendChild(td(r.surcharge ? parseFloat(r.surcharge).toLocaleString('en-IN') : '0', 'px-6 py-4 text-right'));
+                        tr.appendChild(td(r.cess ? parseFloat(r.cess).toLocaleString('en-IN') : '0', 'px-6 py-4 text-right'));
+                        tr.appendChild(td(r.interest ? parseFloat(r.interest).toLocaleString('en-IN') : '0', 'px-6 py-4 text-right'));
+                        tr.appendChild(td(r.penalty ? parseFloat(r.penalty).toLocaleString('en-IN') : '0', 'px-6 py-4 text-right'));
+                        tr.appendChild(td(r.fee234E ? parseFloat(r.fee234E).toLocaleString('en-IN') : '0', 'px-6 py-4 text-right'));
+                        tr.appendChild(td(r.tan, 'px-6 py-4 font-bold'));
+                        tr.appendChild(td(r.assessmentYear, 'px-6 py-4'));
+                    }
+                }
+                
+                tbody.appendChild(tr);
+            });
         }
 
-        function clearResults() {
-            extractedData = [];
-            document.getElementById('resultsSection').classList.add('hidden');
-            document.getElementById('uploadStats').classList.add('hidden');
-            document.getElementById('progressContainer').classList.add('hidden');
-            document.getElementById('actionButtons').classList.add('hidden');
-            document.getElementById('fileInput').value = '';
+        // --- EXPORT IMPLEMENTATIONS ---
+        function copyToClipboard() {
+            let text = "";
+            let currentData = [];
             
-            // Reset stats
-            document.getElementById('totalFiles').textContent = '0';
-            document.getElementById('successCount').textContent = '0';
-            document.getElementById('errorCount').textContent = '0';
-            document.getElementById('processingTime').textContent = '0s';
+            if (activeTab === 'PF') {
+                text = "File Name\tTRRN No\tChallan Status\tEstablishment ID\tEstablishment Name\tTotal Amount\tAccount-1\tAccount-2\tAccount-10\tAccount-21\tAccount-22\tCRN\tPayment Date\tConfirmation Date\tWage Month\tAfter 15th?\n";
+                currentData = extractedPF;
+                currentData.forEach(r => {
+                    if (r._noText) text += `${r.file}\t(no text)\n`;
+                    else if (r._error) text += `${r.file}\t(error: ${r._errorMsg})\n`;
+                    else text += `${r.file}\t${r.trrn || ''}\t${r.status || ''}\t${r.estId || ''}\t${r.estName || ''}\t${r.totalAmt || 0}\t${r.a1 || 0}\t${r.a2 || 0}\t${r.a10 || 0}\t${r.a21 || 0}\t${r.a22 || 0}\t${r.crn || ''}\t${r.payDate || ''}\t${r.confDate || ''}\t${r.wageMonth || ''}\t${r.after15 ? 'Yes' : 'No'}\n`;
+                });
+            } else if (activeTab === 'ESIC') {
+                text = "Sr. No.\tTransaction Status\tEmployer Code\tEmployer Name\tPeriod\tChallan Number\tCreated Date\tSubmitted Date\tAmount Paid\tTransaction Number\n";
+                currentData = extractedESIC;
+                currentData.forEach((r, idx) => {
+                    if (r._error) text += `${idx+1}\t(error: ${r._errorMsg})\n`;
+                    else text += `${idx+1}\t${r.transactionStatus || ''}\t${r.employerCode || ''}\t${r.employerName || ''}\t${r.challanPeriod || ''}\t${r.challanNumber || ''}\t${r.challanCreatedDate || ''}\t${r.challanSubmittedDate || ''}\t${r.amountPaid || 0}\t${r.transactionNumber || ''}\n`;
+                });
+            } else if (activeTab === 'TDS') {
+                text = "Sr. No.\tDate of Deposit\tBSR Code\tChallan No\tNature of Payment\tAmount\tTax\tSurcharge\tCess\tInterest\tPenalty\tFee 234E\tTAN\tAssessment Year\n";
+                currentData = extractedTDS;
+                currentData.forEach((r, idx) => {
+                    if (r._error) text += `${idx+1}\t(error: ${r._errorMsg})\n`;
+                    else text += `${idx+1}\t${r.dateOfDeposit || ''}\t${r.bsrCode || ''}\t${r.challanNo || ''}\t${r.natureOfPayment || ''}\t${r.amount || 0}\t${r.tax || 0}\t${r.surcharge || 0}\t${r.cess || 0}\t${r.interest || 0}\t${r.penalty || 0}\t${r.fee234E || 0}\t${r.tan || ''}\t${r.assessmentYear || ''}\n`;
+                });
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyToClipboardBtn');
+                const origHTML = btn.innerHTML;
+                btn.innerHTML = `<i class="fas fa-check mr-1 text-green-600"></i>Copied`;
+                setTimeout(() => { btn.innerHTML = origHTML; }, 2000);
+            }).catch(err => {
+                console.error("Copy failed", err);
+            });
+        }
+
+        function printResults() {
+            let currentData = [];
+            if (activeTab === 'PF') currentData = extractedPF;
+            else if (activeTab === 'ESIC') currentData = extractedESIC;
+            else if (activeTab === 'TDS') currentData = extractedTDS;
+            
+            if (currentData.length === 0) return;
+            
+            const win = window.open('', '_blank');
+            let tableHTML = document.getElementById('resultsTable').outerHTML;
+            
+            let html = `
+            <html>
+            <head>
+                <title>${activeTab} Challan Extractor Report</title>
+                <style>
+                    body { font-family: 'Times New Roman', serif; margin: 0.25in; color: #000; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 8px; }
+                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+                    th { font-weight: bold; background-color: #f8fafc; color: #333; text-transform: uppercase; }
+                    .right { text-align: right; }
+                    .center { text-align: center; }
+                    h2, h4 { margin: 4px 0; text-align: center; }
+                    @media print {
+                        body { margin: 0.25in; }
+                        thead { display: table-header-group; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>${activeTab} Challan Extractor Report</h2>
+                <h4 style="color:#555;font-weight:normal;">CA. Vaibhav Khanna | Automation Hub</h4>
+                ${tableHTML}
+            </body>
+            </html>
+            `;
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            setTimeout(() => {
+                win.print();
+                win.close();
+            }, 500);
+        }
+
+        function exportToExcel() {
+            if (!window.XLSX) {
+                alert("Excel library is still loading. Please try again.");
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            let rows = [];
+            let sheetName = "";
+            
+            if (activeTab === 'PF') {
+                sheetName = "PF Challans";
+                const headers = [
+                    "File Name", "TRRN No", "Challan Status", "Establishment ID", "Establishment Name",
+                    "Total Amount (Rs)", "Account-1 (Rs)", "Account-2 (Rs)", "Account-10 (Rs)", "Account-21 (Rs)", "Account-22 (Rs)",
+                    "CRN", "Payment Date", "Payment Confirmation Date", "Wage Month", "Paid after 15th?"
+                ];
+                rows.push(headers);
+                
+                extractedPF.forEach(r => {
+                    if (r._noText) rows.push([r.file, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "No text"]);
+                    else if (r._error) rows.push([r.file, "", "", "", "", "", "", "", "", "", "", "", "", "", "", `Error: ${r._errorMsg}`]);
+                    else {
+                        rows.push([
+                            r.file, r.trrn || '', r.status || '', r.estId || '', r.estName || '',
+                            parseFloat(r.totalAmt) || 0, parseFloat(r.a1) || 0, parseFloat(r.a2) || 0,
+                            parseFloat(r.a10) || 0, parseFloat(r.a21) || 0, parseFloat(r.a22) || 0,
+                            r.crn || '', r.payDate || '', r.confDate || '', r.wageMonth || '',
+                            r.after15 ? "Yes" : "No"
+                        ]);
+                    }
+                });
+                
+                const validRows = extractedPF.filter(r => !r._noText && !r._error);
+                const totalAmt = validRows.reduce((a, r) => a + (parseFloat(r.totalAmt) || 0), 0);
+                const totalA1 = validRows.reduce((a, r) => a + (parseFloat(r.a1) || 0), 0);
+                const totalA2 = validRows.reduce((a, r) => a + (parseFloat(r.a2) || 0), 0);
+                const totalA10 = validRows.reduce((a, r) => a + (parseFloat(r.a10) || 0), 0);
+                const totalA21 = validRows.reduce((a, r) => a + (parseFloat(r.a21) || 0), 0);
+                const totalA22 = validRows.reduce((a, r) => a + (parseFloat(r.a22) || 0), 0);
+                
+                rows.push([]);
+                rows.push([
+                    "TOTALS", "", "", "", "",
+                    totalAmt, totalA1, totalA2, totalA10, totalA21, totalA22,
+                    "", "", "", "", ""
+                ]);
+            } else if (activeTab === 'ESIC') {
+                sheetName = "ESIC Challans";
+                const headers = ['Sr. No.', 'Transaction Status', 'Employer Code', 'Employer Name', 'Challan Period', 'Challan Number', 'Created Date', 'Submitted Date', 'Amount Paid (₹)', 'Transaction Number'];
+                rows.push(headers);
+                
+                extractedESIC.forEach((r, idx) => {
+                    if (r._error) rows.push([idx + 1, "", "", "", "", "", "", "", "", `Error: ${r._errorMsg}`]);
+                    else {
+                        rows.push([
+                            idx + 1, r.transactionStatus, r.employerCode, r.employerName, r.challanPeriod,
+                            r.challanNumber, r.challanCreatedDate, r.challanSubmittedDate, parseFloat(r.amountPaid) || 0, r.transactionNumber
+                        ]);
+                    }
+                });
+                
+                const totalAmount = extractedESIC.filter(r => !r._error).reduce((sum, r) => sum + (parseFloat(r.amountPaid) || 0), 0);
+                rows.push([]);
+                rows.push(['TOTAL', '', '', '', '', '', '', '', totalAmount, '']);
+            } else if (activeTab === 'TDS') {
+                sheetName = "TDS Challans";
+                const headers = ['Sr. No.', 'Date of Deposit', 'BSR Code', 'Challan No', 'Nature of Payment', 'Amount (₹)', 'Tax (₹)', 'Surcharge (₹)', 'Cess (₹)', 'Interest (₹)', 'Penalty (₹)', 'Fee u/s 234E (₹)', 'TAN', 'Assessment Year'];
+                rows.push(headers);
+                
+                extractedTDS.forEach((r, idx) => {
+                    if (r._error) rows.push([idx + 1, "", "", "", "", "", "", "", "", "", "", "", "", `Error: ${r._errorMsg}`]);
+                    else {
+                        rows.push([
+                            idx + 1, r.dateOfDeposit, r.bsrCode, r.challanNo, r.natureOfPayment,
+                            parseFloat(r.amount) || 0, parseFloat(r.tax) || 0, parseFloat(r.surcharge) || 0,
+                            parseFloat(r.cess) || 0, parseFloat(r.interest) || 0, parseFloat(r.penalty) || 0,
+                            parseFloat(r.fee234E) || 0, r.tan, r.assessmentYear
+                        ]);
+                    }
+                });
+                
+                const validTDS = extractedTDS.filter(r => !r._error);
+                const totalAmount = validTDS.reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0);
+                const totalTax = validTDS.reduce((sum, r) => sum + (parseFloat(r.tax) || 0), 0);
+                
+                rows.push([]);
+                rows.push(['', 'TOTAL', '', '', '', totalAmount, totalTax, '', '', '', '', '', '', '']);
+            }
+            
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            ws['!cols'] = rows[0].map((h, colIndex) => {
+                let max = h.length;
+                rows.forEach(r => {
+                    const cellVal = r[colIndex];
+                    if (cellVal !== null && cellVal !== undefined) {
+                        max = Math.max(max, String(cellVal).length);
+                    }
+                });
+                return { wch: max + 2 };
+            });
+            
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            XLSX.writeFile(wb, `${sheetName.replace(/\s+/g, '_')}_Report.xlsx`);
+        }
+
+        function exportToPDF() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF engine is still loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'in', format: 'a4' });
+            
+            const title = `${activeTab} Challan Extractor Report`;
+            const subtitle = "CA. Vaibhav Khanna | Automation Hub";
+            const pageWidth = doc.internal.pageSize.getWidth();
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text(title, pageWidth / 2, 0.4, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(subtitle, pageWidth / 2, 0.6, { align: 'center' });
+            
+            doc.autoTable({
+                html: '#resultsTable',
+                startY: 0.8,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 0.04, valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.001 },
+                headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontSize: 7, fontStyle: 'bold', halign: 'center' },
+                margin: { top: 0.25, right: 0.25, bottom: 0.25, left: 0.25 }
+            });
+            
+            doc.save(`${activeTab}_Challan_Data.pdf`);
         }
     </script>
     <script>
