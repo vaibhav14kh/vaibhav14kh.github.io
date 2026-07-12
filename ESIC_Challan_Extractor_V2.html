@@ -56,20 +56,123 @@
 
     <style>
         /* Base Settings & Theme */
-        body { font-family: 'Inter', sans-serif;   }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+            scroll-behavior: smooth;
+        }
         
-        .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
-        .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
-        .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.9); 
+            backdrop-filter: blur(10px);
+            border: 1px solid #e2e8f0; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            border-radius: 1rem; 
+            transition: all 0.3s ease; 
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+        .glass-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .glass-card:hover {
+            border-color: #475569;
+            box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4);
+        }
+        .gradient-text { 
+            background: linear-gradient(to right, #2563eb, #4f46e5); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+        .dark .gradient-text {
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-pattern { 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px); 
+            background-size: 24px 24px; 
+        }
+        .dark .hero-pattern {
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
 
         /* Upload Zone Styles */
-        .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
-        .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+        .drop-zone { 
+            transition: all 0.3s ease; 
+            background-color: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(4px); 
+        }
+        .dark .drop-zone {
+            background-color: rgba(15, 23, 42, 0.6);
+            border-color: #475569;
+        }
+        .drop-zone.drag-over { 
+            background-color: #eff6ff; 
+            border-color: #3b82f6; 
+            transform: scale(1.005); 
+        }
+        .dark .drop-zone.drag-over {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+        }
 
-        /* Stat Cards */
-        .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+        /* Stat Cards following design system nested card schemas */
+        /* Schema A (Slate / Default) */
+        .stat-card-slate { 
+            background-color: #f1f5f9; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-slate {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        .stat-card-slate:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #cbd5e1; 
+        }
+        .dark .stat-card-slate:hover {
+            border-color: #475569;
+        }
+
+        /* Schema B (Blue Tint / Accent) */
+        .stat-card-blue { 
+            background-color: #eff6ff; 
+            border: 1px solid #dbeafe; 
+            border-radius: 0.75rem; 
+            padding: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 1rem; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .dark .stat-card-blue {
+            background-color: rgba(30, 41, 59, 0.5);
+            border-color: #1e3a8a;
+        }
+        .stat-card-blue:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            border-color: #bfdbfe; 
+        }
+        .dark .stat-card-blue:hover {
+            border-color: #1d4ed8;
+        }
 
         /* Compact Buttons */
         .btn-compact { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
@@ -82,8 +185,18 @@
             text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem;
             text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap;
         }
+        .dark thead th {
+            background-color: #1e293b;
+            color: #94a3b8;
+            border-bottom-color: #334155;
+        }
         tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
+        .dark tbody td {
+            color: #cbd5e1;
+            border-bottom-color: #334155;
+        }
         tbody tr:hover { background-color: #f8fafc; }
+        .dark tbody tr:hover { background-color: rgba(30, 41, 59, 0.5); }
 
         /* Loading Overlay */
         .loading-overlay {
@@ -91,9 +204,16 @@
             background: rgba(255,255,255,0.9); display: none; justify-content: center; align-items: center;
             z-index: 9999; backdrop-filter: blur(4px);
         }
+        .dark .loading-overlay {
+            background: rgba(15, 23, 42, 0.95);
+        }
         .spinner {
             width: 3rem; height: 3rem; border: 4px solid #e2e8f0; border-top: 4px solid #2563eb;
             border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        .dark .spinner {
+            border-color: #334155;
+            border-top-color: #60a5fa;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -110,7 +230,7 @@
     </div>
 
     <!-- Theme Synced Navigation -->
-    <nav class="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 mb-8 dark:bg-slate-900/80 dark:border-slate-700">
+    <nav class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50 mb-8 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <a href="https://ai.manidesigns.in/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -186,29 +306,29 @@
                 
                 <!-- Stats Grid -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 text-xl shadow-sm"><i class="fas fa-file-invoice"></i></div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-file-invoice"></i></div>
                         <div>
                             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Challans</p>
                             <p id="totalChallans" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600 text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-rupee-sign"></i></div>
                         <div>
                             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Total Amount</p>
                             <p id="totalAmount" class="text-xl font-black text-slate-800 dark:text-slate-200">₹0</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600 text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
+                    <div class="stat-card-slate">
+                        <div class="w-12 h-12 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-check-circle"></i></div>
                         <div>
                             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Successful</p>
                             <p id="successCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600 text-xl shadow-sm"><i class="fas fa-clock"></i></div>
+                    <div class="stat-card-blue">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-xl flex items-center justify-center text-xl shadow-sm"><i class="fas fa-clock"></i></div>
                         <div>
                             <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">Pending</p>
                             <p id="pendingCount" class="text-xl font-black text-slate-800 dark:text-slate-200">0</p>
@@ -218,7 +338,7 @@
 
                 <!-- Data Table -->
                 <div class="glass-card overflow-hidden">
-                    <div class="p-5 border-b border-slate-200 bg-white flex justify-between items-center dark:bg-slate-800 dark:border-slate-700">
+                    <div class="p-5 border-b border-slate-200 bg-slate-50/50 dark:bg-slate-800/40 flex justify-between items-center dark:border-slate-700">
                         <h3 class="text-base font-bold text-slate-800 dark:text-slate-200"><i class="fas fa-table mr-2 text-blue-500"></i>Extracted Data</h3>
                         <div class="flex gap-3">
                             <button onclick="exportToCSV()" class="btn-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600"><i class="fas fa-file-csv mr-2 text-blue-600"></i>CSV</button>
@@ -241,7 +361,7 @@
                                     <th>Transaction No</th>
                                 </tr>
                             </thead>
-                            <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm dark:bg-slate-800 dark:divide-slate-700">
+                            <tbody id="resultsBody" class="divide-y divide-slate-100 text-sm dark:divide-slate-700">
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
@@ -286,7 +406,7 @@
                 fileList.classList.remove('hidden');
                 selectedFiles.forEach((file, index) => {
                     const div = document.createElement('div');
-                    div.className = 'flex justify-between items-center bg-slate-50 p-3 rounded-lg border border-slate-200';
+                    div.className = 'flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-200 dark:border-slate-700';
                     div.innerHTML = `
                         <span class="text-slate-700 truncate dark:text-slate-300"><i class="fas fa-file-pdf text-red-400 mr-2"></i>${file.name}</span>
                         <button onclick="removeFile(${index})" class="text-red-500 hover:text-red-700 ml-2 font-bold">
@@ -382,12 +502,17 @@
             data.transactionStatus = getMatch([/Transaction\s*status\s*[:]\s*(\w+)/i, /Transaction\s*status\s+(\w+)/i]);
             data.employerCode = getMatch([/Employer['']?s\s*Code\s*No\s*[:]\s*([A-Z0-9]+)/i, /Employer['']?s\s*Code\s*[:]\s*([A-Z0-9]+)/i]);
             data.employerName = getMatch([/Employer['']?s\s*Name\s*[:]\s*([^:\n]+?)(?=\s*Challan|$)/i]);
-            data.challanPeriod = getMatch([/Challan\s*Period\s*[:]\s*(\w{3}-\d{4})/i]);
+            data.challanPeriod = getMatch([/Challan\s*Period\s*[:]\s*(\w{3}-\d{4})/i, /Challan\s*Period\s*[:]\s*([^:\n]+?)(?=\s*Challan|$)/i]);
             data.challanNumber = getMatch([/Challan\s*Number\s*[:]\s*(\w+)/i, /Challan\s*Number\s+(\w+)/i]);
             data.challanCreatedDate = getMatch([/Challan\s*Created\s*Date\s*[:]\s*([0-9X-]+)/i, /Challan\s*Created\s*Date\s+([0-9X-]+)/i]);
             
             // Complex Date Logic Preserved
-            let submittedDate = getMatch([/Challan\s*Submitted\s*Date\s*[:]\s*(\d{2}-\d{2}-\d{4})/i, /Challan\s*Submitted\s*Date\s+(\d{2}-\d{2}-\d{4})/i]);
+            let submittedDate = getMatch([
+                /Challan\s*Submitted\s*Date\s*[:]\s*(\d{2}-\d{2}-\d{4})/i,
+                /Challan\s*Submitted\s*Date\s+(\d{2}-\d{2}-\d{4})/i,
+                /Challan\s*Submitted\s*Date[^\d]*(\d{2}-\d{2}-\d{4})/i
+            ]);
+            
             if (!submittedDate) {
                 const submittedIndex = cleanText.search(/Challan\s*Submitted\s*Date/i);
                 if (submittedIndex !== -1) {
@@ -396,10 +521,28 @@
                     if (dateMatch) submittedDate = dateMatch[1];
                 }
             }
+            
+            if (!submittedDate) {
+                const slashMatch = getMatch([/Challan\s*Submitted\s*Date[^\d]*(\d{2}\/\d{2}\/\d{4})/i]);
+                if (slashMatch) submittedDate = slashMatch.replace(/\//g, '-');
+            }
+            
+            if (!submittedDate) {
+                const reverseMatch = cleanText.match(/(\d{2}-\d{2}-\d{4})[^]*Challan\s*Submitted\s*Date/i);
+                if (reverseMatch) {
+                    const datePos = cleanText.indexOf(reverseMatch[1]);
+                    const labelPos = cleanText.search(/Challan\s*Submitted\s*Date/i);
+                    if (Math.abs(labelPos - datePos) < 100) {
+                        submittedDate = reverseMatch[1];
+                    }
+                }
+            }
+            
             data.challanSubmittedDate = submittedDate;
 
-            const amt = cleanText.match(/Amount\s*Paid\s*[:]\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i);
+            const amt = cleanText.match(/Amount\s*Paid\s*[:]\s*[₹]?\s*([\d,]+(?:\.\d{2})?)/i) || cleanText.match(/Amount\s*Paid\s+[₹]?\s*([\d,]+(?:\.\d{2})?)/i);
             if (amt) data.amountPaid = amt[1].replace(/,/g, '');
+            
             data.transactionNumber = getMatch([/Transaction\s*Number\s*[:]\s*(\w+)/i, /Transaction\s*Number\s+(\w+)/i]);
             
             return data;
@@ -417,13 +560,13 @@
                 
                 let statusBadge = '';
                 if (data.transactionStatus.toLowerCase() === 'success') {
-                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200">Success</span>';
+                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">Success</span>';
                     successCount++;
                 } else if (data.transactionStatus.toLowerCase() === 'pending') {
-                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">Pending</span>';
+                    statusBadge = '<span class="px-2 py-1 text-xs font-bold rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800">Pending</span>';
                     pendingCount++;
                 } else {
-                    statusBadge = `<span class="px-2 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200">${data.transactionStatus}</span>`;
+                    statusBadge = `<span class="px-2 py-1 text-xs font-bold rounded-full bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">${data.transactionStatus}</span>`;
                 }
 
                 row.innerHTML = `
@@ -470,11 +613,50 @@
                     data.challanNumber, data.challanCreatedDate, data.challanSubmittedDate, parseFloat(data.amountPaid) || 0, data.transactionNumber
                 ]);
             });
+            
+            // Add summary rows
+            const totalAmount = extractedData.reduce((sum, data) => sum + (parseFloat(data.amountPaid) || 0), 0);
+            const successCount = extractedData.filter(d => d.transactionStatus.toLowerCase() === 'success').length;
+            
+            excelData.push([]);
+            excelData.push(['SUMMARY']);
+            excelData.push(['Total Challans:', extractedData.length]);
+            excelData.push(['Total Amount:', totalAmount]);
+            excelData.push(['Successful Transactions:', successCount]);
+            
             const ws = XLSX.utils.aoa_to_sheet(excelData);
+            
+            // Set column widths
+            ws['!cols'] = [
+                {wch: 8},   // Sr. No.
+                {wch: 18},  // Transaction Status
+                {wch: 20},  // Employer Code
+                {wch: 30},  // Employer Name
+                {wch: 15},  // Challan Period
+                {wch: 20},  // Challan Number
+                {wch: 18},  // Created Date
+                {wch: 18},  // Submitted Date
+                {wch: 15},  // Amount Paid
+                {wch: 25}   // Transaction Number
+            ];
+            
             XLSX.utils.book_append_sheet(wb, ws, 'ESIC Challan Data');
             XLSX.writeFile(wb, 'esic_challan_data.xlsx');
         }
     </script>
+    
+    <!-- Footer component -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-auto transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-8 text-center flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">© 2026 Automation Hub | CA. Vaibhav Khanna. All rights reserved.</p>
+            <div class="text-slate-400 text-sm flex gap-4">
+                <a href="cv.html" class="hover:text-blue-500 transition-colors">Resume</a>
+                <span>&bull;</span>
+                <span>Amritsar, Punjab</span>
+            </div>
+        </div>
+    </footer>
+    
     <script>
         document.getElementById('themeToggle').addEventListener('click', () => {
             const html = document.documentElement;
