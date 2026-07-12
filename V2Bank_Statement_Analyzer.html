@@ -28,7 +28,7 @@
                     else if(path.includes('gstr3b')) requestedTool = 'GSTR3B';
                     
                     // Boot them to the landing page WITH the requested tool parameter
-                    window.location.href = request-access.html?tool=' + requestedTool;
+                    window.location.href = 'request-access.html?tool=' + requestedTool;
                 }
             }
         })();
@@ -51,6 +51,8 @@
     </script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -61,12 +63,18 @@
         /* Theme Styles synced from Landing Page */
         .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
         .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .dark .glass-card:hover { border-color: #475569; box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4); }
+        
         .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
         
         /* Compact Table Styling from Reference */
         tbody tr:nth-child(even) { background-color: #f9fafb; }
         tbody tr:hover { background-color: #eff6ff; }
+        .dark tbody tr:nth-child(even) { background-color: rgba(30, 41, 59, 0.4); }
+        .dark tbody tr:hover { background-color: rgba(59, 130, 246, 0.1); }
         
         /* Dense Select/Input styling */
         select.form-select-sm, input.form-input-sm {
@@ -79,8 +87,19 @@
             border-radius: 0.375rem;
             border-width: 1px;
             border-color: #d1d5db;
+            background-color: white;
+            color: #1e293b;
         }
         select.form-select-sm:focus, input.form-input-sm:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
+        .dark select.form-select-sm, .dark input.form-input-sm {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+        .dark select.form-select-sm:focus, .dark input.form-input-sm:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px #0c4a6e;
+        }
 
         /* Button sizing */
         .btn-sm-compact { height: 2rem; padding-left: 0.75rem; padding-right: 0.75rem; display: inline-flex; align-items: center; font-size: 0.75rem; font-weight: 600; border-radius: 0.375rem; transition: all 0.2s; cursor: pointer; }
@@ -88,10 +107,14 @@
         /* Stat Cards */
         .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1rem; transition: all 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+        .dark .stat-card { background-color: #1e293b; border-color: #334155; }
+        .dark .stat-card:hover { border-color: #38bdf8; }
 
         /* Upload Zone Styles */
         .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
         .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+        .dark .drop-zone { background-color: rgba(30, 41, 59, 0.4); }
+        .dark .drop-zone.drag-over { background-color: rgba(30, 58, 138, 0.3); border-color: #38bdf8; }
 
         /* Chart Containers */
         .chart-container { position: relative; height: 300px; width: 100%; }
@@ -216,13 +239,28 @@
                         <!-- Separator -->
                         <div class="h-6 w-px bg-slate-300 mx-1 hidden md:block"></div>
 
-                        <!-- Action Buttons -->
-                        <button id="downloadBtn" class="btn-sm-compact bg-blue-600 text-white hover:bg-blue-700 shadow-md">
-                            <i class="fas fa-file-excel mr-2"></i> Export Data
-                        </button>
-                        <button onclick="location.reload()" class="btn-sm-compact bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
-                            <i class="fas fa-sync-alt mr-2"></i> Reset
-                        </button>
+                        <!-- Action Buttons / Export Toolbar -->
+                        <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+                            <button type="button" id="copyToClipboardBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600 focus:outline-none flex items-center" title="Copy to Clipboard">
+                                <i class="fas fa-copy mr-1 text-slate-600 dark:text-slate-400"></i>Copy
+                            </button>
+                            
+                            <button type="button" id="printBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600 focus:outline-none flex items-center" title="Print">
+                                <i class="fas fa-print mr-1 text-slate-600 dark:text-slate-400"></i>Print
+                            </button>
+                            
+                            <button type="button" id="downloadBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 dark:hover:bg-green-900/30 dark:text-green-400 dark:border-green-800 focus:outline-none flex items-center" title="Export Excel">
+                                <i class="fas fa-file-excel mr-1 text-green-600"></i>Excel
+                            </button>
+                            
+                            <button type="button" id="exportClientPdfBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800 focus:outline-none flex items-center" title="Export PDF">
+                                <i class="fas fa-file-pdf mr-1 text-red-600"></i>PDF
+                            </button>
+
+                            <button onclick="location.reload()" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-600 focus:outline-none flex items-center" title="Reset">
+                                <i class="fas fa-sync-alt mr-1 text-slate-600 dark:text-slate-400"></i>Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -390,6 +428,7 @@
                 this.sortDirection = 'desc';
                 this.charts = {};
                 
+                window.analyzer = this;
                 this.initializeEventListeners();
             }
 
@@ -419,8 +458,11 @@
                     th.addEventListener('click', () => this.sortTable(th.dataset.sort));
                 });
 
-                // Download
+                // Export Actions
+                document.getElementById('copyToClipboardBtn').addEventListener('click', this.copyToClipboard.bind(this));
+                document.getElementById('printBtn').addEventListener('click', this.printTable.bind(this));
                 document.getElementById('downloadBtn').addEventListener('click', this.downloadSummary.bind(this));
+                document.getElementById('exportClientPdfBtn').addEventListener('click', this.exportPDF.bind(this));
             }
 
             // Drag & Drop Handlers
@@ -613,7 +655,49 @@
             }
 
             // Charts
+            getThemeColors() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    textColor: isDark ? '#e5e7eb' : '#374151',
+                    gridColor: isDark ? '#374151' : '#e5e7eb'
+                };
+            }
+
+            updateChartsTheme() {
+                const colors = this.getThemeColors();
+                Object.values(this.charts).forEach(chart => {
+                    if (!chart) return;
+                    if (chart.options.scales) {
+                        if (chart.options.scales.x) {
+                            if (!chart.options.scales.x.ticks) chart.options.scales.x.ticks = {};
+                            chart.options.scales.x.ticks.color = colors.textColor;
+                            if (chart.options.scales.x.grid) {
+                                chart.options.scales.x.grid.color = colors.gridColor;
+                            }
+                        }
+                        if (chart.options.scales.y) {
+                            if (!chart.options.scales.y.ticks) chart.options.scales.y.ticks = {};
+                            chart.options.scales.y.ticks.color = colors.textColor;
+                            if (chart.options.scales.y.grid) {
+                                chart.options.scales.y.grid.color = colors.gridColor;
+                            }
+                        }
+                    }
+                    if (chart.options.plugins && chart.options.plugins.legend) {
+                        if (!chart.options.plugins.legend.labels) chart.options.plugins.legend.labels = {};
+                        chart.options.plugins.legend.labels.color = colors.textColor;
+                    }
+                    chart.update();
+                });
+            }
+
             createCharts() {
+                // Destroy existing charts if reloading data
+                Object.values(this.charts).forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                this.charts = {};
+
                 this.createBalanceChart();
                 this.createTransactionTypeChart();
                 this.createBankChart();
@@ -623,7 +707,9 @@
             createBalanceChart() {
                 const ctx = document.getElementById('balanceChart').getContext('2d');
                 const sortedData = [...this.data].sort((a, b) => a.date - b.date);
-                new Chart(ctx, {
+                const colors = this.getThemeColors();
+                
+                this.charts.balance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: sortedData.map(d => d.date.toLocaleDateString()),
@@ -642,8 +728,17 @@
                         responsive: true, maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
                         scales: {
-                            x: { grid: { display: false } },
-                            y: { ticks: { callback: v => '₹' + (v/1000) + 'k' } }
+                            x: { 
+                                grid: { display: false },
+                                ticks: { color: colors.textColor }
+                            },
+                            y: { 
+                                grid: { color: colors.gridColor },
+                                ticks: { 
+                                    color: colors.textColor,
+                                    callback: v => '₹' + (v/1000) + 'k' 
+                                } 
+                            }
                         }
                     }
                 });
@@ -652,7 +747,9 @@
             createTransactionTypeChart() {
                 const ctx = document.getElementById('transactionChart').getContext('2d');
                 const typeData = this.data.reduce((acc, d) => { acc[d.transactionType] = (acc[d.transactionType] || 0) + 1; return acc; }, {});
-                new Chart(ctx, {
+                const colors = this.getThemeColors();
+                
+                this.charts.transaction = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
                         labels: Object.keys(typeData),
@@ -662,14 +759,29 @@
                             borderWidth: 0
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10 } } }, cutout: '70%' }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { 
+                            legend: { 
+                                position: 'right', 
+                                labels: { 
+                                    boxWidth: 10,
+                                    color: colors.textColor
+                                } 
+                            } 
+                        }, 
+                        cutout: '70%' 
+                    }
                 });
             }
 
             createBankChart() {
                 const ctx = document.getElementById('bankChart').getContext('2d');
                 const bankData = this.data.reduce((acc, d) => { acc[d.bankName] = (acc[d.bankName] || 0) + 1; return acc; }, {});
-                new Chart(ctx, {
+                const colors = this.getThemeColors();
+                
+                this.charts.bank = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: Object.keys(bankData),
@@ -680,7 +792,22 @@
                             borderRadius: 4
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } }, 
+                        scales: { 
+                            x: {
+                                grid: { color: colors.gridColor },
+                                ticks: { color: colors.textColor }
+                            },
+                            y: { 
+                                beginAtZero: true,
+                                grid: { color: colors.gridColor },
+                                ticks: { color: colors.textColor }
+                            } 
+                        } 
+                    }
                 });
             }
 
@@ -694,7 +821,9 @@
                 }, {});
                 
                 const months = Object.keys(monthlyData).sort((a,b) => new Date(a) - new Date(b));
-                new Chart(ctx, {
+                const colors = this.getThemeColors();
+                
+                this.charts.monthly = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: months,
@@ -703,7 +832,30 @@
                             { label: 'Debits', data: months.map(m => monthlyData[m].debits), backgroundColor: '#ef4444' }
                         ]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { beginAtZero: true, ticks: { callback: v => '₹' + (v/1000) + 'k' } } } }
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: {
+                            legend: {
+                                labels: { color: colors.textColor }
+                            }
+                        },
+                        scales: { 
+                            x: { 
+                                stacked: false,
+                                grid: { color: colors.gridColor },
+                                ticks: { color: colors.textColor }
+                            }, 
+                            y: { 
+                                beginAtZero: true, 
+                                grid: { color: colors.gridColor },
+                                ticks: { 
+                                    color: colors.textColor,
+                                    callback: v => '₹' + (v/1000) + 'k' 
+                                } 
+                            } 
+                        } 
+                    }
                 });
             }
 
@@ -811,17 +963,226 @@
             downloadSummary() {
                 try {
                     const wb = XLSX.utils.book_new();
-                    const kpiData = [['Metric', 'Value'],
-                        ['Total Credits', this.data.filter(d => d.transactionType === 'Credit').reduce((s,d)=>s+Math.abs(d.amount),0)],
-                        ['Total Debits', this.data.filter(d => d.transactionType === 'Debit').reduce((s,d)=>s+Math.abs(d.amount),0)],
-                        ['Transactions', this.data.length]];
-                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(kpiData), 'KPIs');
+
+                    // 1. KPI Summary Sheet
+                    const minDate = new Date(Math.min(...this.data.map(d => d.date)));
+                    const maxDate = new Date(Math.max(...this.data.map(d => d.date)));
+                    const dateRangeStr = this.data.length > 0 
+                        ? `${minDate.toLocaleDateString()} to ${maxDate.toLocaleDateString()}`
+                        : 'N/A';
+
+                    const kpiData = [
+                        ['Metric', 'Value'],
+                        ['Total Credits', this.data.filter(d => d.transactionType === 'Credit').reduce((sum, d) => sum + Math.abs(d.amount), 0)],
+                        ['Total Debits', this.data.filter(d => d.transactionType === 'Debit').reduce((sum, d) => sum + Math.abs(d.amount), 0)],
+                        ['Total Transactions', this.data.length],
+                        ['Number of Banks', new Set(this.data.map(d => d.bankName)).size],
+                        ['Date Range', dateRangeStr]
+                    ];
+                    const kpiWS = XLSX.utils.aoa_to_sheet(kpiData);
+                    XLSX.utils.book_append_sheet(wb, kpiWS, 'KPI Summary');
+
+                    // 2. Monthly Summary Sheet
+                    const monthlyAgg = this.data.reduce((acc, d) => {
+                        const month = d.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+                        if (!acc[month]) acc[month] = { credits: 0, debits: 0, transactions: 0 };
+                        
+                        if (d.transactionType === 'Credit') {
+                            acc[month].credits += Math.abs(d.amount);
+                        } else {
+                            acc[month].debits += Math.abs(d.amount);
+                        }
+                        acc[month].transactions++;
+                        return acc;
+                    }, {});
+
+                    const monthlyData = [
+                        ['Month', 'Credits', 'Debits', 'Transactions', 'Net'],
+                        ...Object.entries(monthlyAgg).map(([month, val]) => [
+                            month, val.credits, val.debits, val.transactions, val.credits - val.debits
+                        ])
+                    ];
+                    const monthlyWS = XLSX.utils.aoa_to_sheet(monthlyData);
+                    XLSX.utils.book_append_sheet(wb, monthlyWS, 'Monthly Summary');
+
+                    // 3. Bank Summary Sheet
+                    const bankAgg = this.data.reduce((acc, d) => {
+                        if (!acc[d.bankName]) acc[d.bankName] = { credits: 0, debits: 0, transactions: 0 };
+                        
+                        if (d.transactionType === 'Credit') {
+                            acc[d.bankName].credits += Math.abs(d.amount);
+                        } else {
+                            acc[d.bankName].debits += Math.abs(d.amount);
+                        }
+                        acc[d.bankName].transactions++;
+                        return acc;
+                    }, {});
+
+                    const bankData = [
+                        ['Bank', 'Credits', 'Debits', 'Transactions', 'Net'],
+                        ...Object.entries(bankAgg).map(([bank, val]) => [
+                            bank, val.credits, val.debits, val.transactions, val.credits - val.debits
+                        ])
+                    ];
+                    const bankWS = XLSX.utils.aoa_to_sheet(bankData);
+                    XLSX.utils.book_append_sheet(wb, bankWS, 'Bank Summary');
+
+                    // 4. Detailed Transactions Sheet
+                    const transactionData = [
+                        ['Date', 'Description', 'Transaction Type', 'Amount', 'Balance', 'Bank Name'],
+                        ...this.filteredData.map(d => [
+                            d.date.toLocaleDateString(),
+                            d.description,
+                            d.transactionType,
+                            d.amount,
+                            d.balance,
+                            d.bankName
+                        ])
+                    ];
+                    const transactionWS = XLSX.utils.aoa_to_sheet(transactionData);
+                    XLSX.utils.book_append_sheet(wb, transactionWS, 'Transactions');
+
+                    // Write workbook
+                    const fileName = `Bank_Statement_Analysis_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                    XLSX.writeFile(wb, fileName);
+
+                } catch (error) {
+                    console.error('Download error:', error);
+                    alert('Error generating Excel file. Please try again.');
+                }
+            }
+
+            copyToClipboard() {
+                try {
+                    const headers = ['Date', 'Description', 'Transaction Type', 'Amount', 'Balance', 'Bank Name'];
+                    const rows = this.filteredData.map(d => [
+                        d.date.toLocaleDateString(),
+                        d.description,
+                        d.transactionType,
+                        d.amount,
+                        d.balance,
+                        d.bankName
+                    ]);
+                    const text = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
+                    navigator.clipboard.writeText(text).then(() => {
+                        const btn = document.getElementById('copyToClipboardBtn');
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = `<i class="fas fa-check mr-1 text-green-600"></i>Copied`;
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                        }, 2000);
+                    });
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                }
+            }
+
+            printTable() {
+                const printWindow = window.open('', '_blank');
+                if (!printWindow) return;
+                
+                const headers = ['Date', 'Description', 'Type', 'Amount', 'Balance', 'Bank'];
+                const rowsHTML = this.filteredData.map(d => `
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: left;">${d.date.toLocaleDateString()}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: left;">${d.description}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: center;">${d.transactionType}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${d.amount >= 0 ? '+' : ''}${this.formatCurrency(d.amount)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: right;">${this.formatCurrency(d.balance)}</td>
+                        <td style="border: 1px solid #ddd; padding: 6px; text-align: left;">${d.bankName}</td>
+                    </tr>
+                `).join('');
+                
+                const html = `
+                    <html>
+                        <head>
+                            <title>Bank Statement Analysis Report</title>
+                            <style>
+                                body { font-family: 'Times New Roman', serif; margin: 0.25in; color: #333; }
+                                h1 { font-size: 20px; text-align: center; margin-bottom: 5px; }
+                                p.subtitle { text-align: center; margin-top: 0; font-size: 12px; color: #666; }
+                                table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }
+                                th { border: 1px solid #444; background-color: #f2f2f2; padding: 8px; font-weight: bold; text-align: center; }
+                                @media print {
+                                    body { margin: 0.25in; }
+                                    .no-print { display: none !important; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>Bank Statement Analysis Report</h1>
+                            <p class="subtitle">Generated on ${new Date().toLocaleString()}</p>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        ${headers.map(h => `<th>${h}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${rowsHTML}
+                                </tbody>
+                            </table>
+                            <script>
+                                window.onload = function() {
+                                    window.print();
+                                    setTimeout(function() { window.close(); }, 500);
+                                };
+                            <\/script>
+                        </body>
+                    </html>
+                `;
+                
+                printWindow.document.write(html);
+                printWindow.document.close();
+            }
+
+            exportPDF() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({
+                        orientation: 'landscape',
+                        unit: 'in',
+                        format: 'a4'
+                    });
                     
-                    const transactionData = [['Date','Description','Type','Amount','Balance','Bank'], ...this.filteredData.map(d=>[d.date,d.description,d.transactionType,d.amount,d.balance,d.bankName])];
-                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(transactionData), 'Transactions');
+                    // Title
+                    doc.setFont('Helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('Bank Statement Analysis Report', 0.25, 0.4);
+                    doc.setFontSize(9);
+                    doc.setFont('Helvetica', 'normal');
+                    doc.setTextColor(100);
+                    doc.text(`Generated on ${new Date().toLocaleString()}`, 0.25, 0.6);
                     
-                    XLSX.writeFile(wb, `Bank_Analysis_${new Date().toISOString().slice(0,10)}.xlsx`);
-                } catch (e) { alert('Export failed'); }
+                    const headers = [['Date', 'Description', 'Type', 'Amount', 'Balance', 'Bank']];
+                    const rows = this.filteredData.map(d => [
+                        d.date.toLocaleDateString(),
+                        d.description,
+                        d.transactionType,
+                        d.amount >= 0 ? `+${this.formatCurrency(Math.abs(d.amount))}` : `-${this.formatCurrency(Math.abs(d.amount))}`,
+                        this.formatCurrency(d.balance),
+                        d.bankName
+                    ]);
+                    
+                    doc.autoTable({
+                        head: headers,
+                        body: rows,
+                        startY: 0.8,
+                        margin: { top: 0.25, right: 0.25, bottom: 0.25, left: 0.25 },
+                        theme: 'grid',
+                        styles: { fontSize: 8, cellPadding: 0.05 },
+                        headStyles: { fillColor: [59, 130, 246] }, // blue
+                        columnStyles: {
+                            3: { halign: 'right' }, // Amount
+                            4: { halign: 'right' }  // Balance
+                        }
+                    });
+                    
+                    doc.save(`Bank_Statement_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+                } catch (err) {
+                    console.error('PDF export failed:', err);
+                    alert('Error generating PDF. Please try again.');
+                }
             }
 
             showProgress() { document.getElementById('progressSection').classList.remove('hidden'); }
@@ -842,6 +1203,9 @@
             } else {
                 html.classList.add('dark');
                 localStorage.theme = 'dark';
+            }
+            if (window.analyzer) {
+                window.analyzer.updateChartsTheme();
             }
         });
     </script>
