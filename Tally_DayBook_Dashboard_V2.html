@@ -50,26 +50,39 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- SheetJS and Chart.js -->
+    <!-- SheetJS, Chart.js, ExcelJS, jsPDF, and AutoTable for exports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
     <style>
         /* Base Settings & Theme */
-        body { font-family: 'Inter', sans-serif;   }
+        body { font-family: 'Inter', sans-serif; transition: background-color 0.3s ease, color 0.3s ease; }
         
         .glass-card { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 0.75rem; transition: all 0.3s ease; }
         .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
+        .dark .glass-card { background: rgba(30, 41, 59, 0.8); border-color: #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); }
+        .dark .glass-card:hover { border-color: #475569; box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.4); }
+
         .gradient-text { background: linear-gradient(to right, #2563eb, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .dark .gradient-text { background: linear-gradient(to right, #60a5fa, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
         .hero-pattern { background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 24px 24px; }
+        .dark .hero-pattern { background-image: radial-gradient(#334155 1px, transparent 1px); }
 
         /* Upload Zone Styles */
         .drop-zone { transition: all 0.3s ease; background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(4px); }
         .drop-zone.drag-over { background-color: #eff6ff; border-color: #3b82f6; transform: scale(1.005); }
+        .dark .drop-zone { background-color: rgba(15, 23, 42, 0.8); border-color: #334155; }
+        .dark .drop-zone.drag-over { background-color: rgba(30, 41, 59, 0.9); border-color: #38bdf8; }
 
         /* Stat Cards */
         .stat-card { background-color: white; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-color: #bfdbfe; }
+        .dark .stat-card { background-color: #1e293b; border-color: #334155; }
+        .dark .stat-card:hover { border-color: #3b82f6; }
 
         /* Compact Inputs */
         select.form-select-sm, input.form-input-sm {
@@ -78,6 +91,16 @@
             background-color: #f8fafc; color: #334155; font-weight: 500;
         }
         select.form-select-sm:focus, input.form-input-sm:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; background-color: #ffffff; }
+        .dark select.form-select-sm, .dark input.form-input-sm {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #f8fafc;
+        }
+        .dark select.form-select-sm:focus, .dark input.form-input-sm:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px #0c4a6e;
+            background-color: #0f172a;
+        }
 
         /* Toggle Switch */
         .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
@@ -93,6 +116,10 @@
         thead th { position: sticky; top: 0; z-index: 10; background-color: #f8fafc; font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 700; padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
         tbody td { padding: 0.75rem 1rem; font-size: 0.875rem; color: #334155; border-bottom: 1px solid #f1f5f9; white-space: nowrap; font-weight: 500; }
         tbody tr:hover { background-color: #f8fafc; }
+
+        .dark thead th { background-color: #1e293b; color: #94a3b8; border-bottom-color: #334155; }
+        .dark tbody td { color: #cbd5e1; border-bottom-color: #334155; }
+        .dark tbody tr:hover { background-color: rgba(30, 41, 59, 0.4); }
 
         /* Chart Container */
         .chart-wrapper { position: relative; height: 250px; width: 100%; }
@@ -113,10 +140,10 @@
                         Vaibhav Khanna | Professional Automation
                     </div>
                     <button id="themeToggle" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none">
-                    <i class="fas fa-sun hidden dark:inline"></i>
-                    <i class="fas fa-moon inline dark:hidden"></i>
-                </button>
-            </div>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                        <i class="fas fa-moon inline dark:hidden"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
@@ -142,7 +169,7 @@
                 </div>
 
                 <!-- Drop Zone -->
-                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm dark:border-slate-600" onclick="document.getElementById('fileInput').click()">
+                <div class="drop-zone border-2 border-dashed border-slate-300 rounded-xl p-12 text-center cursor-pointer hover:border-blue-500 shadow-sm dark:border-slate-600 mb-6" onclick="document.getElementById('fileInput').click()">
                     <div class="space-y-4">
                         <i class="fas fa-cloud-upload-alt text-5xl text-slate-400"></i>
                         <div>
@@ -151,6 +178,32 @@
                         </div>
                     </div>
                     <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+                </div>
+
+                <!-- Expected Columns Preview -->
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider"><i class="fas fa-info-circle mr-1 text-blue-500"></i>Expected Tally Excel Layout (Starting from Row 5):</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 text-center text-xs">
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">A: Date</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">B: Particulars</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 italic">C: (Unused)</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 italic">D: (Unused)</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">E: Voucher Type</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">F: Voucher No</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">G: Debit Amt</div>
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">H: Credit Amt</div>
+                    </div>
+                </div>
+
+                <!-- Diagnostic Log Console -->
+                <div id="logConsoleContainer" class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 hidden">
+                    <div class="flex justify-between items-center mb-2">
+                        <p class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"><i class="fas fa-terminal mr-1 text-blue-500"></i>Process Logs & Diagnostic Info:</p>
+                        <button type="button" onclick="clearLogs()" class="text-[10px] text-slate-400 hover:text-red-500 font-bold uppercase"><i class="fas fa-trash-alt mr-1"></i>Clear Logs</button>
+                    </div>
+                    <div id="logConsole" class="bg-slate-950 border border-slate-800 rounded-lg p-3 font-mono text-[11px] text-slate-300 max-h-40 overflow-y-auto space-y-1 dark:bg-slate-950">
+                        <!-- Populated by JS logs -->
+                    </div>
                 </div>
             </div>
 
@@ -236,6 +289,23 @@
 
                 <!-- Reports Section -->
                 <div id="reportsSection" class="hidden space-y-6">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-slate-200">📋 Detailed Reports</h2>
+                        <div class="flex items-center space-x-2">
+                            <button type="button" id="copyToClipboardBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 focus:outline-none flex items-center dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700" title="Copy to Clipboard">
+                                <i class="fas fa-copy mr-1 text-slate-600 dark:text-slate-400"></i>Copy
+                            </button>
+                            <button type="button" id="printBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 focus:outline-none flex items-center dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700" title="Print">
+                                <i class="fas fa-print mr-1 text-slate-600 dark:text-slate-400"></i>Print
+                            </button>
+                            <button type="button" id="exportClientExcelBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-green-50 hover:bg-green-100 focus:outline-none flex items-center dark:bg-green-900/20 dark:text-green-300 dark:border-green-800 dark:hover:bg-green-900/40" title="Export Excel">
+                                <i class="fas fa-file-excel mr-1 text-green-600 dark:text-green-400"></i>Excel
+                            </button>
+                            <button type="button" id="exportClientPdfBtn" class="h-8 px-3 border border-slate-300 shadow-sm text-xs font-medium rounded-md text-slate-700 bg-red-50 hover:bg-red-100 focus:outline-none flex items-center dark:bg-red-900/20 dark:text-red-300 dark:border-red-800 dark:hover:bg-red-900/40" title="Export PDF">
+                                <i class="fas fa-file-pdf mr-1 text-red-600 dark:text-red-400"></i>PDF
+                            </button>
+                        </div>
+                    </div>
                     <div id="reportsContent">
                         <!-- Reports populated by JS -->
                     </div>
@@ -245,7 +315,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic (Preserved exactly as provided) -->
+    <!-- JavaScript Logic -->
     <script>
         let globalData = [];
         let filteredData = [];
@@ -254,39 +324,144 @@
         document.getElementById('fileInput').addEventListener('change', handleFile);
         document.getElementById('visualToggle').addEventListener('change', toggleView);
 
+        // Bind Export Actions on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('copyToClipboardBtn').addEventListener('click', copyToClipboard);
+            document.getElementById('printBtn').addEventListener('click', printReports);
+            document.getElementById('exportClientExcelBtn').addEventListener('click', exportExcelWithExcelJS);
+            document.getElementById('exportClientPdfBtn').addEventListener('click', exportPDF);
+        });
+
+        // Diagnostic Console Logging Functions
+        function log(message, type = 'info') {
+            const container = document.getElementById('logConsoleContainer');
+            const consoleEl = document.getElementById('logConsole');
+            if (!consoleEl) return;
+            
+            container.classList.remove('hidden'); // Show container when there's a log
+            
+            const timestamp = new Date().toLocaleTimeString();
+            let color = 'text-slate-300';
+            let icon = 'fa-info-circle text-blue-400';
+            
+            if (type === 'error') {
+                color = 'text-red-400 font-bold';
+                icon = 'fa-exclamation-triangle text-red-500';
+            } else if (type === 'success') {
+                color = 'text-green-400 font-bold';
+                icon = 'fa-check-circle text-green-500';
+            } else if (type === 'warning') {
+                color = 'text-yellow-400';
+                icon = 'fa-exclamation-circle text-yellow-500';
+            }
+            
+            consoleEl.innerHTML += `<div class="${color} flex items-start gap-2">
+                <span class="text-slate-500 select-none">[${timestamp}]</span>
+                <i class="fas ${icon} mt-0.5"></i>
+                <span class="flex-grow break-all">${message}</span>
+            </div>`;
+            
+            // Auto scroll to bottom
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function clearLogs() {
+            const consoleEl = document.getElementById('logConsole');
+            if (consoleEl) consoleEl.innerHTML = '';
+            document.getElementById('logConsoleContainer').classList.add('hidden');
+        }
+
         function handleFile(e) {
             const file = e.target.files[0];
             if (!file) return;
 
+            clearLogs();
+            log(`Selected file: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`);
             document.getElementById('fileStatus').innerHTML = '<span class="text-blue-600 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i>Processing data...</span>';
 
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
+                    log(`File loaded into memory. Initializing SheetJS reader...`);
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     
+                    log(`Sheets found in workbook: ${workbook.SheetNames.join(', ')}`);
+                    const sheetName = workbook.SheetNames[0];
+                    log(`Reading primary sheet: "${sheetName}"`);
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    log(`Parsing range A5:H10000 using standard Tally headers...`);
                     const rawData = XLSX.utils.sheet_to_json(worksheet, { 
                         range: 'A5:H10000',
                         header: ['Date', 'Particulars', 'Col3', 'Col4', 'VchType', 'VchNo', 'DebitAmount', 'CreditAmount'],
                         defval: null 
                     });
 
-                    globalData = rawData.filter(record => 
-                        record.Date && record.Particulars && (record.DebitAmount || record.CreditAmount)
-                    ).map(record => ({
-                        ...record,
-                        Date: excelDateToJSDate(record.Date),
-                        DebitAmount: parseFloat(record.DebitAmount) || 0,
-                        CreditAmount: parseFloat(record.CreditAmount) || 0
-                    }));
+                    log(`Parsed ${rawData.length} raw rows from range.`);
+                    
+                    if (rawData.length > 0) {
+                        log(`First parsed row preview: ${JSON.stringify(rawData[0])}`);
+                    } else {
+                        log(`No rows parsed. Check if sheet is empty or begins below row 5.`, 'warning');
+                    }
+
+                    globalData = [];
+                    let skippedCount = 0;
+                    let invalidDateCount = 0;
+                    
+                    rawData.forEach((record, index) => {
+                        // Check if row has particulars and date
+                        if (!record.Date || !record.Particulars) {
+                            skippedCount++;
+                            return;
+                        }
+                        
+                        // Parse date
+                        let parsedDate;
+                        if (typeof record.Date === 'number') {
+                            parsedDate = excelDateToJSDate(record.Date);
+                        } else {
+                            // Try parsing string date
+                            parsedDate = new Date(record.Date);
+                        }
+                        
+                        if (isNaN(parsedDate.getTime())) {
+                            invalidDateCount++;
+                            if (invalidDateCount <= 3) {
+                                log(`Row ${index + 5}: Invalid Date format encountered ("${record.Date}").`, 'warning');
+                            }
+                            return;
+                        }
+
+                        const debit = parseFloat(record.DebitAmount) || 0;
+                        const credit = parseFloat(record.CreditAmount) || 0;
+
+                        if (debit === 0 && credit === 0) {
+                            skippedCount++;
+                            return;
+                        }
+
+                        globalData.push({
+                            ...record,
+                            Date: parsedDate,
+                            DebitAmount: debit,
+                            CreditAmount: credit
+                        });
+                    });
+
+                    log(`Filtered out ${skippedCount} empty or non-transaction rows.`);
+                    if (invalidDateCount > 0) {
+                        log(`Skipped ${invalidDateCount} rows due to invalid date formats.`, 'warning');
+                    }
 
                     if (globalData.length === 0) {
+                        log(`Verification failed: No valid transactions matched filter rules (requires valid Date, Particulars, and non-zero Debit/Credit amount starting at row 5).`, 'error');
                         document.getElementById('fileStatus').innerHTML = '<span class="text-red-500 font-bold"><i class="fas fa-exclamation-circle mr-2"></i>No valid data found</span>';
                         return;
                     }
 
+                    log(`Successfully loaded ${globalData.length} valid transactions!`, 'success');
                     document.getElementById('fileStatus').innerHTML = `<span class="text-green-600 font-bold"><i class="fas fa-check-circle mr-2"></i>Successfully loaded ${globalData.length} transactions</span>`;
                     document.getElementById('dashboardContent').classList.remove('hidden');
                     
@@ -295,6 +470,7 @@
                     
                 } catch (error) {
                     console.error(error);
+                    log(`Processing Error: ${error.message}\nStack: ${error.stack}`, 'error');
                     document.getElementById('fileStatus').innerHTML = '<span class="text-red-500 font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Error processing file</span>';
                 }
             };
@@ -311,15 +487,15 @@
             const vchTypes = [...new Set(globalData.map(d => d.VchType).filter(Boolean))].sort();
             const accounts = [...new Set(globalData.map(d => d.Particulars).filter(Boolean))].sort();
 
-            const populate = (id, opts, labelFn = x => x) => {
+            const populate = (id, opts, valueFn = (o, i) => o, labelFn = o => o) => {
                 const el = document.getElementById(id);
-                el.innerHTML = `<option value="">All</option>` + opts.map((o, i) => `<option value="${typeof o === 'string' ? o : i}">${labelFn(o)}</option>`).join('');
+                el.innerHTML = `<option value="">All</option>` + opts.map((o, i) => `<option value="${valueFn(o, i)}">${labelFn(o)}</option>`).join('');
             };
 
-            populate('monthFilter', months);
-            populate('yearFilter', years);
-            populate('vchTypeFilter', vchTypes);
-            populate('accountFilter', accounts);
+            populate('monthFilter', months, (o, i) => i);
+            populate('yearFilter', years, o => o);
+            populate('vchTypeFilter', vchTypes, o => o);
+            populate('accountFilter', accounts, o => o);
 
             const dates = globalData.map(d => d.Date).sort((a,b) => a-b);
             if(dates.length) {
@@ -333,8 +509,12 @@
         }
 
         function applyFilters() {
-            const dateFrom = new Date(document.getElementById('dateFrom').value);
-            const dateTo = new Date(document.getElementById('dateTo').value);
+            const dateFromStr = document.getElementById('dateFrom').value;
+            const dateToStr = document.getElementById('dateTo').value;
+            const dateFrom = dateFromStr ? new Date(dateFromStr) : null;
+            const dateTo = dateToStr ? new Date(dateToStr) : null;
+            if(dateTo) dateTo.setHours(23, 59, 59, 999);
+
             const month = document.getElementById('monthFilter').value;
             const year = document.getElementById('yearFilter').value;
             const vchType = document.getElementById('vchTypeFilter').value;
@@ -401,7 +581,7 @@
             
             const card = (title, val, sub, color) => `
                 <div class="stat-card border-b-4 border-${color}-500">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-100 text-${color}-600 text-xl shadow-sm"><i class="fas fa-chart-line"></i></div>
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-${color}-100 text-${color}-600 text-xl shadow-sm dark:bg-${color}-950/20 dark:text-${color}-400"><i class="fas fa-chart-line"></i></div>
                     <div>
                         <p class="text-xs text-slate-500 font-bold uppercase tracking-wider dark:text-slate-400">${title}</p>
                         <p class="text-xl font-black text-slate-800 ${val < 0 ? 'text-red-600' : ''} dark:text-slate-200">${fmt(val)}</p>
@@ -529,46 +709,133 @@
 
         function updateReports() {
             const div = document.getElementById('reportsContent');
+            
             const createTable = (title, cols, rows) => `
                 <div class="glass-card overflow-hidden mb-6">
-                    <div class="p-4 bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700"><h3 class="text-base font-black text-slate-800 tracking-wide dark:text-slate-200">${title}</h3></div>
+                    <div class="p-4 bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700">
+                        <h3 class="text-base font-black text-slate-800 tracking-wide dark:text-slate-200">${title}</h3>
+                    </div>
                     <div class="table-container">
                         <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                            <thead class="bg-slate-50 dark:bg-slate-800"><tr>${cols.map(c => `<th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">${c}</th>`).join('')}</tr></thead>
-                            <tbody class="bg-white divide-y divide-slate-100 dark:bg-slate-800 dark:divide-slate-700">${rows}</tbody>
+                            <thead class="bg-slate-50 dark:bg-slate-800">
+                                <tr>
+                                    ${cols.map(c => `
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400 ${
+                                            c.toLowerCase().includes('debit') || c.toLowerCase().includes('credit') || c.toLowerCase().includes('amount') || c.toLowerCase().includes('balance') || c.toLowerCase().includes('percentage') ? 'text-right' : ''
+                                        }">
+                                            ${c}
+                                        </th>
+                                    `).join('')}
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-100 dark:bg-slate-900/50 dark:divide-slate-700">
+                                ${rows}
+                            </tbody>
                         </table>
                     </div>
                 </div>`;
 
-            // Transaction Summary
+            // 1. Transaction Details (Top 100)
             const txnRows = filteredData.slice(0, 100).map(r => `
-                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700">
+                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">${r.Date.toLocaleDateString()}</td>
                     <td class="px-6 py-4 text-sm text-slate-700 max-w-xs truncate dark:text-slate-300" title="${r.Particulars}">${r.Particulars}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold dark:bg-slate-800 dark:text-slate-400">${r.VchType}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300">
+                        <span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs font-bold dark:bg-slate-800 dark:text-slate-400">${r.VchType}</span>
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 font-mono dark:text-slate-300">${r.VchNo}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${r.DebitAmount ? r.DebitAmount.toLocaleString() : '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${r.CreditAmount ? r.CreditAmount.toLocaleString() : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">${r.DebitAmount ? '₹' + r.DebitAmount.toLocaleString('en-IN') : '-'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">${r.CreditAmount ? '₹' + r.CreditAmount.toLocaleString('en-IN') : '-'}</td>
                 </tr>
             `).join('');
             
-            // Account Summary
+            // 2. Account-wise Summary (Top 50)
             const accSum = {};
             filteredData.forEach(r => {
                 if (!accSum[r.Particulars]) accSum[r.Particulars] = { c: 0, d: 0, cr: 0 };
-                accSum[r.Particulars].c++; accSum[r.Particulars].d += r.DebitAmount; accSum[r.Particulars].cr += r.CreditAmount;
+                accSum[r.Particulars].c++;
+                accSum[r.Particulars].d += r.DebitAmount;
+                accSum[r.Particulars].cr += r.CreditAmount;
             });
-            const accRows = Object.entries(accSum).sort((a,b) => (b[1].d+b[1].cr)-(a[1].d+a[1].cr)).slice(0, 50).map(([k,v]) => `
-                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700">
-                    <td class="px-6 py-4 text-sm text-slate-700 font-medium dark:text-slate-300">${k}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${v.c}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${v.d.toLocaleString()}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">${v.cr.toLocaleString()}</td>
-                </tr>
-            `).join('');
+            const accRows = Object.entries(accSum)
+                .sort((a,b) => (b[1].d+b[1].cr)-(a[1].d+a[1].cr))
+                .slice(0, 50)
+                .map(([k,v]) => {
+                    const netBalance = v.cr - v.d;
+                    const netFmt = '₹' + Math.abs(netBalance).toLocaleString('en-IN') + ' ' + (netBalance >= 0 ? 'CR' : 'DR');
+                    const netColorClass = netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
+                            <td class="px-6 py-4 text-sm text-slate-700 font-medium dark:text-slate-300">${k}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${v.c}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">₹${v.d.toLocaleString('en-IN')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">₹${v.cr.toLocaleString('en-IN')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${netColorClass}">${netFmt}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            // 3. Transaction Type Analysis
+            const typeAnalysis = {};
+            let totalAmount = 0;
+            filteredData.forEach(record => {
+                const amount = record.DebitAmount + record.CreditAmount;
+                totalAmount += amount;
+                if (!typeAnalysis[record.VchType]) {
+                    typeAnalysis[record.VchType] = { count: 0, total: 0 };
+                }
+                typeAnalysis[record.VchType].count++;
+                typeAnalysis[record.VchType].total += amount;
+            });
+            const typeRows = Object.entries(typeAnalysis)
+                .sort(([, a], [, b]) => b.total - a.total)
+                .map(([type, analysis]) => {
+                    const percentage = totalAmount ? ((analysis.total / totalAmount) * 100).toFixed(1) : '0.0';
+                    const average = analysis.count ? analysis.total / analysis.count : 0;
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
+                            <td class="px-6 py-4 text-sm text-slate-700 font-medium dark:text-slate-300">${type}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${analysis.count}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">₹${analysis.total.toLocaleString('en-IN')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-700 dark:text-slate-300 text-right">₹${average.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">${percentage}%</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            // 4. Monthly Summary
+            const monthlySummary = {};
+            filteredData.forEach(record => {
+                const monthKey = `${record.Date.getFullYear()}-${String(record.Date.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthlySummary[monthKey]) {
+                    monthlySummary[monthKey] = { count: 0, debits: 0, credits: 0 };
+                }
+                monthlySummary[monthKey].count++;
+                monthlySummary[monthKey].debits += record.DebitAmount;
+                monthlySummary[monthKey].credits += record.CreditAmount;
+            });
+            const monthRows = Object.entries(monthlySummary)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([month, summary]) => {
+                    const netFlow = summary.credits - summary.debits;
+                    const monthName = new Date(month + '-01').toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+                    const flowFmt = '₹' + Math.abs(netFlow).toLocaleString('en-IN') + ' ' + (netFlow >= 0 ? 'Inflow' : 'Outflow');
+                    const flowColorClass = netFlow >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                    return `
+                        <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/40">
+                            <td class="px-6 py-4 text-sm text-slate-700 font-medium dark:text-slate-300">${monthName}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">${summary.count}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">₹${summary.debits.toLocaleString('en-IN')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200 text-right">₹${summary.credits.toLocaleString('en-IN')}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${flowColorClass}">${flowFmt}</td>
+                        </tr>
+                    `;
+                }).join('');
 
             div.innerHTML = createTable('Transaction Details (Top 100)', ['Date', 'Particulars', 'Type', 'No', 'Debit', 'Credit'], txnRows) +
-                            createTable('Account Summary (Top 50)', ['Account', 'Count', 'Debits', 'Credits'], accRows);
+                            createTable('Account Summary (Top 50)', ['Account', 'Count', 'Debits', 'Credits', 'Net Balance'], accRows) +
+                            createTable('Transaction Type Analysis', ['Transaction Type', 'Count', 'Total Amount', 'Average Amount', 'Percentage'], typeRows) +
+                            createTable('Monthly Summary', ['Month', 'Transactions', 'Total Debits', 'Total Credits', 'Net Flow'], monthRows);
         }
 
         function toggleView() {
@@ -578,8 +845,189 @@
             if (isChart) updateCharts(); else updateReports();
         }
 
-        // Init
-        toggleView();
+        // Export Function implementations
+        function copyToClipboard() {
+            const tables = document.getElementById('reportsContent').querySelectorAll('table');
+            const titles = document.getElementById('reportsContent').querySelectorAll('h3');
+            let tsvText = '';
+
+            tables.forEach((table, index) => {
+                const title = titles[index] ? titles[index].innerText : `Report ${index + 1}`;
+                tsvText += `=== ${title} ===\n`;
+
+                const rows = table.querySelectorAll('tr');
+                rows.forEach(tr => {
+                    const cells = tr.querySelectorAll('th, td');
+                    const rowData = Array.from(cells).map(cell => cell.innerText.trim());
+                    tsvText += rowData.join('\t') + '\n';
+                });
+                tsvText += '\n';
+            });
+
+            navigator.clipboard.writeText(tsvText).then(() => {
+                const btn = document.getElementById('copyToClipboardBtn');
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = `<i class="fas fa-check mr-1 text-green-600"></i>Copied`;
+                setTimeout(() => {
+                    btn.innerHTML = origHtml;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        function printReports() {
+            const printContent = document.getElementById('reportsContent').innerHTML;
+            const printWin = window.open('', '_blank');
+            if (!printWin) return;
+            printWin.document.write(`
+                <html>
+                <head>
+                    <title>Tally Cashbook Reports</title>
+                    <style>
+                        body { font-family: 'Times New Roman', serif; margin: 0.25in; background-color: white; color: black; }
+                        .glass-card { margin-bottom: 20px; border: 1px solid #000; page-break-inside: avoid; }
+                        h3 { font-family: 'Arial', sans-serif; font-size: 14pt; margin: 10px; font-weight: bold; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                        th, td { border: 1px solid #000; padding: 6px; text-align: left; font-size: 9pt; }
+                        th { background-color: #f1f5f9; font-weight: bold; }
+                        .text-right { text-align: right; }
+                        .text-center { text-align: center; }
+                        .text-green-600 { color: #16a34a !important; }
+                        .text-red-600 { color: #dc2626 !important; }
+                        .hidden { display: none !important; }
+                    </style>
+                </head>
+                <body>
+                    ${printContent}
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(function() { window.close(); }, 500);
+                        };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWin.document.close();
+        }
+
+        async function exportExcelWithExcelJS() {
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const tables = document.getElementById('reportsContent').querySelectorAll('table');
+                const titles = document.getElementById('reportsContent').querySelectorAll('h3');
+
+                if (tables.length === 0) {
+                    alert('No report tables found to export.');
+                    return;
+                }
+
+                for (let i = 0; i < tables.length; i++) {
+                    const titleText = titles[i] ? titles[i].innerText : `Report ${i + 1}`;
+                    const sheetName = titleText.replace(/[\\\?\*\/\[\]]/g, '').substring(0, 30);
+                    const worksheet = workbook.addWorksheet(sheetName);
+
+                    const table = tables[i];
+                    const rows = table.querySelectorAll('tr');
+
+                    rows.forEach((tr, rowIndex) => {
+                        const cells = tr.querySelectorAll('th, td');
+                        const rowData = Array.from(cells).map(cell => cell.innerText.trim());
+                        const row = worksheet.addRow(rowData);
+
+                        if (rowIndex === 0) {
+                            // Header formatting
+                            row.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                            row.eachCell(cell => {
+                                cell.fill = {
+                                    type: 'pattern',
+                                    pattern: 'solid',
+                                    fgColor: { argb: 'FF1E293B' }
+                                };
+                                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+                            });
+                        } else {
+                            // Body row formatting
+                            if (rowIndex % 2 === 0) {
+                                row.eachCell(cell => {
+                                    cell.fill = {
+                                        type: 'pattern',
+                                        pattern: 'solid',
+                                        fgColor: { argb: 'FFF1F5F9' }
+                                    };
+                                });
+                            }
+                        }
+                    });
+
+                    // Auto-fit columns
+                    worksheet.columns.forEach(column => {
+                        let maxLen = 0;
+                        column.eachCell({ includeEmpty: true }, cell => {
+                            const val = cell.value ? String(cell.value) : '';
+                            if (val.length > maxLen) maxLen = val.length;
+                        });
+                        column.width = Math.max(maxLen + 4, 12);
+                    });
+                }
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'Tally_DayBook_Reports.xlsx';
+                link.click();
+            } catch (error) {
+                console.error('Excel export failed: ', error);
+                alert('Excel export failed. Please check console for details.');
+            }
+        }
+
+        function exportPDF() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'in',
+                    format: 'a4'
+                });
+
+                const tables = document.getElementById('reportsContent').querySelectorAll('table');
+                const titles = document.getElementById('reportsContent').querySelectorAll('h3');
+
+                if (tables.length === 0) {
+                    alert('No report tables found to export.');
+                    return;
+                }
+
+                tables.forEach((table, index) => {
+                    if (index > 0) {
+                        doc.addPage();
+                    }
+
+                    const titleText = titles[index] ? titles[index].innerText : `Report ${index + 1}`;
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(titleText, 0.25, 0.5);
+
+                    doc.autoTable({
+                        html: table,
+                        startY: 0.7,
+                        margin: { top: 0.25, right: 0.25, bottom: 0.25, left: 0.25 },
+                        theme: 'grid',
+                        styles: { fontSize: 8, cellPadding: 0.05, font: 'helvetica' },
+                        headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] },
+                        alternateRowStyles: { fillColor: [241, 245, 249] }
+                    });
+                });
+
+                doc.save('Tally_DayBook_Reports.pdf');
+            } catch (error) {
+                console.error('PDF export failed: ', error);
+                alert('PDF export failed. Please check console for details.');
+            }
+        }
     </script>
     <script>
         document.getElementById('themeToggle').addEventListener('click', () => {
