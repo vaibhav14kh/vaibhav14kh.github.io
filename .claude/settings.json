@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tasklist)",
+      "Bash(taskkill //F //IM webengine_smoke_test.exe)",
+      "Bash(wmic process *)",
+      "Bash(taskkill //F //PID 24688)",
+      "PowerShell(Get-Process webengine_smoke_test -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force -ErrorAction SilentlyContinue)",
+      "Read(//c/Users/**)",
+      "Read(//c/tmp/**)",
+      "Read(//c/Users/vaibh/AppData/Local/Temp/_MEI347722/**)"
+    ]
+  }
+}
