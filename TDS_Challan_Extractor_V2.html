@@ -152,7 +152,7 @@
             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2 dark:text-white">
                 <span class="gradient-text">TDS Challan Extractor</span>
             </h1>
-            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing for Form 281. Zero data leaves your browser.</p>
+            <p class="text-slate-600 text-sm font-medium dark:text-slate-400">Local PDF processing for Form 281 & ITNS 281N. Zero data leaves your browser.</p>
         </div>
 
         <div class="space-y-6">
@@ -170,7 +170,7 @@
                         <i class="fas fa-cloud-upload-alt text-5xl text-blue-400"></i>
                         <div>
                             <p class="text-base font-bold text-slate-700 dark:text-slate-300">Drop TDS Challan PDFs here or click to browse</p>
-                            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Supports batch processing of multiple files</p>
+                            <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">Supports batch processing of Form 281 (Legacy) and ITNS 281N (New Portal) receipts</p>
                         </div>
                     </div>
                     <input type="file" id="fileInput" multiple accept=".pdf" class="hidden">
@@ -244,6 +244,7 @@
                             <thead>
                                 <tr>
                                     <th>Sr. No.</th>
+                                    <th>Format</th>
                                     <th>Date</th>
                                     <th>BSR Code</th>
                                     <th>Challan No</th>
@@ -254,9 +255,15 @@
                                     <th>Cess</th>
                                     <th>Interest</th>
                                     <th>Penalty</th>
-                                    <th>Fee 234E</th>
+                                    <th>Fee 234E/427</th>
                                     <th>TAN</th>
+                                    <th>Taxpayer Name</th>
                                     <th>AY</th>
+                                    <th>Tax Year</th>
+                                    <th>Major Head</th>
+                                    <th>CIN</th>
+                                    <th>Mode</th>
+                                    <th>Bank Ref</th>
                                 </tr>
                             </thead>
                             <tbody id="resultsBody" class="bg-white divide-y divide-slate-100 text-sm dark:bg-slate-800 dark:divide-slate-700">
@@ -342,7 +349,7 @@
             try {
                 for (const file of selectedFiles) {
                     const text = await extractTextFromPDF(file);
-                    const challanData = parseChallanData(text);
+                    const challanData = parseChallanData(text, file.name);
                     if (challanData) {
                         extractedData.push(challanData);
                     }
@@ -368,7 +375,6 @@
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                // Structured extraction logic
                 let lines = [], currentLine = [], lastY = null;
                 textContent.items.forEach(item => {
                     if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
@@ -382,21 +388,34 @@
             }
             return fullText;
         }
-        
-        function parseChallanData(text) {
-            const data = { dateOfDeposit: '', bsrCode: '', challanNo: '', natureOfPayment: '', amount: '', tax: '', surcharge: '', cess: '', interest: '', penalty: '', fee234E: '', tan: '', assessmentYear: '' };
-            const cleanText = text.replace(/\s+/g, ' ').trim();
+
+        // --- DUAL FORMAT DETECTION & PARSING ---
+        function parseChallanData(text, filename = '') {
+            const lower = text.toLowerCase();
+            const is281N = lower.includes('281n') || lower.includes('tax year') || lower.includes('tds/tcs section-wise payment details') || lower.includes('tax breakup details');
             
-            // Helper to find matches
+            if (is281N) {
+                return parseNew281N(text, filename);
+            } else {
+                return parseLegacy281(text, filename);
+            }
+        }
+
+        function parseLegacy281(text, filename) {
+            const data = { 
+                file: filename, formatVersion: '281 (Legacy)', dateOfDeposit: '', bsrCode: '', challanNo: '', natureOfPayment: '', 
+                amount: '', tax: '', surcharge: '0', cess: '0', interest: '0', penalty: '0', fee234E: '0', 
+                tan: '', assessmentYear: '', taxYear: '', taxpayerName: '', cin: '', majorHead: '', modeOfPayment: '', bankRef: '' 
+            };
+            const cleanText = text.replace(/\s+/g, ' ').trim();
             const getMatch = (patterns) => {
                 for (let p of patterns) {
                     const m = cleanText.match(p);
-                    if (m) return m[1];
+                    if (m) return m[1].trim();
                 }
                 return '';
             };
 
-            // Logic preserved from original script with multiple fallback patterns
             data.dateOfDeposit = getMatch([
                 /Date of Deposit\s*[:]\s*(\d{2}-\w{3}-\d{4})/i,
                 /Date of Deposit\s*[:]\s*(\d{2}\/\d{2}\/\d{4})/i,
@@ -406,7 +425,6 @@
                 /Date of Deposit[^0-9]*(\d{2}[-\/]\w{3,}[-\/]\d{4})/i
             ]);
 
-            // Advanced date fallback logic
             if (!data.dateOfDeposit) {
                 const depositIndex = cleanText.search(/Date of Deposit/i);
                 if (depositIndex !== -1) {
@@ -428,7 +446,6 @@
             data.challanNo = getMatch([/Challan\s*No\s*[:]\s*(\d+)/i, /Challan\s*Number\s*[:]\s*(\d+)/i, /Challan\s*No\s*(\d+)/i]);
             data.natureOfPayment = getMatch([/Nature of Payment\s*[:]\s*(\d+[A-Z]*)/i, /Nature of Payment\s*[:]\s*([A-Z0-9]+)/i]);
             
-            // Amounts
             const amt = getMatch([/Amount\s*\(in Rs\.\)\s*[:]\s*[₹]?\s*([\d,]+)/i, /Amount\s*[:]\s*[₹]?\s*([\d,]+)/i, /Total.*[₹]\s*([\d,]+)/i]);
             if (amt) data.amount = amt.replace(/,/g, '');
 
@@ -452,12 +469,119 @@
 
             data.tan = getMatch([/TAN\s*[:]\s*([A-Z]{4}\d{5}[A-Z])/i, /TAN\s+([A-Z]{4}\d{5}[A-Z])/i]);
             data.assessmentYear = getMatch([/Assessment Year\s*[:]\s*(\d{4}-\d{2})/i, /Assessment Year\s+(\d{4}-\d{2})/i]);
+            data.taxpayerName = getMatch([/Name\s*[:]\s*([^:\n]+?)(?=\s*Assessment Year|\s*Major Head|\s*Amount|$)/i]);
+            data.cin = getMatch([/CIN\s*[:]\s*([A-Z0-9]+)/i]);
+            data.majorHead = getMatch([/Major Head\s*[:]\s*([^:\n]+?)(?=\s*Minor Head|\s*Nature|$)/i]);
+            data.modeOfPayment = getMatch([/Mode of Payment\s*[:]\s*([^:\n]+?)(?=\s*Bank|$)/i]);
+            data.bankRef = getMatch([/Bank Reference Number\s*[:]\s*([A-Z0-9]+)/i]);
 
-            // Fallback for total amount
             if (!data.amount) {
                 const total = getMatch([/Total\s*\(A\+B\+C\+D\+E\+F\)\s*[₹]?\s*([\d,]+)/i, /Total.*[₹]\s*([\d,]+)/i]);
                 if (total) data.amount = total.replace(/,/g, '');
             }
+            if (!data.tax && data.amount) data.tax = data.amount;
+
+            return data;
+        }
+
+        function parseNew281N(text, filename) {
+            const data = { 
+                file: filename, formatVersion: '281N (New)', dateOfDeposit: '', bsrCode: '', challanNo: '', natureOfPayment: '', 
+                amount: '', tax: '', surcharge: '0', cess: '0', interest: '0', penalty: '0', fee234E: '0', 
+                tan: '', assessmentYear: '', taxYear: '', taxpayerName: '', cin: '', majorHead: '', modeOfPayment: '', bankRef: '' 
+            };
+            const cleanText = text.replace(/\s+/g, ' ').trim();
+            const getMatch = (patterns) => {
+                for (let p of patterns) {
+                    const m = cleanText.match(p);
+                    if (m) return m[1].trim();
+                }
+                return '';
+            };
+
+            data.dateOfDeposit = getMatch([
+                /Date of Deposit\s*[:]\s*(\d{2}-\w{3}-\d{4})/i,
+                /Date of Deposit\s*[:]\s*(\d{2}\/\d{2}\/\d{4})/i,
+                /Date of Deposit\s*[:]\s*(\d{2}-\w+-\d{4})/i,
+                /Tender Date\s*[:]\s*(\d{2}\/\d{2}\/\d{4})/i,
+                /Date of Deposit\s+(\d{2}-\w{3}-\d{4})/i,
+                /Date of Deposit[^0-9]*(\d{2}[-\/]\w{3,}[-\/]\d{4})/i
+            ]);
+
+            data.bsrCode = getMatch([/BSR\s*code\s*[:]\s*(\d{7})/i, /BSR\s*code\s*(\d{7})/i, /BSR\s*[:]\s*(\d{7})/i]);
+            data.challanNo = getMatch([/Challan\s*No\s*[:]\s*(\d+)/i, /Challan\s*Number\s*[:]\s*(\d+)/i, /Challan\s*No\s*(\d+)/i]);
+            data.tan = getMatch([/TAN\s*[:]\s*([A-Z]{4}\d{5}[A-Z])/i, /TAN\s+([A-Z]{4}\d{5}[A-Z])/i]);
+            data.taxpayerName = getMatch([/Name\s*[:]\s*([^:\n]+?)(?=\s*Tax Year|\s*Major Head|\s*Minor Head|\s*Amount|$)/i]);
+            
+            data.taxYear = getMatch([/Tax Year\s*[:]\s*(\d{4}-\d{2})/i, /Tax Year\s+(\d{4}-\d{2})/i]);
+            data.assessmentYear = getMatch([/Assessment Year\s*[:]\s*(\d{4}-\d{2})/i, /Assessment Year\s+(\d{4}-\d{2})/i]);
+            if (!data.assessmentYear && data.taxYear) {
+                try {
+                    const parts = data.taxYear.split('-');
+                    const startY = parseInt(parts[0], 10) + 1;
+                    const endY = (parseInt(parts[1], 10) + 1) % 100;
+                    data.assessmentYear = `${startY}-${endY < 10 ? '0' + endY : endY}`;
+                } catch(e) {
+                    data.assessmentYear = data.taxYear;
+                }
+            }
+
+            data.majorHead = getMatch([/Major Head\s*[:]\s*([^:\n]+?)(?=\s*Minor Head|\s*Nature|\s*Amount|$)/i]);
+            data.cin = getMatch([/CIN\s*[:]\s*([A-Z0-9]+)/i]);
+            data.modeOfPayment = getMatch([/Mode of Payment\s*[:]\s*([^:\n]+?)(?=\s*Bank|$)/i]);
+            data.bankRef = getMatch([/Bank Reference Number\s*[:]\s*([A-Z0-9]+)/i]);
+
+            data.natureOfPayment = getMatch([/Nature of Payment\s*[:]\s*([A-Z0-9]+)/i, /Nature of Payment\s*[:]\s*(\d+[A-Z]*)/i]);
+            if (!data.natureOfPayment) {
+                const mCode = cleanText.match(/-\s*(\d{4})\s*₹/i) || cleanText.match(/(\d{4})\s*₹/i);
+                if (mCode) {
+                    data.natureOfPayment = mCode[1];
+                } else {
+                    const mSec = cleanText.match(/(?:Section Code|Section)[^\d]*(\d{3}(?:\(\d+\))*(?:\([a-z0-9]+\))*)/i);
+                    if (mSec) data.natureOfPayment = mSec[1];
+                }
+            }
+
+            const amt = getMatch([
+                /Total\s*\(A\+B\+C\+D\+E\+F(?:\+G)?\)\s*[₹]?\s*([\d,]+)/i,
+                /Amount\s*\(in Rs\.\)\s*[:]\s*[₹]?\s*([\d,]+)/i,
+                /Amount\s*[:]\s*[₹]?\s*([\d,]+)/i,
+                /Total\s*[₹]\s*([\d,]+)/i
+            ]);
+            if (amt) data.amount = amt.replace(/,/g, '');
+
+            const tax = getMatch([/[A]\s+Tax\s+[₹]?\s*([\d,]+)/i, /Tax\s+[₹]?\s*([\d,]+)/i, /A\s+[₹]?\s*([\d,]+)/i]);
+            if (tax) data.tax = tax.replace(/,/g, '');
+
+            const sur = getMatch([/[B]\s+Surcharge\s+[₹]?\s*([\d,]+)/i, /Surcharge\s+[₹]?\s*([\d,]+)/i, /B\s+[₹]?\s*([\d,]+)/i]);
+            if (sur) data.surcharge = sur.replace(/,/g, '');
+
+            const cess = getMatch([
+                /[C]\s+Education Cess\s+[₹]?\s*([\d,]+)/i,
+                /[C]\s+Cess\s+[₹]?\s*([\d,]+)/i,
+                /Education Cess\s+[₹]?\s*([\d,]+)/i,
+                /Cess\s+[₹]?\s*([\d,]+)/i,
+                /C\s+[₹]?\s*([\d,]+)/i
+            ]);
+            if (cess) data.cess = cess.replace(/,/g, '');
+
+            const int = getMatch([/[D]\s+Interest\s+[₹]?\s*([\d,]+)/i, /Interest\s+[₹]?\s*([\d,]+)/i, /D\s+[₹]?\s*([\d,]+)/i]);
+            if (int) data.interest = int.replace(/,/g, '');
+
+            const pen = getMatch([/[E]\s+Penalty\s+[₹]?\s*([\d,]+)/i, /Penalty\s+[₹]?\s*([\d,]+)/i, /E\s+[₹]?\s*([\d,]+)/i]);
+            if (pen) data.penalty = pen.replace(/,/g, '');
+
+            const fee = getMatch([
+                /[F]\s+Fee under section\s+\w+\s+[₹]?\s*([\d,]+)/i,
+                /[F]\s+Fee under section 234E\s+[₹]?\s*([\d,]+)/i,
+                /Fee under section 234E\s+[₹]?\s*([\d,]+)/i,
+                /Fee under section 427\s+[₹]?\s*([\d,]+)/i,
+                /F\s+[₹]?\s*([\d,]+)/i
+            ]);
+            if (fee) data.fee234E = fee.replace(/,/g, '');
+
+            if (!data.amount && data.tax) data.amount = data.tax;
+            if (!data.tax && data.amount) data.tax = data.amount;
 
             return data;
         }
@@ -473,19 +597,26 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${index + 1}</td>
+                    <td><span class="px-2 py-0.5 rounded text-xs font-bold ${data.formatVersion.includes('281N') ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'}">${data.formatVersion || '281'}</span></td>
                     <td>${data.dateOfDeposit || '-'}</td>
                     <td class="font-bold">${data.bsrCode || '-'}</td>
                     <td class="font-mono text-slate-500 dark:text-slate-400">${data.challanNo || '-'}</td>
-                    <td><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs dark:bg-blue-900/20">${data.natureOfPayment || '-'}</span></td>
+                    <td><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold text-xs dark:bg-blue-900/20 dark:text-blue-300">${data.natureOfPayment || '-'}</span></td>
                     <td class="font-bold text-slate-800 dark:text-slate-200">${parseFloat(data.amount || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
                     <td class="font-bold text-slate-800 dark:text-slate-200">${parseFloat(data.tax || 0).toLocaleString('en-IN', {style:'currency', currency:'INR'})}</td>
-                    <td>${data.surcharge || '-'}</td>
-                    <td>${data.cess || '-'}</td>
-                    <td>${data.interest || '-'}</td>
-                    <td>${data.penalty || '-'}</td>
-                    <td>${data.fee234E || '-'}</td>
+                    <td>${data.surcharge ? parseFloat(data.surcharge).toLocaleString('en-IN') : '0'}</td>
+                    <td>${data.cess ? parseFloat(data.cess).toLocaleString('en-IN') : '0'}</td>
+                    <td>${data.interest ? parseFloat(data.interest).toLocaleString('en-IN') : '0'}</td>
+                    <td>${data.penalty ? parseFloat(data.penalty).toLocaleString('en-IN') : '0'}</td>
+                    <td>${data.fee234E ? parseFloat(data.fee234E).toLocaleString('en-IN') : '0'}</td>
                     <td class="font-bold">${data.tan || '-'}</td>
+                    <td class="font-medium text-slate-700 dark:text-slate-300 truncate max-w-xs">${data.taxpayerName || '-'}</td>
                     <td>${data.assessmentYear || '-'}</td>
+                    <td>${data.taxYear || '-'}</td>
+                    <td class="truncate max-w-xs">${data.majorHead || '-'}</td>
+                    <td class="font-mono text-xs">${data.cin || '-'}</td>
+                    <td>${data.modeOfPayment || '-'}</td>
+                    <td class="font-mono text-xs">${data.bankRef || '-'}</td>
                 `;
                 tbody.appendChild(row);
                 totalAmount += parseFloat(data.amount || 0);
@@ -500,9 +631,9 @@
         }
         
         function exportToCSV() {
-            let csv = 'Sr. No.,Date of Deposit,BSR Code,Challan No,Nature of Payment,Amount,Tax,Surcharge,Cess,Interest,Penalty,Fee u/s 234E,TAN,Assessment Year\n';
+            let csv = 'Sr. No.,Format,Date of Deposit,BSR Code,Challan No,Nature of Payment,Amount,Tax,Surcharge,Cess,Interest,Penalty,Fee u/s 234E/427,TAN,Taxpayer Name,Assessment Year,Tax Year,Major Head,CIN,Mode of Payment,Bank Reference\n';
             extractedData.forEach((data, index) => {
-                csv += `${index + 1},"${data.dateOfDeposit}","${data.bsrCode}","${data.challanNo}","${data.natureOfPayment}","${data.amount}","${data.tax}","${data.surcharge}","${data.cess}","${data.interest}","${data.penalty}","${data.fee234E}","${data.tan}","${data.assessmentYear}"\n`;
+                csv += `${index + 1},"${data.formatVersion}","${data.dateOfDeposit}","${data.bsrCode}","${data.challanNo}","${data.natureOfPayment}","${data.amount}","${data.tax}","${data.surcharge}","${data.cess}","${data.interest}","${data.penalty}","${data.fee234E}","${data.tan}","${data.taxpayerName}","${data.assessmentYear}","${data.taxYear}","${data.majorHead}","${data.cin}","${data.modeOfPayment}","${data.bankRef}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
@@ -513,14 +644,15 @@
         
         function exportToExcel() {
             const wb = XLSX.utils.book_new();
-            const headers = ['Sr. No.', 'Date of Deposit', 'BSR Code', 'Challan No', 'Nature of Payment', 'Amount (₹)', 'Tax (₹)', 'Surcharge (₹)', 'Cess (₹)', 'Interest (₹)', 'Penalty (₹)', 'Fee u/s 234E (₹)', 'TAN', 'Assessment Year'];
+            const headers = ['Sr. No.', 'Format', 'Date of Deposit', 'BSR Code', 'Challan No', 'Nature of Payment', 'Amount (₹)', 'Tax (₹)', 'Surcharge (₹)', 'Cess (₹)', 'Interest (₹)', 'Penalty (₹)', 'Fee u/s 234E/427 (₹)', 'TAN', 'Taxpayer Name', 'Assessment Year', 'Tax Year', 'Major Head', 'CIN', 'Mode of Payment', 'Bank Reference'];
             const excelData = [headers];
             extractedData.forEach((data, index) => {
                 excelData.push([
-                    index + 1, data.dateOfDeposit, data.bsrCode, data.challanNo, data.natureOfPayment,
+                    index + 1, data.formatVersion, data.dateOfDeposit, data.bsrCode, data.challanNo, data.natureOfPayment,
                     parseFloat(data.amount) || 0, parseFloat(data.tax) || 0, parseFloat(data.surcharge) || 0,
                     parseFloat(data.cess) || 0, parseFloat(data.interest) || 0, parseFloat(data.penalty) || 0,
-                    parseFloat(data.fee234E) || 0, data.tan, data.assessmentYear
+                    parseFloat(data.fee234E) || 0, data.tan, data.taxpayerName, data.assessmentYear, data.taxYear,
+                    data.majorHead, data.cin, data.modeOfPayment, data.bankRef
                 ]);
             });
 
@@ -529,13 +661,14 @@
             const totalTax = extractedData.reduce((sum, data) => sum + (parseFloat(data.tax) || 0), 0);
             
             excelData.push([]);
-            excelData.push(['', 'TOTAL', '', '', '', totalAmount, totalTax, '', '', '', '', '', '', '']);
+            excelData.push(['', 'TOTAL', '', '', '', '', totalAmount, totalTax, '', '', '', '', '', '', '', '', '', '', '', '', '']);
 
             const ws = XLSX.utils.aoa_to_sheet(excelData);
 
             // Set column widths
             ws['!cols'] = [
                 {wch: 8},   // Sr. No.
+                {wch: 15},  // Format
                 {wch: 15},  // Date of Deposit
                 {wch: 12},  // BSR Code
                 {wch: 12},  // Challan No
@@ -546,9 +679,15 @@
                 {wch: 10},  // Cess
                 {wch: 12},  // Interest
                 {wch: 12},  // Penalty
-                {wch: 15},  // Fee u/s 234E
+                {wch: 15},  // Fee u/s 234E/427
                 {wch: 12},  // TAN
-                {wch: 15}   // Assessment Year
+                {wch: 25},  // Taxpayer Name
+                {wch: 15},  // Assessment Year
+                {wch: 15},  // Tax Year
+                {wch: 30},  // Major Head
+                {wch: 22},  // CIN
+                {wch: 15},  // Mode of Payment
+                {wch: 20}   // Bank Reference
             ];
 
             XLSX.utils.book_append_sheet(wb, ws, 'TDS Challan Data');
