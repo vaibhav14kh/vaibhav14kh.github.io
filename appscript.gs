@@ -56,6 +56,12 @@ function doPost(e) {
     } else if(toolId === "CONV") {
       toolName = "Conveyance Reimbursement Form";
       accessLink = "https://ai.manidesigns.in/Conveyance_Reimbursement_Form_V2.html?auth=true";
+    } else if(toolId === "DEP") {
+      toolName = "Depreciation Calculator";
+      accessLink = "https://ai.manidesigns.in/Depreciation_Calculator.html?auth=true";
+    } else if(toolId === "PF") {
+      toolName = "PF Challan Extractor";
+      accessLink = "https://ai.manidesigns.in/PF_Challan_Extractor_V2.html?auth=true";
     } else if(toolId === "GAS") {
       // Add this new block for the GAS tool
       toolName = "Google Apps Script";
