@@ -28,7 +28,7 @@ Automates the creation of complex financial certificates for immigration and com
 A smart legal drafting engine for partnership firms.
 - **Functionality**: Automates the drafting of legal partnership deeds. It includes dynamic partner clauses, instant profit-sharing/capital calculations, and strict legal formatting.
 
-### 4. Engagement Letter Generator (`V2Engagement_Letter_Generator.html`)
+### 4. Engagement Letter Generator (`Engagement_Letter_Generator_V2.html`)
 Standardizes client onboarding documentation.
 - **Functionality**: Instantly generates clean, compliant audit engagement letters tailored for diverse firm structures (Proprietorships, Partnerships, Companies, etc.).
 
@@ -44,15 +44,15 @@ Automates the statutory reporting requirements for private limited companies.
 A data-mining tool for payroll compliance.
 - **Functionality**: Batch extracts structured monthly contribution data directly from ESIC PDF Challans, parsing the data locally and exporting it into Excel for reconciliation.
 
-### 8. TDS Challan Extractor (`TDS_Challan_Extractor_V2.html` / `V2Challan_Extractor.html`)
+### 8. TDS Challan Extractor (`TDS_Challan_Extractor_V2.html`)
 Local PDF processing engine for Direct Tax compliance.
 - **Functionality**: Extracts precise payment details, BSR codes, and challan serial numbers from Form 281 TDS Challans, heavily reducing manual data entry for TDS return preparation.
 
-### 9. Multi-Challan Extractor
+### 9. Multi-Challan Extractor (`Challan_Extractor_V2.html`)
 A unified extraction engine for multiple compliance types.
 - **Functionality**: Bulk upload PF, ESIC, and TDS challans. The tool automatically detects the document type and extracts structured payment data into a consolidated local Excel file.
 
-### 10. Bank Statement Analyzer (`V2Bank_Statement_Analyzer.html`)
+### 10. Bank Statement Analyzer (`Bank_Statement_Analyzer_V2.html`)
 An analytical engine for financial audits and forensic accounting.
 - **Functionality**: Transforms massive, unstructured Excel bank statements into visual Key Performance Indicators (KPIs) and cash flow trends. Categorizes transactions and spots anomalies instantly.
 
@@ -67,6 +67,22 @@ A specialized tool for AS 22 compliance.
 ### 13. Conveyance Reimbursement (`Conveyance_Reimbursement_Form_V2.html`)
 Internal firm management and HR tool.
 - **Functionality**: A secure, digital employee reimbursement claim system that handles local receipt attachment and expense aggregation, generating a structured claim report.
+
+### 14. Depreciation Calculator (`Depreciation_Calculator.html`)
+Instant asset calculation schedules.
+- **Functionality**: Instantly calculate Companies Act (Schedule II) & Income Tax (block) depreciation schedules.
+
+### 15. PF Challan Extractor (`PF_Challan_Extractor_V2.html`)
+Automated data extraction for provident fund payments.
+- **Functionality**: Batch extract payment receipts and TRRN details from EPFO PF Challans into Excel and PDF.
+
+### 16. Google Apps Script (GAS Workspace)
+A collection of Google Apps Scripts for automation workflows.
+- **Functionality**: Provides backend automation, email integrations, and spreadsheet manipulations for the various tools in the hub.
+
+### 17. CA Automation Hub (`CAHUB.html`)
+The central gateway and repository access.
+- **Functionality**: A comprehensive folder holding automation resources, templates, and backend configurations for CA practice management.
 
 ## 🎨 Design System & Workspace Guidelines
 
